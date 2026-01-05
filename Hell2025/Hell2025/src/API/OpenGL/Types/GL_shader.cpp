@@ -280,8 +280,17 @@ void ParseFile(const std::string& filepath, std::string& outputString, std::vect
     std::ifstream file(filepath);
     std::string line;
     int lineNumber = 0;
+    bool isFirstLine = true;
     bool versionInserted = false;
     while (std::getline(file, line)) {
+
+
+        if (isFirstLine)
+        {
+            line = StripBOM(line);
+            isFirstLine = false;
+        }
+
         // Handle includes
         if (line.find("#include") != std::string::npos) {
             size_t start = line.find("\"") + 1;
