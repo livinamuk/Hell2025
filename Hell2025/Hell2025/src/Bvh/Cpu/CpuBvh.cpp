@@ -7,6 +7,7 @@
 #include "Timer.hpp"
 
 #include <iostream>
+#include <algorithm>
 #include <unordered_map>
 
 #include "bvh/v2/bvh.h"
@@ -331,13 +332,13 @@ namespace Bvh::Cpu {
 
 		// Walk the scene BVH and create the GPU primitive instance array, specifically ordering them such that leaf node instances are adjacent
 		sceneBvh.m_gpuInstances.reserve(instances.size());
-		uint32_t stack[MAX_BVH_STACK_SIZE];
-		size_t stack_size = 0;
-		uint32_t rootNodeIndex = 0;
-		stack[stack_size++] = rootNodeIndex;
+		std::vector<uint32_t> stack;
+		stack.reserve(std::max<size_t>(MAX_BVH_STACK_SIZE, sceneBvh.m_nodes.size()));
+		stack.push_back(0);
 
-		while (stack_size != 0) {
-			uint32_t currentIndex = stack[--stack_size];
+		while (!stack.empty()) {
+			uint32_t currentIndex = stack.back();
+			stack.pop_back();
 			BvhNode& node = sceneBvh.m_nodes[currentIndex];
 
 			// If this node is a leaf...
@@ -353,7 +354,14 @@ namespace Bvh::Cpu {
 
 					// Create the GPU primitive instance
 					GpuPrimitiveInstance& gpuInstance = sceneBvh.m_gpuInstances.emplace_back();
-					gpuInstance.rootNodeIndex = g_meshBvhRootNodeOffsetMapping[instance.meshBvhId];
+					auto rootNodeOffsetIt = g_meshBvhRootNodeOffsetMapping.find(instance.meshBvhId);
+					if (rootNodeOffsetIt != g_meshBvhRootNodeOffsetMapping.end()) {
+						gpuInstance.rootNodeIndex = rootNodeOffsetIt->second;
+					}
+					else {
+						std::cout << "Warning: missing mesh BVH root mapping for meshBvhId " << instance.meshBvhId << "\n";
+						gpuInstance.rootNodeIndex = 0;
+					}
 					gpuInstance.worldTransform = instance.worldTransform;
 					gpuInstance.inverseWorldTransform = instance.inverseWorldTransform;
 					gpuInstance.openableId = instance.openableId;
@@ -366,8 +374,8 @@ namespace Bvh::Cpu {
 				node.firstChildOrPrimitive = newPrimitiveIndex;
 			}
 			else {
-				stack[stack_size++] = node.firstChildOrPrimitive;
-				stack[stack_size++] = node.firstChildOrPrimitive + 1;
+				stack.push_back(node.firstChildOrPrimitive);
+				stack.push_back(node.firstChildOrPrimitive + 1);
 			}
 		}
 	}
@@ -426,7 +434,7 @@ namespace Bvh::Cpu {
 	}
 
 	glm::vec3 BvhVec3ToGlmVec3(MadmannVec3 vec) {
-		return { vec.values[0], vec.values[2], vec.values[2] };
+		return { vec.values[0], vec.values[1], vec.values[2] };
 	}
 
 	MadmannVec3 GlmVec3ToBvhVec3(glm::vec3 vec) {

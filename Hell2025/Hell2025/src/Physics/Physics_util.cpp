@@ -122,6 +122,7 @@ namespace Physics {
         if (result.hitFound) {
             result.hitPosition = glm::vec3(hit.block.position.x, hit.block.position.y, hit.block.position.z);
             result.hitNormal = glm::vec3(hit.block.normal.x, hit.block.normal.y, hit.block.normal.z);
+            result.distanceToHit = glm::distance(rayOrigin, result.hitPosition);
             result.hitFound = true;
             PhysicsUserData* userData = (PhysicsUserData*)hit.block.actor->userData;
             if (userData) {
@@ -325,4 +326,3 @@ namespace Physics {
         }
     }
 }
-
