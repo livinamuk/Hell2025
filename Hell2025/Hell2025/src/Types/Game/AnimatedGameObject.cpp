@@ -96,7 +96,13 @@ void AnimatedGameObject::UpdateRenderItems() {
 
                 // Update the model matrix to include the animated bone transform
                 int boneIndex = mesh->nonDeformingBoneIndex;
-                renderItem.modelMatrix = GetModelMatrix() * m_boneSkinningMatrices[boneIndex];
+                const int boneMatrixCount = static_cast<int>(m_boneSkinningMatrices.size());
+                if (boneIndex >= 0 && boneIndex < boneMatrixCount) {
+                    renderItem.modelMatrix = GetModelMatrix() * m_boneSkinningMatrices[boneIndex];
+                }
+                else {
+                    renderItem.modelMatrix = GetModelMatrix();
+                }
                 renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
 
 
