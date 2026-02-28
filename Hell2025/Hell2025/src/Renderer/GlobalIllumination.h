@@ -49,7 +49,7 @@ namespace GlobalIllumination {
 
     uint64_t GetSceneBvhId();
     const std::vector<BvhNode>& GetSceneNodes();
-    std::vector<CloudPoint>& GetPointClound();
+    std::vector<CloudPoint>& GetPointCloud();
     std::vector<LightVolume>& GetLightVolumes();
     std::vector<PointCloudOctrant>& GetPointCloudOctrants();
     std::vector<unsigned int>& GetPointIndices();

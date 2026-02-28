@@ -425,7 +425,8 @@ namespace OpenGLRenderer {
 
     void UpdateSSBOS() {
         const std::vector<GLuint64>& bindlessTextureIDs = OpenGLBackEnd::GetBindlessTextureIDs();
-        g_ssbos["Samplers"].Update(bindlessTextureIDs.size() * sizeof(GLuint64), (void*)&bindlessTextureIDs[0]);
+        const void* bindlessTextureData = bindlessTextureIDs.empty() ? nullptr : bindlessTextureIDs.data();
+        g_ssbos["Samplers"].Update(bindlessTextureIDs.size() * sizeof(GLuint64), bindlessTextureData);
         g_ssbos["Samplers"].Bind(0);
 
         const RendererData& rendererData = RenderDataManager::GetRendererData();
@@ -433,19 +434,23 @@ namespace OpenGLRenderer {
         g_ssbos["RendererData"].Bind(1);
 
         const std::vector<ViewportData>& playerData = RenderDataManager::GetViewportData();
-        g_ssbos["ViewportData"].Update(playerData.size() * sizeof(ViewportData), (void*)&playerData[0]);
+        const void* playerDataPtr = playerData.empty() ? nullptr : playerData.data();
+        g_ssbos["ViewportData"].Update(playerData.size() * sizeof(ViewportData), playerDataPtr);
         g_ssbos["ViewportData"].Bind(2);
 
         const std::vector<RenderItem>& instanceData = RenderDataManager::GetInstanceData();
-        g_ssbos["InstanceData"].Update(instanceData.size() * sizeof(RenderItem), (void*)&instanceData[0]);
+        const void* instanceDataPtr = instanceData.empty() ? nullptr : instanceData.data();
+        g_ssbos["InstanceData"].Update(instanceData.size() * sizeof(RenderItem), instanceDataPtr);
         g_ssbos["InstanceData"].Bind(3);
 
         const std::vector<GPULight>& gpuLightsHighRes = RenderDataManager::GetGPULightsHighRes();
-        g_ssbos["Lights"].Update(gpuLightsHighRes.size() * sizeof(GPULight), (void*)&gpuLightsHighRes[0]);
+        const void* lightsDataPtr = gpuLightsHighRes.empty() ? nullptr : gpuLightsHighRes.data();
+        g_ssbos["Lights"].Update(gpuLightsHighRes.size() * sizeof(GPULight), lightsDataPtr);
         g_ssbos["Lights"].Bind(4);
 
         const std::vector<BloodDecalInstanceData>& screenSpaceBloodDecalInstances = RenderDataManager::GetScreenSpaceBloodDecalInstanceData();
-        g_ssbos["BloodDecalInstances"].Update(screenSpaceBloodDecalInstances.size() * sizeof(BloodDecalInstanceData), (void*)&screenSpaceBloodDecalInstances[0]);
+        const void* bloodDecalDataPtr = screenSpaceBloodDecalInstances.empty() ? nullptr : screenSpaceBloodDecalInstances.data();
+        g_ssbos["BloodDecalInstances"].Update(screenSpaceBloodDecalInstances.size() * sizeof(BloodDecalInstanceData), bloodDecalDataPtr);
 
 
         GLuint zero = 0;
@@ -453,11 +458,12 @@ namespace OpenGLRenderer {
         UpdateSSBO("BloodDecalCounter", sizeof(uint32_t), &zero);
         UpdateSSBO("ChristmasLightCounter", sizeof(uint32_t), &zero);
 
-        g_ssbos["BloodDecalInstances"].Update(screenSpaceBloodDecalInstances.size() * sizeof(BloodDecalInstanceData), (void*)&screenSpaceBloodDecalInstances[0]);
+        g_ssbos["BloodDecalInstances"].Update(screenSpaceBloodDecalInstances.size() * sizeof(BloodDecalInstanceData), bloodDecalDataPtr);
 
 
         const std::vector<glm::mat4>& oceanPatchTransforms = RenderDataManager::GetOceanPatchTransforms();
-        UpdateSSBO("OceanPatchTransforms", oceanPatchTransforms.size() * sizeof(glm::mat4), (void*)&oceanPatchTransforms[0]);
+        const void* oceanPatchTransformData = oceanPatchTransforms.empty() ? nullptr : oceanPatchTransforms.data();
+        UpdateSSBO("OceanPatchTransforms", oceanPatchTransforms.size() * sizeof(glm::mat4), oceanPatchTransformData);
 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }

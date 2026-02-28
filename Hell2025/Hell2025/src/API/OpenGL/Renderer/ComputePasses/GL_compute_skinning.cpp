@@ -45,11 +45,15 @@ namespace OpenGLRenderer {
         shader->Bind();
 
         const std::vector<glm::mat4>& skinningTransforms = RenderDataManager::GetSkinningTransforms();
-        skinningTransformsSSBO->Update(skinningTransforms.size() * sizeof(glm::mat4), &skinningTransforms[0]);
+        const void* skinningTransformData = skinningTransforms.empty() ? nullptr : skinningTransforms.data();
+        skinningTransformsSSBO->Update(skinningTransforms.size() * sizeof(glm::mat4), skinningTransformData);
 
         for (const RenderItem& renderItem : RenderDataManager::GetSkinnedRenderItems()) {
             uint32_t meshIndex = renderItem.meshIndex;
             SkinnedMesh* mesh = AssetManager::GetSkinnedMeshByIndex(meshIndex);
+            if (!mesh) {
+                continue;
+            }
 
             shader->SetInt("vertexCount", mesh->vertexCount);
             shader->SetInt("baseInputVertex", mesh->baseVertexGlobal);

@@ -56,7 +56,6 @@ namespace OpenGLRenderer {
 
         if (doTime) {
             g_globalTime += deltaTime;
-            g_globalTime += deltaTime;
         }
         else {
             g_globalTime = 50.0f;
