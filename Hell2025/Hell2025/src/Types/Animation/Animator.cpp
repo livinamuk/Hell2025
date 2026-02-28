@@ -296,6 +296,7 @@ void Animator::UpdateAnimation(AnimationLayer& animationLayer, float deltaTime) 
 float Animator::GetAnimationTimeInTicks(AnimationLayer& animationState) {
     Animation* animation = animationState.m_animation;
     if (!animation) return 0;
+    if (animation->m_duration <= 0.0f) return 0;
 
     float ticksPerSecond = animation->m_ticksPerSecond != 0 ? animation->m_ticksPerSecond : 25.0f;
     float timeInTicks = animationState.m_currentTime * ticksPerSecond;

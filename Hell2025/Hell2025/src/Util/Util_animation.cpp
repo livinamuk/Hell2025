@@ -15,6 +15,10 @@ namespace Util {
     }
 
     int FindAnimatedNodeIndex(float AnimationTime, const AnimatedNode* animatedNode) {
+        if (!animatedNode || animatedNode->m_nodeKeys.empty()) {
+            return -1;
+        }
+
         // bail if current animation time is earlier than the this nodes first keyframe time
         if (AnimationTime < animatedNode->m_nodeKeys[0].timeStamp)
             return -1; // you WERE returning -1 here
@@ -27,6 +31,11 @@ namespace Util {
     }
 
     void CalcInterpolatedPosition(glm::vec3& Out, float AnimationTime, const AnimatedNode* animatedNode) {
+        if (!animatedNode || animatedNode->m_nodeKeys.empty()) {
+            Out = glm::vec3(0.0f);
+            return;
+        }
+
         int Index = FindAnimatedNodeIndex(AnimationTime, animatedNode);
         int NextIndex = (Index + 1);
 
@@ -42,6 +51,10 @@ namespace Util {
             return;
         }
         float DeltaTime = animatedNode->m_nodeKeys[NextIndex].timeStamp - animatedNode->m_nodeKeys[Index].timeStamp;
+        if (DeltaTime == 0.0f) {
+            Out = animatedNode->m_nodeKeys[Index].positon;
+            return;
+        }
         float Factor = (AnimationTime - animatedNode->m_nodeKeys[Index].timeStamp) / DeltaTime;
 
         glm::vec3 start = animatedNode->m_nodeKeys[Index].positon;
@@ -51,6 +64,11 @@ namespace Util {
     }
 
     void CalcInterpolatedScale(glm::vec3& Out, float AnimationTime, const AnimatedNode* animatedNode) {
+        if (!animatedNode || animatedNode->m_nodeKeys.empty()) {
+            Out = glm::vec3(1.0f);
+            return;
+        }
+
         int Index = FindAnimatedNodeIndex(AnimationTime, animatedNode);
         int NextIndex = (Index + 1);
 
@@ -66,6 +84,10 @@ namespace Util {
             return;
         }
         float DeltaTime = animatedNode->m_nodeKeys[NextIndex].timeStamp - animatedNode->m_nodeKeys[Index].timeStamp;
+        if (DeltaTime == 0.0f) {
+            Out = animatedNode->m_nodeKeys[Index].scale;
+            return;
+        }
         float Factor = (AnimationTime - animatedNode->m_nodeKeys[Index].timeStamp) / DeltaTime;
 
         glm::vec3 start = animatedNode->m_nodeKeys[Index].scale;
@@ -75,6 +97,11 @@ namespace Util {
     }
 
     void CalcInterpolatedRotation(glm::quat& Out, float AnimationTime, const AnimatedNode* animatedNode) {
+        if (!animatedNode || animatedNode->m_nodeKeys.empty()) {
+            Out = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+            return;
+        }
+
         int Index = FindAnimatedNodeIndex(AnimationTime, animatedNode);
         int NextIndex = (Index + 1);
 
@@ -90,6 +117,10 @@ namespace Util {
             return;
         }
         float DeltaTime = animatedNode->m_nodeKeys[NextIndex].timeStamp - animatedNode->m_nodeKeys[Index].timeStamp;
+        if (DeltaTime == 0.0f) {
+            Out = animatedNode->m_nodeKeys[Index].rotation;
+            return;
+        }
         float Factor = (AnimationTime - animatedNode->m_nodeKeys[Index].timeStamp) / DeltaTime;
 
         const glm::quat& StartRotationQ = animatedNode->m_nodeKeys[Index].rotation;
