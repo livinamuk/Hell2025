@@ -39,6 +39,11 @@ namespace AssetManager {
     }
 
     int CreateMesh(const std::string& name, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices) {
+        if (vertices.empty()) {
+            std::cout << "AssetManager::CreateMesh(\"" << name << "\") failed: vertices was empty\n";
+            return CreateMesh(name, vertices, indices, glm::vec3(0.0f), glm::vec3(0.0f), -1, glm::mat4(1.0f), glm::mat4(1.0f));
+        }
+
         // Initialize AABB min and max with first vertex
         glm::vec3 aabbMin = vertices[0].position;
         glm::vec3 aabbMax = vertices[0].position;

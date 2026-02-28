@@ -128,7 +128,6 @@ namespace World {
         LoadMapInstancesHeightMapData(mapInstanceCreateInfoSet);
 
 
-        int i = 0;
         for (MapInstanceCreateInfo& mapInstanceCreateInfo : mapInstanceCreateInfoSet) {
             SpawnOffset spawnOffset;
             spawnOffset.translation.x = mapInstanceCreateInfo.spawnOffsetChunkX * HEIGHT_MAP_CHUNK_WORLD_SPACE_SIZE;
@@ -157,10 +156,6 @@ namespace World {
             //christmasTreeCreateInfo.position = glm::vec3(0.78f, 0.15f, 2.25f);
             //christmasTreeCreateInfo.rotation.y = Util::RandomFloat(0, HELL_PI);
             //AddChristmasTree(christmasTreeCreateInfo, spawnOffset);
-
-            Logging::Warning() << "MAKE SURE YOU REMOVE THIS LINE break IT IS DISABLING THE LOAD OF THE SECOND MAP INSTANCE";
-            break;
-            i++;
         }
 
         RecreateHouseMesh();
