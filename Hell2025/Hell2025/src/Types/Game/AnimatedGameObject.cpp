@@ -96,7 +96,13 @@ void AnimatedGameObject::UpdateRenderItems() {
 
                 // Update the model matrix to include the animated bone transform
                 int boneIndex = mesh->nonDeformingBoneIndex;
-                renderItem.modelMatrix = GetModelMatrix() * m_boneSkinningMatrices[boneIndex];
+                const int boneMatrixCount = static_cast<int>(m_boneSkinningMatrices.size());
+                if (boneIndex >= 0 && boneIndex < boneMatrixCount) {
+                    renderItem.modelMatrix = GetModelMatrix() * m_boneSkinningMatrices[boneIndex];
+                }
+                else {
+                    renderItem.modelMatrix = GetModelMatrix();
+                }
                 renderItem.inverseModelMatrix = glm::inverse(renderItem.modelMatrix);
 
 
@@ -208,8 +214,21 @@ void AnimatedGameObject::Update(float deltaTime) {
     // Compute local bone matrices
     int boneCount = m_skinnedModel->GetBoneCount();
     m_boneSkinningMatrices.resize(boneCount);
+
+    const int nodeTransformCount = (int)m_animator.m_globalBlendedNodeTransforms.size();
+    const int boneNodeIndexCount = (int)m_skinnedModel->m_boneNodeIndices.size();
+    const int boneOffsetCount = (int)m_skinnedModel->m_boneOffsets.size();
+
     for (int b = 0; b < boneCount; ++b) {
+        if (b >= boneNodeIndexCount || b >= boneOffsetCount) {
+            continue;
+        }
+
         int nodeIdx = m_skinnedModel->m_boneNodeIndices[b];
+        if (nodeIdx < 0 || nodeIdx >= nodeTransformCount) {
+            continue;
+        }
+
         m_boneSkinningMatrices[b] = m_animator.m_globalBlendedNodeTransforms[nodeIdx] * m_skinnedModel->m_boneOffsets[b];
     }
 

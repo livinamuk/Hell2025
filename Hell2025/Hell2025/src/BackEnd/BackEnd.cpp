@@ -151,18 +151,16 @@ namespace BackEnd {
     }
 
     void UpdateGame() {
-        const Resolutions& resolutions = Config::GetResolutions();
-
-        float deltaTime = Game::GetDeltaTime();
-
         ViewportManager::Update();
+
+        AStarMap::Update();
+        Game::Update();
+        float deltaTime = Game::GetDeltaTime();
 
         if (Editor::IsOpen()) {
             Editor::Update(deltaTime);
         }
 
-        AStarMap::Update();
-        Game::Update();
         MirrorManager::Update();
 
         Physics::UpdateAllRigidDynamics(deltaTime);

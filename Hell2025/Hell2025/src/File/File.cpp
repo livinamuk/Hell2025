@@ -203,7 +203,9 @@ SkinnedModelData File::ImportSkinnedModel(const std::string& filepath) {
 
     // Read the name
     std::string modelName(skinnedModelHeader.nameLength, '\0');
-    file.read(&modelName[0], skinnedModelHeader.nameLength);
+    if (skinnedModelHeader.nameLength > 0) {
+        file.read(&modelName[0], skinnedModelHeader.nameLength);
+    }
 
     #if PRINT_SKINNED_MODEL_HEADERS_ON_READ
     PrintSkinnedModelHeader(skinnedModelHeader, "Read model header: '" + modelName + "'");
@@ -226,7 +228,9 @@ SkinnedModelData File::ImportSkinnedModel(const std::string& filepath) {
         // Read node name
         std::string nodeName;
         nodeName.resize(nodeNameLength);
-        file.read(&nodeName[0], nodeNameLength);
+        if (nodeNameLength > 0) {
+            file.read(&nodeName[0], nodeNameLength);
+        }
 
         // Read parent index
         int parentIndex = 0;
@@ -262,7 +266,9 @@ SkinnedModelData File::ImportSkinnedModel(const std::string& filepath) {
         // Read the bone name into a string
         std::string boneName;
         boneName.resize(nameLength);
-        file.read(&boneName[0], nameLength);
+        if (nameLength > 0) {
+            file.read(&boneName[0], nameLength);
+        }
 
         // Read the corresponding bone index
         unsigned int boneIndex = 0;
@@ -290,7 +296,9 @@ SkinnedModelData File::ImportSkinnedModel(const std::string& filepath) {
 
         // Read the mesh name.
         std::string meshName(nameLength, '\0');
-        file.read(&meshName[0], nameLength);
+        if (nameLength > 0) {
+            file.read(&meshName[0], nameLength);
+        }
 
         // Read the AABB values.
         glm::vec3 aabbMin;

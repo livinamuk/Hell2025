@@ -45,16 +45,37 @@ namespace OpenGLRenderer {
         shader->Bind();
 
         const std::vector<glm::mat4>& skinningTransforms = RenderDataManager::GetSkinningTransforms();
-        skinningTransformsSSBO->Update(skinningTransforms.size() * sizeof(glm::mat4), &skinningTransforms[0]);
+        const void* skinningTransformData = skinningTransforms.empty() ? nullptr : skinningTransforms.data();
+        skinningTransformsSSBO->Update(skinningTransforms.size() * sizeof(glm::mat4), skinningTransformData);
 
         for (const RenderItem& renderItem : RenderDataManager::GetSkinnedRenderItems()) {
             uint32_t meshIndex = renderItem.meshIndex;
             SkinnedMesh* mesh = AssetManager::GetSkinnedMeshByIndex(meshIndex);
+            if (!mesh || mesh->vertexCount == 0) {
+                continue;
+            }
+
+            const int32_t baseTransformIndex = renderItem.baseSkinningTransformIndex;
+            if (baseTransformIndex < 0 || static_cast<size_t>(baseTransformIndex) >= skinningTransforms.size()) {
+                continue;
+            }
+
+            uint64_t objectId = 0;
+            Util::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, objectId);
+            AnimatedGameObject* animatedGameObject = World::GetAnimatedGameObjectByObjectId(objectId);
+            if (!animatedGameObject) {
+                continue;
+            }
+
+            const size_t boneCount = animatedGameObject->GetBoneSkinningMatrices().size();
+            if (boneCount == 0 || static_cast<size_t>(baseTransformIndex) + boneCount > skinningTransforms.size()) {
+                continue;
+            }
 
             shader->SetInt("vertexCount", mesh->vertexCount);
             shader->SetInt("baseInputVertex", mesh->baseVertexGlobal);
             shader->SetInt("baseOutputVertex", renderItem.baseSkinnedVertex);
-            shader->SetInt("baseTransformIndex", renderItem.baseSkinningTransformIndex);
+            shader->SetInt("baseTransformIndex", baseTransformIndex);
 
             GLuint workgroupSize = 128;
             GLuint groupCountX = (mesh->vertexCount + workgroupSize - 1) / workgroupSize;

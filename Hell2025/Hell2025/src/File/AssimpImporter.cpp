@@ -289,15 +289,16 @@ namespace AssimpImporter {
             bool allVerticeHaveOnlyOneWeight = true;
 
             for (WeightedVertex& vertex : meshData.vertices) {
-                if (vertex.weight.y != 0 &&
-                    vertex.weight.z != 0 &&
+                if (vertex.weight.y != 0 ||
+                    vertex.weight.z != 0 ||
                     vertex.weight.w != 0) {
                     allVerticeHaveOnlyOneWeight = false;
+                    break;
                 }
             }
 
             // If they do, now check they all reference the same bone
-            int foundBoneIndex = meshData.vertices[0].boneID[0];
+            int foundBoneIndex = meshData.vertices.empty() ? -1 : meshData.vertices[0].boneID[0];
             bool allVerticesAlsoOnlyReferenceTheSameBone = true;
 
             if (allVerticeHaveOnlyOneWeight) {

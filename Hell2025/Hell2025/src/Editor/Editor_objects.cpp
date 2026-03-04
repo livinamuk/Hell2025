@@ -189,7 +189,7 @@ namespace Editor {
 
             if (Piano* piano = World::GetPianoByObjectId(GetSelectedObjectId())) {
                 Gizmo::SetPosition(piano->GetPosition());
-                Gizmo::SetRotation(piano->GetPosition());
+                Gizmo::SetRotation(piano->GetRotation());
             }
 
             if (PickUp* pickup = World::GetPickUpByObjectId(GetSelectedObjectId())) {

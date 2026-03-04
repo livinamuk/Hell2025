@@ -3,6 +3,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <algorithm>
 #include <future>
 
 namespace AssetManager {
@@ -22,66 +23,81 @@ namespace AssetManager {
     void LoadAnimation(Animation* animation) {
         const FileInfo& fileInfo = animation->GetFileInfo();
 
-        aiScene* m_pAnimationScene;
         Assimp::Importer m_AnimationImporter;
 
         // Try and load the animation
-        const aiScene* tempAnimScene = m_AnimationImporter.ReadFile(fileInfo.path.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs);
+        const aiScene* animationScene = m_AnimationImporter.ReadFile(fileInfo.path.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs);
 
         // Failed
-        if (!tempAnimScene) {
+        if (!animationScene) {
             std::cout << "Could not load: " << fileInfo.path << "\n";
+            animation->SetLoadingState(LoadingState::Value::LOADING_COMPLETE);
             return;
         }
 
-        // Success
-        m_pAnimationScene = new aiScene(*tempAnimScene);
-        if (m_pAnimationScene) {
-            if (m_pAnimationScene->mNumAnimations == 0) {
-                std::cout << "ATTENTION! " << animation->GetName() << " has zero animations\n";
-            }
-            else {
-                animation->m_duration = (float)m_pAnimationScene->mAnimations[0]->mDuration;
-                animation->m_ticksPerSecond = (float)m_pAnimationScene->mAnimations[0]->mTicksPerSecond;
-                //std::cout << "Loaded animation: " << Filename << "\n";
-            }
+        if (animationScene->mNumAnimations == 0 || animationScene->mAnimations[0] == nullptr) {
+            std::cout << "ATTENTION! " << animation->GetName() << " has zero animations\n";
+            m_AnimationImporter.FreeScene();
+            animation->SetLoadingState(LoadingState::Value::LOADING_COMPLETE);
+            return;
         }
-        // Some other error possibility
-        else {
-            std::cout << "Error parsing " << fileInfo.path << ": " << m_AnimationImporter.GetErrorString();
-        }
+
+        animation->m_duration = (float)animationScene->mAnimations[0]->mDuration;
+        animation->m_ticksPerSecond = (float)animationScene->mAnimations[0]->mTicksPerSecond;
 
         // need to create an animation clip.
         // need to fill it with animation poses.
-        aiAnimation* aiAnim = m_pAnimationScene->mAnimations[0];
+        aiAnimation* aiAnim = animationScene->mAnimations[0];
 
         // Resize the vector big enough for each pose
-        int nodeCount = aiAnim->mNumChannels;
+        int nodeCount = (int)aiAnim->mNumChannels;
          // trying the assimp way now. coz why fight it.
         for (int n = 0; n < nodeCount; n++)
         {
+            if (!aiAnim->mChannels[n]) {
+                continue;
+            }
+
             const char* nodeName = Util::CopyConstChar(aiAnim->mChannels[n]->mNodeName.C_Str());
 
             AnimatedNode animatedNode(nodeName);
             animation->m_NodeMapping.emplace(nodeName, n);
 
-            //for (unsigned int p = 0; p < aiAnim->mChannels[n]->mNumPositionKeys; p++)
-            unsigned int numPosKeys = aiAnim->mChannels[n]->mNumPositionKeys;
-            unsigned int numRotKeys = aiAnim->mChannels[n]->mNumRotationKeys;
-            unsigned int numScaleKeys = aiAnim->mChannels[n]->mNumScalingKeys;
+            const aiNodeAnim* channel = aiAnim->mChannels[n];
+            unsigned int numPosKeys = channel->mNumPositionKeys;
+            unsigned int numRotKeys = channel->mNumRotationKeys;
+            unsigned int numScaleKeys = channel->mNumScalingKeys;
             unsigned int keyCount = std::max({ numPosKeys, numRotKeys, numScaleKeys });
+
+            if (keyCount == 0) {
+                continue;
+            }
 
             for (unsigned int p = 0; p < keyCount; ++p)
             {
                 SQT sqt;
-                aiVectorKey pos = aiAnim->mChannels[n]->mPositionKeys[p];
-                aiQuatKey rot = aiAnim->mChannels[n]->mRotationKeys[p];
-                aiVectorKey scale = aiAnim->mChannels[n]->mScalingKeys[p];
+                sqt.positon = glm::vec3(0.0f);
+                sqt.rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+                sqt.scale = glm::vec3(1.0f);
+                sqt.timeStamp = 0.0f;
 
-                sqt.positon = glm::vec3(pos.mValue.x, pos.mValue.y, pos.mValue.z);
-                sqt.rotation = glm::quat(rot.mValue.w, rot.mValue.x, rot.mValue.y, rot.mValue.z);
-                sqt.scale = glm::vec3(scale.mValue.x, scale.mValue.y, scale.mValue.z);
-                sqt.timeStamp = (float)pos.mTime;
+                if (numPosKeys > 0) {
+                    const aiVectorKey& pos = channel->mPositionKeys[std::min(p, numPosKeys - 1)];
+                    sqt.positon = glm::vec3(pos.mValue.x, pos.mValue.y, pos.mValue.z);
+                    sqt.timeStamp = (float)pos.mTime;
+                }
+
+                if (numRotKeys > 0) {
+                    const aiQuatKey& rot = channel->mRotationKeys[std::min(p, numRotKeys - 1)];
+                    sqt.rotation = glm::quat(rot.mValue.w, rot.mValue.x, rot.mValue.y, rot.mValue.z);
+                    sqt.timeStamp = std::max(sqt.timeStamp, (float)rot.mTime);
+                }
+
+                if (numScaleKeys > 0) {
+                    const aiVectorKey& scale = channel->mScalingKeys[std::min(p, numScaleKeys - 1)];
+                    sqt.scale = glm::vec3(scale.mValue.x, scale.mValue.y, scale.mValue.z);
+                    sqt.timeStamp = std::max(sqt.timeStamp, (float)scale.mTime);
+                }
 
                 // not good: sqt.positon = Util::SanitizeVec3(sqt.positon);
                 // not good: sqt.rotation = Util::SanitizeQuat(sqt.rotation);

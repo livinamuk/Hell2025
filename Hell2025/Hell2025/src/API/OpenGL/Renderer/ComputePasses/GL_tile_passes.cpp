@@ -61,7 +61,8 @@ namespace OpenGLRenderer {
             g_gpuLights.insert(g_gpuLights.end(), gpuLights.begin(), gpuLights.end());
         }
 
-        UpdateSSBO("ChristmasLightInstances", g_gpuLights.size() * sizeof(GPUChristmasLight), (void*)&g_gpuLights[0]);
+        const void* christmasLightData = g_gpuLights.empty() ? nullptr : g_gpuLights.data();
+        UpdateSSBO("ChristmasLightInstances", g_gpuLights.size() * sizeof(GPUChristmasLight), christmasLightData);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
         // Debug draw the lights as points

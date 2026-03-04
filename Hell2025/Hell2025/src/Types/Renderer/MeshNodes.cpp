@@ -212,11 +212,9 @@ bool MeshNodes::MeshNodeIsOpen(const std::string& meshName) {
     if (!meshNode) return false;
 
     if (Openable* openable = OpenableManager::GetOpenableByOpenableId(meshNode->openableId)) {
-        if (openable->IsOpen()) {
-            return false;
-        }
+        return openable->IsOpen();
     }
-    return true;
+    return false;
 }
 
 bool MeshNodes::MeshNodeIsClosed(const std::string& meshName) {
@@ -224,11 +222,9 @@ bool MeshNodes::MeshNodeIsClosed(const std::string& meshName) {
     if (!meshNode) return false;
 
     if (Openable* openable = OpenableManager::GetOpenableByOpenableId(meshNode->openableId)) {
-        if (openable->IsClosed()) {
-            return false;
-        }
+        return openable->IsClosed();
     }
-    return true;
+    return false;
 }
 
 bool MeshNodes::MeshNodeIsStatic(int localNodeIndex) {

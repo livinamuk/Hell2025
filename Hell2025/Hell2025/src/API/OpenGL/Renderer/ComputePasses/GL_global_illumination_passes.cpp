@@ -32,6 +32,9 @@ namespace OpenGLRenderer {
 
         OpenGLSSBO* pointGridBufferSSBO = GetSSBO("PointGridBuffer");
         OpenGLSSBO* pointIndicesBufferSSBO = GetSSBO("PointIndicesBuffer");
+        if (!triangleDataSSBO || !sceneBvhSSBO || !meshesBvhSSBO || !entityInstancesSSBO || !lightsSSBO || !pointGridBufferSSBO || !pointIndicesBufferSSBO) {
+            return;
+        }
         
         uint64_t sceneBvhId = GlobalIllumination::GetSceneBvhId();
 
@@ -42,12 +45,19 @@ namespace OpenGLRenderer {
         std::vector<PointCloudOctrant>& pointCloudOctrants = GlobalIllumination::GetPointCloudOctrants();
         std::vector<unsigned int>& pointIndices = GlobalIllumination::GetPointIndices();
 
-        UpdateSSBO("SceneBvh", sceneNodes.size() * sizeof(BvhNode), &sceneNodes[0]);
-        UpdateSSBO("MeshesBvh", meshBvhNodes.size() * sizeof(BvhNode), &meshBvhNodes[0]);
-        UpdateSSBO("EntityInstances", entityInstances.size() * sizeof(GpuPrimitiveInstance), &entityInstances[0]);
-        UpdateSSBO("TriangleData", triData.size() * sizeof(float), &triData[0]);
-        UpdateSSBO("PointGridBuffer", pointCloudOctrants.size() * sizeof(PointCloudOctrant), &pointCloudOctrants[0]);
-        UpdateSSBO("PointIndicesBuffer", pointIndices.size() * sizeof(unsigned int), &pointIndices[0]);
+        const void* sceneNodeData = sceneNodes.empty() ? nullptr : sceneNodes.data();
+        const void* meshBvhNodeData = meshBvhNodes.empty() ? nullptr : meshBvhNodes.data();
+        const void* entityInstanceData = entityInstances.empty() ? nullptr : entityInstances.data();
+        const void* triDataPtr = triData.empty() ? nullptr : triData.data();
+        const void* pointCloudOctrantData = pointCloudOctrants.empty() ? nullptr : pointCloudOctrants.data();
+        const void* pointIndexData = pointIndices.empty() ? nullptr : pointIndices.data();
+
+        UpdateSSBO("SceneBvh", sceneNodes.size() * sizeof(BvhNode), sceneNodeData);
+        UpdateSSBO("MeshesBvh", meshBvhNodes.size() * sizeof(BvhNode), meshBvhNodeData);
+        UpdateSSBO("EntityInstances", entityInstances.size() * sizeof(GpuPrimitiveInstance), entityInstanceData);
+        UpdateSSBO("TriangleData", triData.size() * sizeof(float), triDataPtr);
+        UpdateSSBO("PointGridBuffer", pointCloudOctrants.size() * sizeof(PointCloudOctrant), pointCloudOctrantData);
+        UpdateSSBO("PointIndicesBuffer", pointIndices.size() * sizeof(unsigned int), pointIndexData);
 
         //std::cout << "pointCloudOctrants.size(): " << pointCloudOctrants.size() << "\n";
         //std::cout << "pointIndices.size(): " << pointIndices.size() << "\n";
@@ -68,7 +78,7 @@ namespace OpenGLRenderer {
             glGenBuffers(1, &g_pointCloudVbo);
         }
 
-        std::vector<CloudPoint>& pointCloud = GlobalIllumination::GetPointClound();
+        std::vector<CloudPoint>& pointCloud = GlobalIllumination::GetPointCloud();
         std::vector<PointCloudOctrant>& pointCloudOctrants = GlobalIllumination::GetPointCloudOctrants();
         std::vector<unsigned int>& pointIndics = GlobalIllumination::GetPointIndices();
 
@@ -104,7 +114,7 @@ namespace OpenGLRenderer {
         shader->Bind();
         shader->SetInt("u_lightCount", World::GetLightCount());
 
-        GLuint numGroupsX = (GlobalIllumination::GetPointClound().size() + 127) / 128;
+        GLuint numGroupsX = (GlobalIllumination::GetPointCloud().size() + 127) / 128;
 
         glDispatchCompute(numGroupsX, 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -150,7 +160,7 @@ namespace OpenGLRenderer {
         glDisable(GL_CULL_FACE);
         glDisable(GL_BLEND);
 
-        std::vector<CloudPoint>& pointCloud = GlobalIllumination::GetPointClound();
+        std::vector<CloudPoint>& pointCloud = GlobalIllumination::GetPointCloud();
         int pointCloudCount = pointCloud.size();
 
         for (int i = 0; i < 4; i++) {

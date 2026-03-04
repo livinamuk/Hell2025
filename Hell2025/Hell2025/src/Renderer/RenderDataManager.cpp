@@ -570,7 +570,11 @@ namespace RenderDataManager {
 
         for (const RenderItem& renderItem : renderItems) {
             SkinnedMesh* mesh = AssetManager::GetSkinnedMeshByIndex(renderItem.meshIndex);
-            std::size_t index = commands.size();
+            if (!mesh) {
+                instanceOffset++;
+                continue;
+            }
+
             auto& cmd = commands.emplace_back();
             cmd.indexCount = mesh->indexCount;
             cmd.firstIndex = mesh->baseIndex;
@@ -586,7 +590,11 @@ namespace RenderDataManager {
 
         for (const RenderItem& renderItem : renderItems) {
             SkinnedMesh* mesh = AssetManager::GetSkinnedMeshByIndex(renderItem.meshIndex);
-            std::size_t index = commands.size();
+            if (!mesh) {
+                instanceOffset++;
+                continue;
+            }
+
             auto& cmd = commands.emplace_back();
             cmd.indexCount = mesh->indexCount;
             cmd.firstIndex = mesh->baseIndex;
@@ -606,38 +614,49 @@ namespace RenderDataManager {
         // Create the transforms buffer
         std::unordered_map<uint64_t, uint32_t> transformIndexMap; // Maps an AnimatedGameObject Id to its base transform index
         uint32_t baseTransformIndex = 0;
+        int32_t baseSkinnedVertex = 0;
+        std::vector<RenderItem> validSkinnedRenderItems;
+        validSkinnedRenderItems.reserve(g_skinnedRenderItems.size());
 
-        for (RenderItem& renderItem : g_skinnedRenderItems) {
+        for (RenderItem renderItem : g_skinnedRenderItems) {
             uint64_t id = 0;
             Util::UnpackUint64(renderItem.objectIdLowerBit, renderItem.objectIdUpperBit, id);
 
             AnimatedGameObject* animatedGameObject = World::GetAnimatedGameObjectByObjectId(id);
-            if (!animatedGameObject) continue;
+            if (!animatedGameObject) {
+                continue;
+            }
+
+            const std::vector<glm::mat4>& boneSkinningMatrices = animatedGameObject->GetBoneSkinningMatrices();
+            if (boneSkinningMatrices.empty()) {
+                continue;
+            }
+
+            SkinnedMesh* mesh = AssetManager::GetSkinnedMeshByIndex(renderItem.meshIndex);
+            if (!mesh || mesh->vertexCount == 0) {
+                continue;
+            }
 
             // Add the id if aint in the map yet
             if (transformIndexMap.find(id) == transformIndexMap.end()) {
                 transformIndexMap[id] = baseTransformIndex;
 
                 // Append skinning matrices to global array
-                g_skinningTransforms.insert(g_skinningTransforms.end(), animatedGameObject->GetBoneSkinningMatrices().begin(), animatedGameObject->GetBoneSkinningMatrices().end());
+                g_skinningTransforms.insert(g_skinningTransforms.end(), boneSkinningMatrices.begin(), boneSkinningMatrices.end());
 
                 // Set the base transform index for the next animated game object
-                baseTransformIndex = g_skinningTransforms.size();
+                baseTransformIndex = static_cast<uint32_t>(g_skinningTransforms.size());
             }
 
             // Update render item with the base transform index
-            renderItem.baseSkinningTransformIndex = transformIndexMap[id];
-        }
-
-        // Set their base vertices
-        int baseSkinnedVertex = 0;
-        for (RenderItem& renderItem : g_skinnedRenderItems) {
-            SkinnedMesh* mesh = AssetManager::GetSkinnedMeshByIndex(renderItem.meshIndex);
-            if (!mesh) continue;
+            renderItem.baseSkinningTransformIndex = static_cast<int32_t>(transformIndexMap[id]);
 
             renderItem.baseSkinnedVertex = baseSkinnedVertex;
-            baseSkinnedVertex += mesh->vertexCount;
+            baseSkinnedVertex += static_cast<int32_t>(mesh->vertexCount);
+            validSkinnedRenderItems.push_back(renderItem);
         }
+
+        g_skinnedRenderItems.swap(validSkinnedRenderItems);
 
         // Create the per viewport draw commands
         for (int i = 0; i < 4; i++) {

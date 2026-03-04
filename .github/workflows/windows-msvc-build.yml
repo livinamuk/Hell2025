@@ -1,0 +1,26 @@
+name: Windows MSVC Build
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build Hell2025.sln (Release|x64)
+        shell: pwsh
+        run: |
+          msbuild "Hell2025/Hell2025.sln" /m /t:Build /p:Configuration=Release /p:Platform=x64 /verbosity:minimal

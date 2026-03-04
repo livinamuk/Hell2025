@@ -69,8 +69,6 @@ void Player::UpdateFlashlight(float deltaTime) {
     m_flashlightPosition = Util::LerpVec3(m_flashlightPosition, flashlightPositionTarget, deltaTime, interSpeed);
     m_flashlightDirection = Util::LerpVec3(m_flashlightDirection, flashlightDirectionTarget, deltaTime, interSpeed);
 
-    m_flashlightPosition = flashlightPositionTarget;
-
     float aspectRatio = 1.0f;
     //if (RenderDataManager::GetViewportData().size()) {
     //    float viewportWidth = RenderDataManager::GetViewportData()[m_viewportIndex].width;
