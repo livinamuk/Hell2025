@@ -66,8 +66,5 @@ void main() {
     vec3 rayFogColor = mix(horizonColor, downColor, colorT) * amount;
     vec3 outColor = mix(skyLinear, rayFogColor, fogT);
 
-    outColor = Tonemap_ACES(outColor);
-    outColor = pow(outColor, vec3(1.0 / 2.2));
-
     out_color = vec4(outColor, 1.0);
 }

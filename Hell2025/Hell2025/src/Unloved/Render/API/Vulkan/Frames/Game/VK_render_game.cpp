@@ -21,6 +21,7 @@ namespace VulkanRenderer {
         PostProcessingPass(frame.commandBuffer);
 
         DebugViewPass(frame.commandBuffer);
+        ComputeDebugTileViewPass(frame.commandBuffer);
 
         BlitImage(frame.commandBuffer, "Lighting", "FinalImage", VK_FILTER_LINEAR);
         BlitImage(frame.commandBuffer, "FinalImage", "Present", VK_FILTER_NEAREST);

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -253,11 +253,13 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Create\GL_create_texture_arrays.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer_debug.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_debug_tile_view.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_hair_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_debug_view_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_debug_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_lighting_forward_blended_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_post_processing_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_skybox_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_tile_culling_passes.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\RayTracing\VK_acceleration_structure_utils.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\RayTracing\VK_raytracing_scene.cpp" />
     <ClCompile Include="src\Unloved\Render\API\Vulkan\RayTracing\VK_transient_blas_builder.cpp" />
@@ -662,6 +664,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.vert" />
     <None Include="res\shaders\Vulkan\VK_compute_skinning.comp" />
     <None Include="res\shaders\Vulkan\VK_compute_red_test.comp" />
+    <None Include="res\shaders\Vulkan\VK_debug_tile_view.comp" />
     <None Include="res\shaders\Vulkan\VK_fullscreen_triangle.vert" />
     <None Include="res\shaders\Vulkan\VK_material_resolve.frag" />
     <None Include="res\shaders\Vulkan\VK_post_processing.comp" />

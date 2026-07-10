@@ -63,7 +63,6 @@ namespace VulkanRenderer {
         VkDeviceSize viewportDataBufferSize = sizeof(ViewportData) * viewportData.size();
         EnsureBufferSize(viewportDataBuffer, viewportDataBufferSize);
         UpdateBuffer(viewportDataBuffer, viewportData.data(), viewportDataBufferSize);
-
     }
 
     void UpdateBuffersUI() {

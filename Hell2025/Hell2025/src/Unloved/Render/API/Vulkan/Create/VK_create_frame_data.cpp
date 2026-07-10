@@ -5,9 +5,11 @@
 #include "Hell/Render/VertexAttributes.h"
 #include "Hell/ResourceManagement/Types/Material.h"
 #include "Hell/UI/UITypes.h"
+
 #include "Unloved/Common/Constants.h"
 #include "Unloved/Render/RendererConstants.h"
 #include "Unloved/Render/RendererTypes.h"
+#include "Unloved/Render/Renderer.h"
 
 #include <glm/mat4x4.hpp>
 
@@ -21,8 +23,10 @@ namespace VulkanRenderer {
         VmaAllocationCreateFlags vmaFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
         VkDeviceSize dummySize = 64;
+        VkDeviceSize tileCount = Unloved::Renderer::GetTileCount();
 
         for (VulkanFrameData& frameData : g_frameData) {
+            frameData.accelerationStructures.rayQueryTLAS = VulkanResourceManager::CreateAccelerationStructure();
             frameData.buffers.instanceData = VulkanResourceManager::CreateBuffer(dummySize, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.viewportData = VulkanResourceManager::CreateBuffer(sizeof(ViewportData) * MAX_VIEWPORT_COUNT, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.rendererData = VulkanResourceManager::CreateBuffer(sizeof(RendererData), usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
@@ -36,8 +40,9 @@ namespace VulkanRenderer {
             frameData.buffers.rayQueryGeometryData = VulkanResourceManager::CreateBuffer(1, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.buffers.rayQueryScratch = VulkanResourceManager::CreateBuffer(1, usageRayQueryScratch, VMA_MEMORY_USAGE_AUTO);
             frameData.buffers.uiRenderItems = VulkanResourceManager::CreateBuffer(dummySize * VULKAN_MAX_UI_RENDER_ITEMS, usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.buffers.tileLights = VulkanResourceManager::CreateBuffer(tileCount * sizeof(TileLights), usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
+            frameData.buffers.tileWorldBounds = VulkanResourceManager::CreateBuffer(tileCount * sizeof(TileWorldBounds), usageStorage, VMA_MEMORY_USAGE_AUTO, vmaFlags);
             frameData.genericMeshes.ui = VulkanResourceManager::CreateGenericMesh();
-            frameData.accelerationStructures.rayQueryTLAS = VulkanResourceManager::CreateAccelerationStructure();
         }
     }
 }

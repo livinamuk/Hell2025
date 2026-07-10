@@ -72,8 +72,13 @@ namespace VulkanRenderer {
     void LightingForwardBlendedPass(VkCommandBuffer commandBuffer);
     void SkyboxPass(VkCommandBuffer commandBuffer);
     void DebugViewPass(VkCommandBuffer commandBuffer);
+    void ComputeDebugTileViewPass(VkCommandBuffer commandBuffer);
     void HairPass(VkCommandBuffer commandBuffer);
     void PostProcessingPass(VkCommandBuffer commandBuffer);
+
+    // Tile culling passes
+    void ComputeTileWorldBounds(VkCommandBuffer commandBuffer);
+    void LightCullingPass(VkCommandBuffer commandBuffer);
 
     // Present Pass
     void PresentPass(VkCommandBuffer commandBuffer, VkImageView imageView);

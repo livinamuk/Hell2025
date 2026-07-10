@@ -38,6 +38,13 @@ namespace {
         pipeline.Build();
     }
 
+    void CreateDebugTileView() {
+        VulkanPipeline& pipeline = VulkanResourceManager::CreatePipeline("DebugTileView");
+        pipeline.SetShader("DebugTileView");
+        pipeline.AddDescriptorSetLayout("StaticDescriptorSet");
+        pipeline.Build();
+    }
+
     // Material Resolve
 
     void CreateMaterialResolvePipeline() {
@@ -197,6 +204,11 @@ namespace {
 namespace VulkanRenderer {
 
     void CreatePipelines() {
+
+        // Debug
+        CreateDebugTileView();
+        CreateDebugViewPipeline();
+
         // Loading screen
         CreateLoadingScreenPipeline();
 
@@ -208,7 +220,6 @@ namespace VulkanRenderer {
         CreateLightingDeferredPipeline();
         CreateLightingForwardBlendedPipeline();
         CreateSkyboxPipeline();
-        CreateDebugViewPipeline();
 
         // Misc
         CreateComputeRedTestPipeline();

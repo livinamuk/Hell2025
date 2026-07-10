@@ -1,0 +1,29 @@
+#version 460
+#extension GL_EXT_nonuniform_qualifier : require
+
+#include "../common/constants.glsl"
+#include "../common/Vulkan/binding_indices.glsl"
+
+layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
+
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2D storageImagesRGBA16F[];
+
+void main() {
+    ivec2 texel = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 targetSize = imageSize(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING]);
+
+    if (texel.x >= targetSize.x || texel.y >= targetSize.y) return;
+
+    vec4 color = imageLoad(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], texel);
+    imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], texel, color);
+
+    // TODO
+    //
+    // actually read from the Tile Based Deferred data structures
+    //
+
+    // Lines
+	if (gl_LocalInvocationIndex.x < TILE_SIZE || gl_LocalInvocationIndex.x % TILE_SIZE == 0 || gl_LocalInvocationIndex.x < TILE_SIZE || gl_LocalInvocationIndex.x % TILE_SIZE == 1) {
+        imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], texel, vec4(0, 0, 0, 1));
+	}
+}

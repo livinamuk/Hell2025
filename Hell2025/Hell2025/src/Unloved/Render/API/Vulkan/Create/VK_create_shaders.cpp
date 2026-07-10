@@ -8,6 +8,7 @@ namespace VulkanRenderer {
 
         // Debug
         VulkanResourceManager::CreateShader("DebugView", { "VK_fullscreen_triangle.vert", "VK_debug_view.frag" });
+        VulkanResourceManager::CreateShader("DebugTileView", { "VK_debug_tile_view.comp" });
 
         // Compute
         VulkanResourceManager::CreateShader("ComputeSkinning", { "VK_compute_skinning.comp" });

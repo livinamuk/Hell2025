@@ -15,14 +15,16 @@ struct VulkanFrameData {
         uint64_t lights = 0;
         uint64_t materials = 0;
         uint64_t drawCommands = 0;
-        uint64_t skinningTransforms = 0;
-        uint64_t skinnedVertices = 0;
         uint64_t rayQueryInstances = 0;
         uint64_t rayQueryInstanceData = 0;
         uint64_t rayQueryGeometryData = 0;
         uint64_t rayQueryScratch = 0;
+        uint64_t skinningTransforms = 0;
+        uint64_t skinnedVertices = 0;
+        uint64_t tileLights = 0;
+        uint64_t tileWorldBounds = 0;
         uint64_t uiRenderItems = 0;
-    } buffers;
+      } buffers;
 
     struct GenericMeshes {
         uint64_t ui = 0;
