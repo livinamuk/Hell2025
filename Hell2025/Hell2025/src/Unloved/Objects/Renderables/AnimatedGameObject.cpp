@@ -254,7 +254,7 @@ void AnimatedGameObject::UpdateDirtyBounds() {
             dirtyBounds.boundsMax = glm::max(boundsMax, boundsMaxLastFrame);
         }
 
-        DirtyTracker::AddDirtyBounds(dirtyBounds);
+        DirtyTracker::AddDynamicDirtyBounds(dirtyBounds);
     }
 
     m_skinnedAABBLastFrame = m_skinnedAABB;

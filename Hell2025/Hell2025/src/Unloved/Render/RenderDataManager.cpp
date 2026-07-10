@@ -61,7 +61,10 @@ namespace Unloved::RenderDataManager {
     std::vector<RenderItem> g_renderItemsStainedGlass;
     std::vector<RenderItem> g_renderItemsToiletWater;
 
-    std::vector<RenderItem> g_renderItemsPointLightShadows;
+    std::vector<RenderItem> g_renderItemsStaticPointLightShadows;
+    std::vector<RenderItem> g_renderItemsDynamicPointLightShadows;
+
+
     std::vector<RenderItem> g_renderItemsMoonLightShadows;
 
     // Emissive
@@ -167,7 +170,9 @@ namespace Unloved::RenderDataManager {
         g_renderItemsHair.clear();
         g_renderItemsEmissive.clear();
 
-        g_renderItemsPointLightShadows.clear();
+        g_renderItemsStaticPointLightShadows.clear();
+        g_renderItemsDynamicPointLightShadows.clear();
+
         g_renderItemsMoonLightShadows.clear();
 
         // Think about better names for these containers below
@@ -493,7 +498,9 @@ namespace Unloved::RenderDataManager {
         SortRenderItems(g_renderItemsPlastic);
         SortRenderItemsByMeshId(g_renderItemsProcedural);
 
-        SortRenderItems(g_renderItemsPointLightShadows);
+        SortRenderItems(g_renderItemsStaticPointLightShadows);
+        SortRenderItems(g_renderItemsDynamicPointLightShadows);
+
         SortRenderItems(g_renderItemsMoonLightShadows);
 
         SortRenderItems(g_renderItemsEmissive);
@@ -593,32 +600,64 @@ namespace Unloved::RenderDataManager {
         // Clear all existing draw commands
         for (int shadowMapIndex = 0; shadowMapIndex < MAX_SHADOW_MAP_ARRAY_LEVELS; shadowMapIndex++) {
             for (int faceIndex = 0; faceIndex < 6; faceIndex++) {
-                set.hiResShadowMapDrawCommands.assetGeometry[shadowMapIndex][faceIndex].clear();
-                set.hiResShadowMapDrawCommands.assetGeometryAlphaDiscard[shadowMapIndex][faceIndex].clear();
-                set.hiResShadowMapDrawCommands.assetGeometryHair[shadowMapIndex][faceIndex].clear();
-                set.hiResShadowMapDrawCommands.assetGeometrySkinned[shadowMapIndex][faceIndex].clear();
-                set.hiResShadowMapDrawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][faceIndex].clear();
-                set.hiResShadowMapDrawCommands.assetGeometrySkinnedHair[shadowMapIndex][faceIndex].clear();
-                set.hiResShadowMapDrawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][faceIndex].clear();
-                set.hiResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][faceIndex].clear();
-                set.hiResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][faceIndex].clear();
-                set.hiResShadowMapDrawCommands.procedural[shadowMapIndex][faceIndex].clear();
+                set.staticHiResShadowMapDrawCommands.assetGeometry[shadowMapIndex][faceIndex].clear();
+                set.staticHiResShadowMapDrawCommands.assetGeometryAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.staticHiResShadowMapDrawCommands.assetGeometryHair[shadowMapIndex][faceIndex].clear();
+                set.staticHiResShadowMapDrawCommands.assetGeometrySkinned[shadowMapIndex][faceIndex].clear();
+                set.staticHiResShadowMapDrawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.staticHiResShadowMapDrawCommands.assetGeometrySkinnedHair[shadowMapIndex][faceIndex].clear();
+                set.staticHiResShadowMapDrawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][faceIndex].clear();
+                set.staticHiResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.staticHiResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][faceIndex].clear();
+                set.staticHiResShadowMapDrawCommands.procedural[shadowMapIndex][faceIndex].clear();
 
-                set.lowResShadowMapDrawCommands.assetGeometry[shadowMapIndex][faceIndex].clear();
-                set.lowResShadowMapDrawCommands.assetGeometryAlphaDiscard[shadowMapIndex][faceIndex].clear();
-                set.lowResShadowMapDrawCommands.assetGeometryHair[shadowMapIndex][faceIndex].clear();
-                set.lowResShadowMapDrawCommands.assetGeometrySkinned[shadowMapIndex][faceIndex].clear();
-                set.lowResShadowMapDrawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][faceIndex].clear();
-                set.lowResShadowMapDrawCommands.assetGeometrySkinnedHair[shadowMapIndex][faceIndex].clear();
-                set.lowResShadowMapDrawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][faceIndex].clear();
-                set.lowResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][faceIndex].clear();
-                set.lowResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][faceIndex].clear();
-                set.lowResShadowMapDrawCommands.procedural[shadowMapIndex][faceIndex].clear();
+                set.staticLowResShadowMapDrawCommands.assetGeometry[shadowMapIndex][faceIndex].clear();
+                set.staticLowResShadowMapDrawCommands.assetGeometryAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.staticLowResShadowMapDrawCommands.assetGeometryHair[shadowMapIndex][faceIndex].clear();
+                set.staticLowResShadowMapDrawCommands.assetGeometrySkinned[shadowMapIndex][faceIndex].clear();
+                set.staticLowResShadowMapDrawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.staticLowResShadowMapDrawCommands.assetGeometrySkinnedHair[shadowMapIndex][faceIndex].clear();
+                set.staticLowResShadowMapDrawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][faceIndex].clear();
+                set.staticLowResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.staticLowResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][faceIndex].clear();
+                set.staticLowResShadowMapDrawCommands.procedural[shadowMapIndex][faceIndex].clear();
+
+                set.dynamicHiResShadowMapDrawCommands.assetGeometry[shadowMapIndex][faceIndex].clear();
+                set.dynamicHiResShadowMapDrawCommands.assetGeometryAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.dynamicHiResShadowMapDrawCommands.assetGeometryHair[shadowMapIndex][faceIndex].clear();
+                set.dynamicHiResShadowMapDrawCommands.assetGeometrySkinned[shadowMapIndex][faceIndex].clear();
+                set.dynamicHiResShadowMapDrawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.dynamicHiResShadowMapDrawCommands.assetGeometrySkinnedHair[shadowMapIndex][faceIndex].clear();
+                set.dynamicHiResShadowMapDrawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][faceIndex].clear();
+                set.dynamicHiResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.dynamicHiResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][faceIndex].clear();
+                set.dynamicHiResShadowMapDrawCommands.procedural[shadowMapIndex][faceIndex].clear();
+
+                set.dynamicLowResShadowMapDrawCommands.assetGeometry[shadowMapIndex][faceIndex].clear();
+                set.dynamicLowResShadowMapDrawCommands.assetGeometryAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.dynamicLowResShadowMapDrawCommands.assetGeometryHair[shadowMapIndex][faceIndex].clear();
+                set.dynamicLowResShadowMapDrawCommands.assetGeometrySkinned[shadowMapIndex][faceIndex].clear();
+                set.dynamicLowResShadowMapDrawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.dynamicLowResShadowMapDrawCommands.assetGeometrySkinnedHair[shadowMapIndex][faceIndex].clear();
+                set.dynamicLowResShadowMapDrawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][faceIndex].clear();
+                set.dynamicLowResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][faceIndex].clear();
+                set.dynamicLowResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][faceIndex].clear();
+                set.dynamicLowResShadowMapDrawCommands.procedural[shadowMapIndex][faceIndex].clear();
             }
         }
 
+
+
+
+
+        // S T A T I C
+
+
+
+
         // Create shadow map draw commands for dirty hi res shadow mapped lights
-        for (const ShadowMapInfo& shadowMapInfo : ShadowMapManager::GetDirtyHiResShadowMaps()) {
+
+        for (const ShadowMapInfo& shadowMapInfo : ShadowMapManager::GetStaticDirtyHiResShadowMaps()) {
             Light* light = Unloved::World::GetLightByObjectId(shadowMapInfo.lightId);
             if (!light) continue;
             int shadowMapIndex = shadowMapInfo.shadowMapIndex;
@@ -628,21 +667,15 @@ namespace Unloved::RenderDataManager {
                 Unloved::Frustum* frustum = light->GetFrustumByFaceIndex(i);
                 if (!frustum) continue;
 
-                CreateShadowCubeMapMultiDrawIndirectCommands(set.hiResShadowMapDrawCommands.assetGeometry[shadowMapIndex][i], g_renderItemsPointLightShadows, i, light, BlendingMode::DEFAULT);
-                CreateShadowCubeMapMultiDrawIndirectCommands(set.hiResShadowMapDrawCommands.assetGeometryAlphaDiscard[shadowMapIndex][i], g_renderItemsPointLightShadows, i, light, BlendingMode::ALPHA_DISCARD);
-                CreateShadowCubeMapMultiDrawIndirectCommands(set.hiResShadowMapDrawCommands.assetGeometryHair[shadowMapIndex][i], g_renderItemsPointLightShadows, i, light, BlendingMode::HAIR);
-                CreateDrawCommandsSkinned(set.hiResShadowMapDrawCommands.assetGeometrySkinned[shadowMapIndex][i], g_skinnedRenderItemsDefault, -1, frustum);
-                CreateDrawCommandsSkinned(set.hiResShadowMapDrawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][i], g_skinnedRenderItemsAlphaDiscard, -1, frustum);
-                CreateDrawCommandsSkinned(set.hiResShadowMapDrawCommands.assetGeometrySkinnedHair[shadowMapIndex][i], g_skinnedRenderItemsHair, -1, frustum);
-                CreateDrawCommandsNonDeformingSkinned(set.hiResShadowMapDrawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItems, -1, frustum);
-                CreateDrawCommandsNonDeformingSkinned(set.hiResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard, -1, frustum);
-                CreateDrawCommandsNonDeformingSkinned(set.hiResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItemsHair, -1, frustum);
-                CreateDrawCommandProcedural(set.hiResShadowMapDrawCommands.procedural[shadowMapIndex][i], g_renderItemsProcedural, frustum, -1);
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.staticHiResShadowMapDrawCommands.assetGeometry[shadowMapIndex][i], g_renderItemsStaticPointLightShadows, i, light, BlendingMode::DEFAULT);
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.staticHiResShadowMapDrawCommands.assetGeometryAlphaDiscard[shadowMapIndex][i], g_renderItemsStaticPointLightShadows, i, light, BlendingMode::ALPHA_DISCARD);
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.staticHiResShadowMapDrawCommands.assetGeometryHair[shadowMapIndex][i], g_renderItemsStaticPointLightShadows, i, light, BlendingMode::HAIR);
+                CreateDrawCommandProcedural(set.staticHiResShadowMapDrawCommands.procedural[shadowMapIndex][i], g_renderItemsProcedural, frustum, -1);
             }
         }
 
         // Create shadow map draw commands for dirty low res shadow mapped lights
-        for (const ShadowMapInfo& shadowMapInfo : ShadowMapManager::GetDirtyLowResShadowMaps()) {
+        for (const ShadowMapInfo& shadowMapInfo : ShadowMapManager::GetStaticDirtyLowResShadowMaps()) {
             Light* light = Unloved::World::GetLightByObjectId(shadowMapInfo.lightId);
             if (!light) continue;
             int shadowMapIndex = shadowMapInfo.shadowMapIndex;
@@ -652,18 +685,81 @@ namespace Unloved::RenderDataManager {
                 Unloved::Frustum* frustum = light->GetFrustumByFaceIndex(i);
                 if (!frustum) continue;
 
-                CreateShadowCubeMapMultiDrawIndirectCommands(set.lowResShadowMapDrawCommands.assetGeometry[shadowMapIndex][i], g_renderItemsPointLightShadows, i, light, BlendingMode::DEFAULT);
-                CreateShadowCubeMapMultiDrawIndirectCommands(set.lowResShadowMapDrawCommands.assetGeometryAlphaDiscard[shadowMapIndex][i], g_renderItemsPointLightShadows, i, light, BlendingMode::ALPHA_DISCARD);
-                CreateShadowCubeMapMultiDrawIndirectCommands(set.lowResShadowMapDrawCommands.assetGeometryHair[shadowMapIndex][i], g_renderItemsPointLightShadows, i, light, BlendingMode::HAIR);
-                CreateDrawCommandsSkinned(set.lowResShadowMapDrawCommands.assetGeometrySkinned[shadowMapIndex][i], g_skinnedRenderItemsDefault, -1, frustum);
-                CreateDrawCommandsSkinned(set.lowResShadowMapDrawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][i], g_skinnedRenderItemsAlphaDiscard, -1, frustum);
-                CreateDrawCommandsSkinned(set.lowResShadowMapDrawCommands.assetGeometrySkinnedHair[shadowMapIndex][i], g_skinnedRenderItemsHair, -1, frustum);
-                CreateDrawCommandsNonDeformingSkinned(set.lowResShadowMapDrawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItems, -1, frustum);
-                CreateDrawCommandsNonDeformingSkinned(set.lowResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard, -1, frustum);
-                CreateDrawCommandsNonDeformingSkinned(set.lowResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItemsHair, -1, frustum);
-                CreateDrawCommandProcedural(set.lowResShadowMapDrawCommands.procedural[shadowMapIndex][i], g_renderItemsProcedural, frustum, -1);
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.staticLowResShadowMapDrawCommands.assetGeometry[shadowMapIndex][i], g_renderItemsStaticPointLightShadows, i, light, BlendingMode::DEFAULT);
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.staticLowResShadowMapDrawCommands.assetGeometryAlphaDiscard[shadowMapIndex][i], g_renderItemsStaticPointLightShadows, i, light, BlendingMode::ALPHA_DISCARD);
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.staticLowResShadowMapDrawCommands.assetGeometryHair[shadowMapIndex][i], g_renderItemsStaticPointLightShadows, i, light, BlendingMode::HAIR);
+                CreateDrawCommandProcedural(set.staticLowResShadowMapDrawCommands.procedural[shadowMapIndex][i], g_renderItemsProcedural, frustum, -1);
             }
         }
+
+
+
+
+
+
+
+
+         // D Y N A M I C
+
+
+
+
+        // Create shadow map draw commands for dirty hi res shadow mapped lights
+
+        for (const ShadowMapInfo& shadowMapInfo : ShadowMapManager::GetDynamicDirtyHiResShadowMaps()) {
+            Light* light = Unloved::World::GetLightByObjectId(shadowMapInfo.lightId);
+            if (!light) continue;
+            int shadowMapIndex = shadowMapInfo.shadowMapIndex;
+            if (shadowMapIndex == -1) continue;
+
+            for (uint32_t i = 0; i < 6; i++) {
+                Unloved::Frustum* frustum = light->GetFrustumByFaceIndex(i);
+                if (!frustum) continue;
+
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.dynamicHiResShadowMapDrawCommands.assetGeometry[shadowMapIndex][i], g_renderItemsDynamicPointLightShadows, i, light, BlendingMode::DEFAULT);
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.dynamicHiResShadowMapDrawCommands.assetGeometryAlphaDiscard[shadowMapIndex][i], g_renderItemsDynamicPointLightShadows, i, light, BlendingMode::ALPHA_DISCARD);
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.dynamicHiResShadowMapDrawCommands.assetGeometryHair[shadowMapIndex][i], g_renderItemsDynamicPointLightShadows, i, light, BlendingMode::HAIR);
+                CreateDrawCommandsSkinned(set.dynamicHiResShadowMapDrawCommands.assetGeometrySkinned[shadowMapIndex][i], g_skinnedRenderItemsDefault, -1, frustum);
+                CreateDrawCommandsSkinned(set.dynamicHiResShadowMapDrawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][i], g_skinnedRenderItemsAlphaDiscard, -1, frustum);
+                CreateDrawCommandsSkinned(set.dynamicHiResShadowMapDrawCommands.assetGeometrySkinnedHair[shadowMapIndex][i], g_skinnedRenderItemsHair, -1, frustum);
+                CreateDrawCommandsNonDeformingSkinned(set.dynamicHiResShadowMapDrawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItems, -1, frustum);
+                CreateDrawCommandsNonDeformingSkinned(set.dynamicHiResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard, -1, frustum);
+                CreateDrawCommandsNonDeformingSkinned(set.dynamicHiResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItemsHair, -1, frustum);
+            }
+        }
+
+        // Create shadow map draw commands for dirty low res shadow mapped lights
+        for (const ShadowMapInfo& shadowMapInfo : ShadowMapManager::GetDynamicDirtyLowResShadowMaps()) {
+            Light* light = Unloved::World::GetLightByObjectId(shadowMapInfo.lightId);
+            if (!light) continue;
+            int shadowMapIndex = shadowMapInfo.shadowMapIndex;
+            if (shadowMapIndex == -1) continue;
+
+            for (uint32_t i = 0; i < 6; i++) {
+                Unloved::Frustum* frustum = light->GetFrustumByFaceIndex(i);
+                if (!frustum) continue;
+
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.dynamicLowResShadowMapDrawCommands.assetGeometry[shadowMapIndex][i], g_renderItemsDynamicPointLightShadows, i, light, BlendingMode::DEFAULT);
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.dynamicLowResShadowMapDrawCommands.assetGeometryAlphaDiscard[shadowMapIndex][i], g_renderItemsDynamicPointLightShadows, i, light, BlendingMode::ALPHA_DISCARD);
+                CreateShadowCubeMapMultiDrawIndirectCommands(set.dynamicLowResShadowMapDrawCommands.assetGeometryHair[shadowMapIndex][i], g_renderItemsDynamicPointLightShadows, i, light, BlendingMode::HAIR);
+                CreateDrawCommandsSkinned(set.dynamicLowResShadowMapDrawCommands.assetGeometrySkinned[shadowMapIndex][i], g_skinnedRenderItemsDefault, -1, frustum);
+                CreateDrawCommandsSkinned(set.dynamicLowResShadowMapDrawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][i], g_skinnedRenderItemsAlphaDiscard, -1, frustum);
+                CreateDrawCommandsSkinned(set.dynamicLowResShadowMapDrawCommands.assetGeometrySkinnedHair[shadowMapIndex][i], g_skinnedRenderItemsHair, -1, frustum);
+                CreateDrawCommandsNonDeformingSkinned(set.dynamicLowResShadowMapDrawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItems, -1, frustum);
+                CreateDrawCommandsNonDeformingSkinned(set.dynamicLowResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItemsAlphaDiscard, -1, frustum);
+                CreateDrawCommandsNonDeformingSkinned(set.dynamicLowResShadowMapDrawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][i], g_skinnedNonDeformingSkinnedMeshRenderItemsHair, -1, frustum);
+            }
+        }
+
+
+
+
+
+
+
+
+
+
     }
 
     void CreateDrawCommandProcedural(std::vector<DrawIndexedIndirectCommand>& drawCommands, std::vector<RenderItem>& renderItems, Unloved::Frustum* frustum, int viewportIndex) {
@@ -1117,8 +1213,9 @@ namespace Unloved::RenderDataManager {
     const std::vector<RenderItem>& GetRenderItemsPlastic()      { return g_renderItemsPlastic; }
     const std::vector<RenderItem>& GetRenderItemsProcedural()   { return g_renderItemsProcedural; }
     const std::vector<RenderItem>& GetRenderItemsStainedGlass() { return g_renderItemsStainedGlass; }
-    const std::vector<RenderItem>& GetRenderItemsToiletWater()  { return g_renderItemsToiletWater; }
-    const std::vector<RenderItem>& GetRenderItemsPointLightShadows() { return g_renderItemsPointLightShadows; }
+    const std::vector<RenderItem>& GetRenderItemsToiletWater() { return g_renderItemsToiletWater; }
+    // const std::vector<RenderItem>& GetRenderItemsDynamicPointLightShadows() { return g_renderItemsDynamicPointLightShadows; }
+    // const std::vector<RenderItem>& GetRenderItemsStaticPointLightShadows()  { return g_renderItemsStaticPointLightShadows; }
 
     const std::vector<RenderItem>& GetSkinnedRenderItemsAlphaDiscard() { return g_skinnedRenderItemsAlphaDiscard; }
     const std::vector<RenderItem>& GetSkinnedRenderItemsBlended()      { return g_skinnedRenderItemsBlended; }
@@ -1531,7 +1628,18 @@ namespace Unloved::RenderDataManager {
         if (objectId != 0 && objectId == Editor::GetSelectedObjectId()) g_renderItemsOutline.push_back(renderItem);
 
         // Shadow Casting
-        if ((renderItem.shadowFlags & SHADOW_FLAG_POINT_LIGHT) != 0u) g_renderItemsPointLightShadows.push_back(renderItem);
+        if ((renderItem.shadowFlags & SHADOW_FLAG_POINT_LIGHT) != 0u) {
+
+            bool isDynamic = Hell::Bit::Contains(renderItem.miscFlags, MISC_FLAG_DYNAMIC_OBJECT);
+
+            if (isDynamic) {
+                g_renderItemsDynamicPointLightShadows.push_back(renderItem);
+            }
+            else {
+                g_renderItemsStaticPointLightShadows.push_back(renderItem);
+            }
+        }
+
         if ((renderItem.shadowFlags & SHADOW_FLAG_CSM)  != 0u) g_renderItemsMoonLightShadows.push_back(renderItem);
 
         // Vulkan raytracing instance

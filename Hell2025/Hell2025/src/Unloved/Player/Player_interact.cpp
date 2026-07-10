@@ -60,6 +60,15 @@ void Player::UpdateCursorRays() {
     glm::vec3 rayOrigin = GetCameraPosition();
     glm::vec3 rayDir = GetCameraForward();
     m_bvhRayResult = Unloved::WorldBVH::ClosestHit(rayOrigin, rayDir, maxRayDistance);
+
+    if (Hell::Input::KeyPressed(HELL_KEY_J)) {
+        World::RemoveObjectById(m_bvhRayResult.objectId);
+    }
+
+    if (Hell::Input::KeyPressed(HELL_KEY_N)) {
+        const glm::vec3& currentPosition = World::GetPositionById(m_bvhRayResult.objectId);
+        World::SetPositionById(m_bvhRayResult.objectId, currentPosition + glm::vec3(0.0f, 0.1f, 0.0f));
+    }
 }
 
 

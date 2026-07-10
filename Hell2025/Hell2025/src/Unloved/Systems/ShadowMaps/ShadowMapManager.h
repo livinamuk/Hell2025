@@ -27,6 +27,8 @@ namespace Unloved::ShadowMapManager {
     inline size_t GetShadowMapHiResResolution()  { return SHADOW_MAP_HI_RES_RESOLUTION; }
     inline size_t GetShadowMapLowResResolution() { return SHADOW_MAP_LOW_RES_RESOLUTION; }
 
-    const std::vector<ShadowMapInfo>& GetDirtyHiResShadowMaps();
-    const std::vector<ShadowMapInfo>& GetDirtyLowResShadowMaps();
+    const std::vector<ShadowMapInfo>& GetStaticDirtyHiResShadowMaps();
+    const std::vector<ShadowMapInfo>& GetStaticDirtyLowResShadowMaps();
+    const std::vector<ShadowMapInfo>& GetDynamicDirtyHiResShadowMaps();
+    const std::vector<ShadowMapInfo>& GetDynamicDirtyLowResShadowMaps();
 }

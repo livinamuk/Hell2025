@@ -74,7 +74,7 @@ void PickUp::MarkDirtyInTracker() {
     dirtyBounds.boundsMax = aabb.GetBoundsMax();
     dirtyBounds.castShadows = true;
 
-    DirtyTracker::AddDirtyBounds(dirtyBounds);
+    DirtyTracker::AddDynamicDirtyBounds(dirtyBounds);
 }
 
 void PickUp::SetPosition(const glm::vec3& position) {

@@ -26,27 +26,37 @@ namespace Unloved::DirtyTracker {
     void DebugDrawDirtyBounds();
     void DebugPrintDirtyLightInfo(const Light& light, uint64_t intersectingObjectId);
 
-    std::vector<uint64_t> g_dirtyDoorIds;
-    std::vector<uint64_t> g_dirtyLightIds;
-    std::vector<DirtyBounds> g_dirtyBoundsSet;
+    void UpdateDirtyLightIds();
 
-    const std::vector<uint64_t>& GetDirtyDoorIds()  { return g_dirtyDoorIds; }
-    const std::vector<uint64_t>& GetDirtyLightIds() { return g_dirtyLightIds; }
+    std::vector<uint64_t> g_dirtyDoorIds;
+
+    std::vector<uint64_t> g_staticDirtyLightIds;
+    std::vector<uint64_t> g_dynamicDirtyLightIds;
+
+    std::vector<DirtyBounds> g_staticDirtyBoundsSet;
+    std::vector<DirtyBounds> g_dynamicDirtyBoundsSet;
+
+    const std::vector<uint64_t>& GetDirtyDoorIds()         { return g_dirtyDoorIds; }
+    const std::vector<uint64_t>& GetStaticDirtyLightIds()  { return g_staticDirtyLightIds; }
+    const std::vector<uint64_t>& GetDynamicDirtyLightIds() { return g_dynamicDirtyLightIds; }
 
     std::vector<GPUAABB> g_dirtyDoorAABBs;
 
     void BeginFrame() {
         g_dirtyDoorIds.clear();
-        g_dirtyLightIds.clear();
-        g_dirtyBoundsSet.clear();
+        g_staticDirtyLightIds.clear();
+        g_dynamicDirtyLightIds.clear();
+        g_staticDirtyBoundsSet.clear();
+        g_dynamicDirtyBoundsSet.clear();
     }
+
 
     void Update() {
         CalculateDirtyDoorAABBs();
         UpdateLightRayTracingDirtyFlags();
 
         // Doors
-        for (const DirtyBounds& dirtyBounds : g_dirtyBoundsSet) {
+        for (const DirtyBounds& dirtyBounds : g_dynamicDirtyBoundsSet) {
 
             // Skip non doors
             if (Unloved::GetObjectIdType(dirtyBounds.objectId) != ObjectType::DOOR) {
@@ -54,7 +64,7 @@ namespace Unloved::DirtyTracker {
             }
 
             bool found = false;
-    
+
             // Check whether the ID is already in there
             for (uint64_t dirtyId : g_dirtyDoorIds) {
                 if (dirtyId == dirtyBounds.objectId) {
@@ -69,37 +79,106 @@ namespace Unloved::DirtyTracker {
             }
         }
 
-        // Lights
+        UpdateDirtyLightIds();
+
+        DebugDrawDirtyBounds();
+        DebugDrawLightIds();
+    }
+
+
+    void UpdateDirtyLightIds() {
         for (Light& light : World::GetLights()) {
 
-            // If light was forced dirty this frame, then no need to check any potential DirtyBounds
+            // If light was forced dirty this frame, then no need to check any potential DirtyBounds, just mark ids in both static and dirty containers
             if (light.IsForcedDirty()) {
                 light.ConsumeForcedDirtyFlag();
-                g_dirtyLightIds.push_back(light.GetObjectId());
+                g_staticDirtyLightIds.push_back(light.GetObjectId());
+                g_dynamicDirtyLightIds.push_back(light.GetObjectId());
             }
-            // Otherwise check for AABB intersections
-            else {
-                for (const DirtyBounds& dirtyBounds : g_dirtyBoundsSet) {
+            // Otherwise check for AABB intersections, starting with static aabbs if there are any
+            else if (g_staticDirtyBoundsSet.size()){
+                for (const DirtyBounds& dirtyBounds : g_staticDirtyBoundsSet) {
 
                     // Skip any object that doesn't cast shadows
                     if (!dirtyBounds.castShadows) {
                         continue;
                     }
-                
+
                     // If intersection is found add the light ID and move onto checking next light
                     if (IntersectAABB(light.GetWorldBoundsMin(), light.GetWorldBoundsMax(), dirtyBounds.boundsMin, dirtyBounds.boundsMax)) {
-                        g_dirtyLightIds.push_back(light.GetObjectId());
+                        g_staticDirtyLightIds.push_back(light.GetObjectId());
+                        g_dynamicDirtyLightIds.push_back(light.GetObjectId());
+                        break;
+                    }
+                }
+            }
+            // Otherwise for dynamic aabbs intersections, if there are any
+            else {
+                for (const DirtyBounds& dirtyBounds : g_dynamicDirtyBoundsSet) {
+
+                    // Skip any object that doesn't cast shadows
+                    if (!dirtyBounds.castShadows) {
+                        continue;
+                    }
+
+                    // If intersection is found add the light ID and move onto checking next light
+                    if (IntersectAABB(light.GetWorldBoundsMin(), light.GetWorldBoundsMax(), dirtyBounds.boundsMin, dirtyBounds.boundsMax)) {
+                        g_dynamicDirtyLightIds.push_back(light.GetObjectId());
                         break;
                     }
                 }
             }
         }
-
-        //DebugDrawDirtyBounds();
-        //DebugDrawLightIds();
     }
 
-    void AddDirtyBounds(const DirtyBounds& dirtyBounds) {
+   // void UpdateStatic() {
+   //     for (Light& light : World::GetLights()) {
+   //
+   //         // If light was forced dirty this frame, then no need to check any potential DirtyBounds
+   //         if (light.IsForcedDirty()) {
+   //             light.ConsumeForcedDirtyFlag();
+   //             g_dirtyLightIds.push_back(light.GetObjectId());
+   //         }
+   //         // Otherwise check for AABB intersections
+   //         else {
+   //             for (const DirtyBounds& dirtyBounds : g_staticDirtyBoundsSet) {
+   //
+   //                 // Skip any object that doesn't cast shadows
+   //                 if (!dirtyBounds.castShadows) {
+   //                     continue;
+   //                 }
+   //
+   //                 // If intersection is found add the light ID and move onto checking next light
+   //                 if (IntersectAABB(light.GetWorldBoundsMin(), light.GetWorldBoundsMax(), dirtyBounds.boundsMin, dirtyBounds.boundsMax)) {
+   //                     g_dirtyLightIds.push_back(light.GetObjectId());
+   //                     break;
+   //                 }
+   //             }
+   //         }
+   //     }
+   // }
+
+
+
+
+
+
+
+
+
+
+
+
+    //void AddDirtyBounds(const DirtyBounds& dirtyBounds) {
+    //    AddDynamicDirtyBounds(dirtyBounds);
+    //}
+
+    const std::vector<GPUAABB>& GetDirtyDoorAABBs() {
+        return g_dirtyDoorAABBs;
+    }
+
+
+    void AddStaticDirtyBounds(const DirtyBounds& dirtyBounds) {
         // Bail if invalid AABB was passed in
         if (dirtyBounds.boundsMin.x > dirtyBounds.boundsMax.x ||
             dirtyBounds.boundsMin.y > dirtyBounds.boundsMax.y ||
@@ -107,12 +186,20 @@ namespace Unloved::DirtyTracker {
             return;
         }
 
-        g_dirtyBoundsSet.push_back(dirtyBounds);
+        g_staticDirtyBoundsSet.push_back(dirtyBounds);
     }
 
-    const std::vector<GPUAABB>& GetDirtyDoorAABBs() {
-        return g_dirtyDoorAABBs;
+    void AddDynamicDirtyBounds(const DirtyBounds& dirtyBounds) {
+        // Bail if invalid AABB was passed in
+        if (dirtyBounds.boundsMin.x > dirtyBounds.boundsMax.x ||
+            dirtyBounds.boundsMin.y > dirtyBounds.boundsMax.y ||
+            dirtyBounds.boundsMin.z > dirtyBounds.boundsMax.z) {
+            return;
+        }
+
+        g_dynamicDirtyBoundsSet.push_back(dirtyBounds);
     }
+
 
     void CalculateDirtyDoorAABBs() {
         g_dirtyDoorAABBs.clear();
@@ -154,17 +241,23 @@ namespace Unloved::DirtyTracker {
     }
 
     void DebugDrawDirtyBounds() {
-        for (DirtyBounds& dirtyBounds : g_dirtyBoundsSet) {
+        for (DirtyBounds& dirtyBounds : g_dynamicDirtyBoundsSet) {
             AABB aabb(dirtyBounds.boundsMin, dirtyBounds.boundsMax);
             DebugDraw::DrawAABB(aabb, YELLOW);
         }
     }
 
     void DebugDrawLightIds() {
-        for (uint64_t id : g_dirtyLightIds) {
+        for (uint64_t id : g_dynamicDirtyLightIds) {
             if (Light* light = World::GetLightByObjectId(id)) {
                 AABB aabb(light->GetWorldBoundsMin(), light->GetWorldBoundsMax());
                 DebugDraw::DrawAABB(aabb, GREEN);
+            }
+        }
+        for (uint64_t id : g_staticDirtyLightIds) {
+            if (Light* light = World::GetLightByObjectId(id)) {
+                AABB aabb(light->GetWorldBoundsMin(), light->GetWorldBoundsMax());
+                DebugDraw::DrawAABB(aabb, BLUE);
             }
         }
     }

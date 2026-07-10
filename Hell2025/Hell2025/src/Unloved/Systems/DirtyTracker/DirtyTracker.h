@@ -15,11 +15,16 @@ namespace Unloved::DirtyTracker {
     void BeginFrame();
     void Update();
 
-    void AddDirtyBounds(const DirtyBounds& dirtyBounds);
+    //void AddDirtyBounds(const DirtyBounds& dirtyBounds);
+
+    void AddStaticDirtyBounds(const DirtyBounds& dirtyBounds);
+    void AddDynamicDirtyBounds(const DirtyBounds& dirtyBounds);
 
     const std::vector<GPUAABB>& GetDirtyDoorAABBs();
 
     const std::vector<uint64_t>& GetDirtyDoorIds();
-    const std::vector<uint64_t>& GetDirtyLightIds();
+
+    const std::vector<uint64_t>& GetStaticDirtyLightIds();
+    const std::vector<uint64_t>& GetDynamicDirtyLightIds();
 
 }

@@ -117,9 +117,12 @@ namespace OpenGL::Renderer {
         OpenGLShader* shader = OpenGL::ResourceManager::GetShaderPtr("ShadowCubeMap");
         if (!shader) return;
 
-        const std::vector<ShadowMapInfo>& hiResShadowMaps = ShadowMapManager::GetDirtyHiResShadowMaps();
-        const std::vector<ShadowMapInfo>& lowResShadowMaps = ShadowMapManager::GetDirtyLowResShadowMaps();
-        if (hiResShadowMaps.empty() && lowResShadowMaps.empty()) return;
+        const std::vector<ShadowMapInfo>& staticHiResShadowMaps = ShadowMapManager::GetStaticDirtyHiResShadowMaps();
+        const std::vector<ShadowMapInfo>& staticLowResShadowMaps = ShadowMapManager::GetStaticDirtyLowResShadowMaps();
+        const std::vector<ShadowMapInfo>& dynamicHiResShadowMaps = ShadowMapManager::GetDynamicDirtyHiResShadowMaps();
+        const std::vector<ShadowMapInfo>& dynamicLowResShadowMaps = ShadowMapManager::GetDynamicDirtyLowResShadowMaps();
+
+        if (staticHiResShadowMaps.empty() && staticLowResShadowMaps.empty() && dynamicHiResShadowMaps.empty() && dynamicHiResShadowMaps.empty()) return;
 
         OpenGL::BindShader("ShadowCubeMap");
 
@@ -133,8 +136,44 @@ namespace OpenGL::Renderer {
 
         const DrawCommandsSet& drawInfoSet = Unloved::RenderDataManager::GetDrawInfoSet();
 
-        RenderPointLightShadowMapArray(OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("HiRes"), hiResShadowMaps, drawInfoSet.hiResShadowMapDrawCommands);
-        RenderPointLightShadowMapArray(OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("LowRes"), lowResShadowMaps, drawInfoSet.lowResShadowMapDrawCommands);
+
+        RenderPointLightShadowMapArray(OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("StaticHiRes"), staticHiResShadowMaps, drawInfoSet.staticHiResShadowMapDrawCommands);
+        RenderPointLightShadowMapArray(OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("StaticLowRes"), staticLowResShadowMaps, drawInfoSet.staticLowResShadowMapDrawCommands);
+
+        // Now for any dynamic shadow maps, first copy their static partner into it
+
+        for (const ShadowMapInfo& shadowMapInfo : dynamicHiResShadowMaps) {
+            int32_t shadowMapIndex = shadowMapInfo.shadowMapIndex;
+
+            OpenGLShadowCubeMapArray& src = OpenGL::ResourceManager::GetShadowCubeMapArray("StaticHiRes");
+            OpenGLShadowCubeMapArray& dst = OpenGL::ResourceManager::GetShadowCubeMapArray("HiRes");
+
+            BlitShadowCubeMapArray(src, dst, shadowMapIndex, shadowMapIndex);
+        }
+
+        for (const ShadowMapInfo& shadowMapInfo : dynamicLowResShadowMaps) {
+            int32_t shadowMapIndex = shadowMapInfo.shadowMapIndex;
+
+            OpenGLShadowCubeMapArray& src = OpenGL::ResourceManager::GetShadowCubeMapArray("StaticLowRes");
+            OpenGLShadowCubeMapArray& dst = OpenGL::ResourceManager::GetShadowCubeMapArray("LowRes");
+
+            BlitShadowCubeMapArray(src, dst, shadowMapIndex, shadowMapIndex);
+        }
+
+
+        // No render the dynamic objects on top
+
+        RenderPointLightShadowMapArray(OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("HiRes"), dynamicHiResShadowMaps, drawInfoSet.dynamicHiResShadowMapDrawCommands);
+        RenderPointLightShadowMapArray(OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("LowRes"), dynamicLowResShadowMaps, drawInfoSet.dynamicLowResShadowMapDrawCommands);
+
+
+       // PointLightShadowMapDrawCommands staticHiResShadowMapDrawCommands;
+       // PointLightShadowMapDrawCommands staticLowResShadowMapDrawCommands;
+       // PointLightShadowMapDrawCommands dynamicHiResShadowMapDrawCommands;
+       // PointLightShadowMapDrawCommands dynamicLowResShadowMapDrawCommands;
+
+        //RenderPointLightShadowMapArray(OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("HiRes"), hiResShadowMaps, drawInfoSet.hiResShadowMapDrawCommands);
+        //RenderPointLightShadowMapArray(OpenGL::ResourceManager::GetShadowCubeMapArrayPtr("LowRes"), lowResShadowMaps, drawInfoSet.lowResShadowMapDrawCommands);
     }
 
     void RenderPointLightShadowMapArray(OpenGLShadowCubeMapArray* shadowMaps, const std::vector<ShadowMapInfo>& shadowMapInfoSet, const PointLightShadowMapDrawCommands& drawCommands) {
@@ -191,14 +230,16 @@ namespace OpenGL::Renderer {
                 OpenGL::RasterizerStateManager::SetRasterizerState(solidShadowState);
                 glBindVertexArray(meshBufferProcedural.GetVAO());
                 MultiDrawIndirect(drawCommands.procedural[shadowMapIndex][face]);
-
                 glBindVertexArray(meshBufferAssets.GetVAO());
                 MultiDrawIndirect(drawCommands.assetGeometry[shadowMapIndex][face]);
+
                 OpenGL::RasterizerStateManager::SetRasterizerState(alphaShadowState);
                 MultiDrawIndirect(drawCommands.assetGeometryAlphaDiscard[shadowMapIndex][face]);
                 MultiDrawIndirect(drawCommands.assetGeometryHair[shadowMapIndex][face]);
+
                 OpenGL::RasterizerStateManager::SetRasterizerState(solidShadowState);
                 MultiDrawIndirect(drawCommands.assetGeometrySkinnedNonDeforming[shadowMapIndex][face]);
+
                 OpenGL::RasterizerStateManager::SetRasterizerState(alphaShadowState);
                 MultiDrawIndirect(drawCommands.assetGeometrySkinnedNonDeformingAlphaDiscard[shadowMapIndex][face]);
                 MultiDrawIndirect(drawCommands.assetGeometrySkinnedNonDeformingHair[shadowMapIndex][face]);
@@ -206,8 +247,10 @@ namespace OpenGL::Renderer {
                 glBindVertexArray(OpenGL::BackEnd::GetSkinnedVertexDataVAO());
                 glBindBuffer(GL_ARRAY_BUFFER, OpenGL::BackEnd::GetSkinnedVertexDataVBO());
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshBufferAssets.GetEBO());
+
                 OpenGL::RasterizerStateManager::SetRasterizerState(solidShadowState);
                 MultiDrawIndirect(drawCommands.assetGeometrySkinned[shadowMapIndex][face]);
+
                 OpenGL::RasterizerStateManager::SetRasterizerState(alphaShadowState);
                 MultiDrawIndirect(drawCommands.assetGeometrySkinnedAlphaDiscard[shadowMapIndex][face]);
                 MultiDrawIndirect(drawCommands.assetGeometrySkinnedHair[shadowMapIndex][face]);

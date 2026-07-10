@@ -162,11 +162,18 @@ namespace OpenGL::Renderer {
         skybox->depthFunc = GL_GREATER;
 
         // Allocate shadow map array memory
-        OpenGLShadowCubeMapArray& hiResShadowMapArray = OpenGL::ResourceManager::CreateShadowCubeMapArray("HiRes");
+        OpenGLShadowCubeMapArray& hiResShadowMapArray = OpenGL::ResourceManager::CreateShadowCubeMapArray("HiRes");   // THESE ARE DYNAMIC. RENAM<E IF U EVER GET HTIS WOKRING
+        hiResShadowMapArray.Init(ShadowMapManager::GetShadowMapHiResMaxCount(), 1024);                                // THESE ARE DYNAMIC. RENAM<E IF U EVER GET HTIS WOKRING
+                                                                                                                      // THESE ARE DYNAMIC. RENAM<E IF U EVER GET HTIS WOKRING
+        OpenGLShadowCubeMapArray& lowResShadowMapArray = OpenGL::ResourceManager::CreateShadowCubeMapArray("LowRes"); // THESE ARE DYNAMIC. RENAM<E IF U EVER GET HTIS WOKRING
+        lowResShadowMapArray.Init(ShadowMapManager::GetShadowMapLowResMaxCount(), 512);                               // THESE ARE DYNAMIC. RENAM<E IF U EVER GET HTIS WOKRING
+
+        OpenGLShadowCubeMapArray& staticHiResShadowMapArray = OpenGL::ResourceManager::CreateShadowCubeMapArray("StaticHiRes");
         hiResShadowMapArray.Init(ShadowMapManager::GetShadowMapHiResMaxCount(), 1024);
 
-        OpenGLShadowCubeMapArray& lowResShadowMapArray = OpenGL::ResourceManager::CreateShadowCubeMapArray("LowRes");
+        OpenGLShadowCubeMapArray& staticLowResShadowMapArray = OpenGL::ResourceManager::CreateShadowCubeMapArray("StaticLowRes");
         lowResShadowMapArray.Init(ShadowMapManager::GetShadowMapLowResMaxCount(), 512);
+
 
         // Moon light shadow maps
         float depthMapResolution = SHADOW_MAP_CSM_SIZE;

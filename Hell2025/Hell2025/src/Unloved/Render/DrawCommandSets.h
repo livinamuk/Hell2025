@@ -47,8 +47,10 @@ struct DrawCommandsSet {
     std::vector<DrawIndexedIndirectCommand> skinnedNonDeformingHair[4];
     std::vector<DrawIndexedIndirectCommand> skinnedNonDeformingStandard[4];
 
-    PointLightShadowMapDrawCommands hiResShadowMapDrawCommands;
-    PointLightShadowMapDrawCommands lowResShadowMapDrawCommands;
+    PointLightShadowMapDrawCommands staticHiResShadowMapDrawCommands;
+    PointLightShadowMapDrawCommands staticLowResShadowMapDrawCommands;
+    PointLightShadowMapDrawCommands dynamicHiResShadowMapDrawCommands;
+    PointLightShadowMapDrawCommands dynamicLowResShadowMapDrawCommands;
 
     std::vector<DrawIndexedIndirectCommand> moonLightCascades[4][SHADOW_CASCADE_COUNT];
 };

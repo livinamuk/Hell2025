@@ -279,6 +279,19 @@ bool MeshNodes::MeshNodeIsNonKinematicRigidDynamic(int localNodeIndex) const {
 }
 
 void MeshNodes::CleanUp() {
+    // But before that, mark all nodes as dirty, using their positions from last frame
+    for (const MeshNode& meshNode : m_meshNodes) {
+        DirtyBounds dirtyBounds;
+        dirtyBounds.objectId = meshNode.parentObjectId;
+        dirtyBounds.boundsMin = meshNode.worldspaceAabb.GetBoundsMin();
+        dirtyBounds.boundsMax = meshNode.worldspaceAabb.GetBoundsMax();
+        dirtyBounds.castShadows = meshNode.castShadows;
+
+        // Marking as a dirty static region regardless to whether this MeshNode was dynamic
+        // because it's gonna trigger a dynamic update anyway
+        DirtyTracker::AddStaticDirtyBounds(dirtyBounds);
+    }
+
     // First remove physics shapes
     for (MeshNode& meshNode : m_meshNodes) {
         if (meshNode.rigidDynamicId != 0) {
@@ -793,7 +806,10 @@ void MeshNodes::UpdateAABBsFromWorldMatrices() {
 }
 
 void MeshNodes::AddDirtyBoundsToTracker() {
-    for (const MeshNode& meshNode : m_meshNodes) {
+
+    for (int i = 0; i < m_meshNodes.size(); i++) {
+        const MeshNode& meshNode = m_meshNodes[i];
+
         if (!m_firstFrame && Hell::Math::NearlyEqual(meshNode.worldMatrix, meshNode.prevWorldMatrix)) {
             continue;
         }
@@ -812,7 +828,12 @@ void MeshNodes::AddDirtyBoundsToTracker() {
         dirtyBounds.boundsMax = meshNode.worldspaceAabb.GetBoundsMax();
         dirtyBounds.castShadows = meshNode.castShadows;
 
-        DirtyTracker::AddDirtyBounds(dirtyBounds);
+        if (MeshNodeIsStatic(i)) {
+            DirtyTracker::AddStaticDirtyBounds(dirtyBounds);
+        }
+        else {
+            DirtyTracker::AddDynamicDirtyBounds(dirtyBounds);
+        }
     }
 }
 
