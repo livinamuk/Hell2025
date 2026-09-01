@@ -1,6 +1,6 @@
 #include "Unloved/Bible/Bible.h"
 
-namespace Bible {
+namespace Unloved::Bible {
     using namespace Unloved;
 
 

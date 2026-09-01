@@ -30,4 +30,7 @@ enum class DebugTextMode {
     NONE,
     PER_PLAYER,
     MENU,
+    PER_PLAYER_INTERACT_INFO,
+    PER_PLAYER_LADDER_INFO,
+    PER_PLAYER_WEAPON_INFO,
 };

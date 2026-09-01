@@ -9,7 +9,7 @@ namespace Audio = Hell::Audio;
 namespace Unloved {
 
 void Player::UseItem(const std::string& itemName) {
-	ItemInfo* itemInfo = Bible::GetItemInfoByName(itemName);
+	Bible::ItemInfo* itemInfo = Bible::GetItemInfoByName(itemName);
 	if (!itemInfo || !itemInfo->IsUsable()) return;
 
 	if (itemInfo->GetType() == ItemType::HEAL) {
@@ -21,7 +21,7 @@ void Player::UseItem(const std::string& itemName) {
 }
 
 bool Player::CanUseItem(const std::string& itemName) {
-	ItemInfo* itemInfo = Bible::GetItemInfoByName(itemName);
+	Bible::ItemInfo* itemInfo = Bible::GetItemInfoByName(itemName);
 	if (!itemInfo || !itemInfo->IsUsable()) return false;
 
 	// If you have less than 100 you can use a healing item

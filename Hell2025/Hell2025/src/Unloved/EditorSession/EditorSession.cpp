@@ -5,13 +5,16 @@
 #include "Unloved/EditorSession/HeightMap/EditorHeightMap.h"
 #include "Unloved/EditorSession/UI/EditorInputElements.h"
 #include "Unloved/EditorSession/UI/EditorLayout.h"
-#include "EditorMapTools.h"
 #include "EditorMenuBar.h"
 #include "EditorObjectOptions.h"
 #include "EditorInspector.h"
 #include "EditorPlacement.h"
+#include "EditorToolbar.h"
 #include "Unloved/EditorSession/Interaction/EditorPointSequences.h"
 #include "Unloved/EditorSession/Interaction/EditorSelection.h"
+#include "Unloved/EditorSession/BoneMask/EditorBoneMask.h"
+#include "Unloved/EditorSession/Ragdoll/EditorRagdoll.h"
+#include "Unloved/EditorSession/Ragdoll/EditorRagdollTest.h"
 #include "Unloved/EditorSession/UI/EditorUI.h"
 #include "Unloved/EditorSession/Core/EditorViewports.h"
 #include "Unloved/EditorSession/Interaction/EditorVisibility.h"
@@ -23,25 +26,39 @@
 #include "Hell/Input.h"
 #include "Hell/UI/UIBackEnd.h"
 
+#include "Unloved/Characters/Enemies/Kangaroo/Kangaroo.h"
 #include "Unloved/Common/Constants.h"
 #include "Unloved/Debug/Debug.h"
 #include "Unloved/Debug/DebugDraw.h"
-#include "Unloved/Editor/Gizmo.h"
-#include "Unloved/ObjectId.h"
+#include "Unloved/EditorSession/Gizmo/Gizmo.h"
 #include "Unloved/Objects/House/Door.h"
 #include "Unloved/Objects/House/Wall.h"
 #include "Unloved/Objects/Props/GenericObject.h"
 #include "Unloved/Objects/Props/PickUp.h"
+#include "Unloved/Session/Session.h"
 #include "Unloved/Objects/Traversal/Ladder.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Systems/WorldBVH/WorldBVH.h"
 #include "Unloved/World/World.h"
 
 #include <algorithm>
+#include <string>
 
 namespace Unloved::EditorSession {
     namespace {
         bool g_isActive = false;
+        EditorRenderMode g_renderMode = EditorRenderMode::PBR;
+
+        void DeactivateEditor() {
+            Workspace::Close();
+            SetActive(false);
+        }
+
+        void ResetMapEditor() {
+            SetRenderMode(EditorRenderMode::PBR);
+            HeightMapEditor::ResetTools();
+            Toolbar::Reset();
+        }
 
         bool IsDialogOpen() {
             return Dialog::IsOpen() || FileDialog::IsOpen();
@@ -58,7 +75,7 @@ namespace Unloved::EditorSession {
             float maximumZ = DEFAULT_GRID_EXTENT;
             float gridHeight = DEFAULT_GRID_HEIGHT;
 
-            const bool heightMapMode = Workspace::HasMode() && Workspace::GetMode() == EditorSessionMode::MAP && MapTools::GetMode() == MapTools::Mode::HEIGHT_MAP;
+            const bool heightMapMode = Workspace::HasMode() && Workspace::GetMode() == EditorSessionMode::MAP && HeightMapEditor::IsActive();
             if (heightMapMode) {
                 const uint32_t chunkWidth = Workspace::GetMapChunkWidth();
                 const uint32_t chunkDepth = Workspace::GetMapChunkDepth();
@@ -90,9 +107,42 @@ namespace Unloved::EditorSession {
 
         void HandleMenuAction(MenuBar::EditorMenuAction action) {
             switch (action) {
-                case MenuBar::EditorMenuAction::NEW_FILE:     FileDialog::New(Workspace::GetMode()); break;
-                case MenuBar::EditorMenuAction::OPEN_FILE:    FileDialog::Open(Workspace::GetMode(), Workspace::GetName()); break;
-                case MenuBar::EditorMenuAction::SAVE:         Workspace::Save(); break;
+                case MenuBar::EditorMenuAction::NEW_FILE:
+                    switch (Workspace::GetMode()) {
+                        case EditorSessionMode::HOUSE:     FileDialog::New(NewFileDialogType::NEW_HOUSE); break;
+                        case EditorSessionMode::MAP:       FileDialog::New(NewFileDialogType::NEW_MAP); break;
+                        case EditorSessionMode::RAGDOLL:   FileDialog::New(NewFileDialogType::NEW_RAGDOLL); break;
+                        case EditorSessionMode::BONE_MASK: FileDialog::New(NewFileDialogType::NEW_BONE_MASK); break;
+                    }
+                    break;
+                case MenuBar::EditorMenuAction::OPEN_FILE: {
+                    std::string selectedFile = Workspace::GetName();
+                    if (Workspace::GetMode() == EditorSessionMode::RAGDOLL) selectedFile = RagdollEditor::GetSourcePath();
+                    if (Workspace::GetMode() == EditorSessionMode::BONE_MASK) selectedFile = BoneMaskEditor::GetSourcePath();
+                    FileDialog::Open(Workspace::GetMode(), selectedFile);
+                    break;
+                }
+                case MenuBar::EditorMenuAction::IMPORT_RAG:
+                    if (Workspace::GetMode() == EditorSessionMode::RAGDOLL) FileDialog::ImportRagdoll("");
+                    break;
+                case MenuBar::EditorMenuAction::SAVE:
+                    if (Workspace::GetMode() == EditorSessionMode::RAGDOLL) {
+                        std::string error;
+                        if (!Workspace::SaveRagdoll(error)) Dialog::Open(error.empty() ? "Failed to save ragdoll" : error);
+                    }
+                    else if (Workspace::GetMode() == EditorSessionMode::BONE_MASK) {
+                        std::string error;
+                        if (!Workspace::SaveBoneMask(error)) Dialog::Open(error.empty() ? "Failed to save bone mask" : error);
+                    }
+                    else {
+                        Workspace::Save();
+                    }
+                    break;
+                case MenuBar::EditorMenuAction::SAVE_AS:
+                    if (Workspace::GetMode() == EditorSessionMode::RAGDOLL) {
+                        FileDialog::SaveRagdollAs(RagdollEditor::GetName());
+                    }
+                    break;
                 case MenuBar::EditorMenuAction::CLOSE_EDITOR: Close(); break;
                 case MenuBar::EditorMenuAction::VIEWPORT_SINGLE:     Layout::SetViewportLayout(EditorViewportLayout::SINGLE);     break;
                 case MenuBar::EditorMenuAction::VIEWPORT_LEFT_RIGHT: Layout::SetViewportLayout(EditorViewportLayout::LEFT_RIGHT); break;
@@ -103,38 +153,89 @@ namespace Unloved::EditorSession {
         }
 
         bool OpenWorkspaceFile(const std::string& fileName) {
-            if (fileName == Workspace::GetName()) return true;
-            const bool opened = Workspace::GetMode() == EditorSessionMode::MAP ? Workspace::OpenMap(fileName) : Workspace::OpenHouse(fileName);
+            std::string currentFile = Workspace::GetName();
+            if (Workspace::GetMode() == EditorSessionMode::RAGDOLL) currentFile = RagdollEditor::GetSourcePath();
+            if (Workspace::GetMode() == EditorSessionMode::BONE_MASK) currentFile = BoneMaskEditor::GetSourcePath();
+            if (fileName == currentFile) return true;
+
+            bool opened = false;
+            std::string error;
+            switch (Workspace::GetMode()) {
+                case EditorSessionMode::HOUSE:     opened = Workspace::OpenHouse(fileName); break;
+                case EditorSessionMode::MAP:       opened = Workspace::OpenMap(fileName); break;
+                case EditorSessionMode::RAGDOLL:   opened = Workspace::OpenRagdoll(fileName, error); break;
+                case EditorSessionMode::BONE_MASK: opened = Workspace::OpenBoneMask(fileName, error); break;
+            }
+
             if (!opened) {
-                Dialog::Open("Failed to open '" + fileName + "'");
+                Dialog::Open(error.empty() ? "Failed to open '" + fileName + "'" : error);
                 return false;
             }
-            Visibility::Clear();
+
+            if (Workspace::IsWorldBacked()) {
+                Visibility::Clear();
+            }
             if (Workspace::GetMode() == EditorSessionMode::MAP) {
-                MapTools::Reset();
+                ResetMapEditor();
             }
             SetActive(true);
+
+            if (Workspace::GetMode() == EditorSessionMode::RAGDOLL) {
+                const size_t markerCount = RagdollEditor::GetAsset().markers.size();
+                Debug::BlitQuickDebugMessage("Opened '" + Workspace::GetName() + "' with " + std::to_string(markerCount) + (markerCount == 1 ? " marker" : " markers"));
+            }
             return true;
         }
 
-        bool NewWorkspaceFile(const std::string& fileName) {
-            const bool created = Workspace::GetMode() == EditorSessionMode::MAP ? Workspace::NewMap(fileName) : Workspace::NewHouse(fileName);
-            if (!created) {
-                Dialog::Open("Failed to create '" + fileName + "'");
+        bool ImportLegacyRagdollFile(const std::string& fileName) {
+            std::string error;
+            if (!Workspace::ImportRagdoll(fileName, error)) {
+                Dialog::Open(error.empty() ? "Failed to import '" + fileName + "'" : error);
                 return false;
             }
-            Visibility::Clear();
-            if (Workspace::GetMode() == EditorSessionMode::MAP) {
-                MapTools::Reset();
-            }
+
             SetActive(true);
+            const size_t markerCount = RagdollEditor::GetAsset().markers.size();
+            const size_t warningCount = RagdollEditor::GetImportWarnings().size();
+            const std::string warningMessage = warningCount == 0 ? "" : ", " + std::to_string(warningCount) + (warningCount == 1 ? " warning" : " warnings");
+            Debug::BlitQuickDebugMessage("Imported '" + Workspace::GetName() + "' with " + std::to_string(markerCount) + (markerCount == 1 ? " marker" : " markers") + warningMessage);
             return true;
+        }
+
+    }
+
+    void CreateNewFile(NewFileDialogType type, const std::string& fileName) {
+        bool created = false;
+        std::string error;
+        switch (type) {
+            case NewFileDialogType::NEW_HOUSE:     created = Workspace::NewHouse(fileName); break;
+            case NewFileDialogType::NEW_MAP:       created = Workspace::NewMap(fileName); break;
+            case NewFileDialogType::NEW_RAGDOLL:   created = Workspace::NewRagdoll(fileName, error); break;
+            case NewFileDialogType::NEW_BONE_MASK: created = Workspace::NewBoneMask(fileName, error); break;
+            case NewFileDialogType::SAVE_RAGDOLL_AS:
+            case NewFileDialogType::NONE: return;
+        }
+
+        if (!created) {
+            Dialog::Open(error.empty() ? "Failed to create '" + fileName + "'" : error);
+            return;
+        }
+        if (Workspace::IsWorldBacked()) Visibility::Clear();
+        if (type == NewFileDialogType::NEW_MAP) ResetMapEditor();
+        SetActive(true);
+    }
+
+    void SaveRagdollAs(const std::string& fileName) {
+        std::string error;
+        if (!Workspace::SaveRagdollAs(fileName, error)) {
+            Dialog::Open(error.empty() ? "Failed to save ragdoll as '" + fileName + "'" : error);
         }
     }
 
     void Init() {
         InitPlacementTools();
-        MapTools::Init();
+        Toolbar::Init();
+        ResetMapEditor();
         Selection::Reset();
         Viewports::Init();
         MenuBar::Init();
@@ -147,13 +248,25 @@ namespace Unloved::EditorSession {
     }
 
     void Open(EditorSessionMode mode) {
+        MenuBar::SetMode(mode);
         if (IsActive()) {
             if (Workspace::HasMode() && Workspace::GetMode() == mode) return;
             Close();
         }
+
+        // Asset editors use an empty world
+        if (mode == EditorSessionMode::RAGDOLL || mode == EditorSessionMode::BONE_MASK) {
+            if (mode == EditorSessionMode::RAGDOLL) {
+                Session::KeepOnlyFirstLocalPlayer();
+            }
+            RagdollTest::Stop();
+            World::ResetWorld();
+            Viewports::PrepareInitialRagdollView();
+        }
+
         if (!Workspace::Open(mode)) {
             if (mode == EditorSessionMode::MAP) {
-                MapTools::Reset();
+                ResetMapEditor();
             }
             SetActive(true);
             FileDialog::Open(mode, "");
@@ -161,7 +274,7 @@ namespace Unloved::EditorSession {
         }
 
         if (mode == EditorSessionMode::MAP) {
-            MapTools::Reset();
+            ResetMapEditor();
 
             // Put presents back at their authored transforms
             for (GenericObject& genericObject : World::GetGenericObjects()) {
@@ -178,10 +291,14 @@ namespace Unloved::EditorSession {
     void Close() {
         if (!IsActive()) return;
 
-        const bool hadWorkspace = Workspace::HasMode();
-        Workspace::Close();
-        SetActive(false);
-        if (!hadWorkspace) return;
+        const bool hadWorldWorkspace = Workspace::IsWorldBacked();
+        const bool hadDisposableWorkspace = Workspace::HasMode() && !hadWorldWorkspace;
+        DeactivateEditor();
+        if (hadDisposableWorkspace) {
+            World::ResetWorld();
+            return;
+        }
+        if (!hadWorldWorkspace) return;
 
         // Push authored transforms back into PhysX before gameplay reads them
         for (GenericObject& genericObject : World::GetGenericObjects()) {
@@ -203,6 +320,8 @@ namespace Unloved::EditorSession {
     }
 
     void SetActive(bool active) {
+        const bool worldBacked = Workspace::IsWorldBacked();
+
         // No interaction survives crossing the editor boundary
         Selection::Reset();
         InputElements::Reset();
@@ -217,7 +336,11 @@ namespace Unloved::EditorSession {
 
         g_isActive = active;
 
-        if (g_isActive && Workspace::HasMode()) {
+        if (g_isActive && worldBacked) {
+            for (Kangaroo& kangaroo : World::GetKangaroos()) {
+                kangaroo.Respawn();
+            }
+
             // Respawn authored pickups and delete player dropped items
             const auto pickUpIds = World::GetPickUps().ids();
             for (uint64_t objectId : pickUpIds) {
@@ -231,7 +354,9 @@ namespace Unloved::EditorSession {
             }
         }
 
-        WorldBVH::MarkStaticSceneBvhDirty();
+        if (worldBacked) {
+            WorldBVH::MarkStaticSceneBvhDirty();
+        }
 
         if (g_isActive) {
             Hell::Input::ShowCursor();
@@ -265,15 +390,12 @@ namespace Unloved::EditorSession {
         MenuBar::RefreshLayout();
     }
 
+    void SetRenderMode(EditorRenderMode renderMode) {
+        g_renderMode = renderMode;
+    }
+
     void Update() {
         if (!IsActive()) return;
-
-        // Handle completed file dialogs
-        const std::string newFileName = FileDialog::ConsumeNewFileName();
-        if (!newFileName.empty()) {
-            NewWorkspaceFile(newFileName);
-            return;
-        }
 
         const std::string selectedFile = FileDialog::ConsumeSelectedFile();
         if (!selectedFile.empty()) {
@@ -281,9 +403,29 @@ namespace Unloved::EditorSession {
             return;
         }
 
+        const std::string importedRagdoll = FileDialog::ConsumeImportedRagdoll();
+        if (!importedRagdoll.empty()) {
+            ImportLegacyRagdollFile(importedRagdoll);
+            return;
+        }
+
         // Handle editor hotkeys
         const bool allowHotkeys = !WantsKeyboardCapture();
-        if (allowHotkeys && Hell::Input::KeyPressed(HELL_KEY_TAB)) {
+        if (allowHotkeys && Workspace::HasMode() && Workspace::GetMode() == EditorSessionMode::RAGDOLL && Hell::Input::KeyPressed(HELL_KEY_GRAVE_ACCENT)) {
+            if (!RagdollEditor::HasDocument()) {
+                Dialog::Open("Open a ragdoll before testing");
+                return;
+            }
+            const RagdollAsset& asset = RagdollEditor::GetAsset();
+            if (asset.markers.empty()) {
+                Dialog::Open("Create at least one shape before testing");
+                return;
+            }
+            RagdollTest::Start(asset);
+            return;
+        }
+
+        if (Workspace::IsWorldBacked() && allowHotkeys && Hell::Input::KeyPressed(HELL_KEY_TAB)) {
             const EditorSelectionMode previousMode = Selection::GetMode();
             const EditorSelectionMode mode = Selection::GetMode() == EditorSelectionMode::OBJECT ? EditorSelectionMode::VERTEX : EditorSelectionMode::OBJECT;
             Selection::SetMode(mode);
@@ -306,6 +448,11 @@ namespace Unloved::EditorSession {
 
         // Update the grid and menu
         DrawGrid();
+        if (Workspace::HasMode() && Workspace::GetMode() == EditorSessionMode::RAGDOLL) {
+            RagdollEditor::DrawSkeleton();
+            RagdollEditor::DrawJointLimits();
+        }
+        if (Workspace::HasMode() && Workspace::GetMode() == EditorSessionMode::BONE_MASK) BoneMaskEditor::DrawSkeleton();
         RefreshNativeLayout();
         if (IsDialogOpen()) {
             Hell::BackEnd::SetCursor(HELL_CURSOR_ARROW);
@@ -320,7 +467,12 @@ namespace Unloved::EditorSession {
             MenuBar::ConsumePlacementTool();
             return;
         }
-        Placement::Begin(MenuBar::ConsumePlacementTool());
+        if (Workspace::IsWorldBacked()) {
+            Placement::Begin(MenuBar::ConsumePlacementTool());
+        }
+        else {
+            MenuBar::ConsumePlacementTool();
+        }
 
         if (!IsActive()) return;
 
@@ -328,7 +480,7 @@ namespace Unloved::EditorSession {
         Layout::Update();
         Layout::UpdateDividerInput(!MenuBar::WantsMouseCapture());
         Hierarchy::Update(!Placement::IsActive() && !MenuBar::WantsMouseCapture() && !Layout::WantsMouseCapture());
-        MapTools::Update(!Placement::IsActive() && !MenuBar::WantsMouseCapture() && !Layout::WantsMouseCapture() && !Hierarchy::WantsMouseCapture());
+        Toolbar::Update(!Placement::IsActive() && !MenuBar::WantsMouseCapture() && !Layout::WantsMouseCapture() && !Hierarchy::WantsMouseCapture());
         Layout::SetToolsVisible(Inspector::HasTools());
         Layout::SetBrushesVisible(Inspector::HasBrushes());
         Layout::SetMaterialsVisible(Inspector::HasMaterials());
@@ -341,11 +493,11 @@ namespace Unloved::EditorSession {
     void Render() {
         if (!IsActive()) return;
 
-        const bool newFileDialogOpen = FileDialog::IsNewFileOpen();
-        InputElements::BeginFrame(!Dialog::IsOpen() && (!FileDialog::IsOpen() || newFileDialogOpen));
+        const bool nameInputDialogOpen = FileDialog::IsNameInputOpen();
+        InputElements::BeginFrame(!Dialog::IsOpen() && (!FileDialog::IsOpen() || nameInputDialogOpen));
         Layout::RenderBackgrounds();
         Hierarchy::Render();
-        if (!newFileDialogOpen) {
+        if (!nameInputDialogOpen) {
             Inspector::RenderProperties(Layout::GetPropertiesContentRect());
             Layout::SetPropertiesContentHeight(InputElements::GetLastRenderedHeight());
             Inspector::RenderTools(Layout::GetToolsContentRect());
@@ -356,15 +508,20 @@ namespace Unloved::EditorSession {
         }
         Layout::RenderOverlay();
         Viewports::RenderLabels();
-        MapTools::Render();
+        Toolbar::Render();
         MenuBar::Render();
         FileDialog::Render();
 
-        // New file input ends after its dialog renders
-        if (newFileDialogOpen) {
+        // Name input ends after its dialog renders
+        if (nameInputDialogOpen) {
             InputElements::EndFrame();
         }
         Dialog::Render();
+
+        // Submit preview after inspector edits
+        if (Workspace::HasMode() && Workspace::GetMode() == EditorSessionMode::RAGDOLL) {
+            RagdollEditor::SubmitRenderItems();
+        }
     }
 
     void UpdateViewportInput() {
@@ -374,10 +531,27 @@ namespace Unloved::EditorSession {
         if (!Workspace::HasMode()) return;
 
         // UI input wins before the viewport or gizmo sees it
-        const bool allowMouseInput = !IsDialogOpen() && !MenuBar::WantsMouseCapture() && !Layout::WantsMouseCapture() && !Hierarchy::WantsMouseCapture() && !MapTools::WantsMouseCapture();
+        const bool allowMouseInput = !IsDialogOpen() && !MenuBar::WantsMouseCapture() && !Layout::WantsMouseCapture() && !Hierarchy::WantsMouseCapture() && !Toolbar::WantsMouseCapture();
         const bool allowKeyboardInput = !IsDialogOpen() && !MenuBar::WantsKeyboardCapture() && !InputElements::WantsKeyboardCapture();
 
         Viewports::UpdateInput(allowKeyboardInput, allowMouseInput);
+
+        if (Workspace::GetMode() == EditorSessionMode::RAGDOLL) {
+            if (allowKeyboardInput && RagdollEditor::HasSelectedMarker() && (Hell::Input::KeyPressed(HELL_KEY_BACKSPACE) || Hell::Input::KeyPressed(HELL_KEY_DELETE))) {
+                std::string error;
+                if (RagdollEditor::DeleteSelectedMarker(error)) {
+                    Hell::Audio::PlayAudio(AUDIO_SELECT, 1.0f);
+                    Hierarchy::RefreshRagdollMarkers();
+                }
+                else if (!error.empty()) {
+                    Dialog::Open(error);
+                }
+                return;
+            }
+
+            RagdollEditor::UpdateInput(allowKeyboardInput, allowMouseInput && !Viewports::IsFlyMode());
+            return;
+        }
 
         // Placement owns the click so the gizmo and selection never see it
         if (Placement::IsActive()) {
@@ -420,7 +594,7 @@ namespace Unloved::EditorSession {
         }
 
         // Height map tools own viewport input
-        const bool heightMapMode = GetMode() == EditorSessionMode::MAP && MapTools::GetMode() == MapTools::Mode::HEIGHT_MAP;
+        const bool heightMapMode = GetMode() == EditorSessionMode::MAP && HeightMapEditor::IsActive();
         HeightMapEditor::Update(heightMapMode && allowMouseInput && !Viewports::IsFlyMode());
         if (heightMapMode) {
             Gizmo::SetVisible(false);
@@ -467,12 +641,20 @@ namespace Unloved::EditorSession {
         return !g_isActive;
     }
 
+    bool IsHeightMapEditorActive() {
+        return IsActive() && Workspace::HasMode() && Workspace::GetMode() == EditorSessionMode::MAP && HeightMapEditor::IsActive();
+    }
+
     bool HasMode() {
         return Workspace::HasMode();
     }
 
     EditorSessionMode GetMode() {
         return Workspace::GetMode();
+    }
+
+    EditorRenderMode GetRenderMode() {
+        return g_renderMode;
     }
 
     bool WantsMouseCapture() {
@@ -482,7 +664,7 @@ namespace Unloved::EditorSession {
         if (MenuBar::WantsMouseCapture()) return true;
         if (Layout::WantsMouseCapture()) return true;
         if (Hierarchy::WantsMouseCapture()) return true;
-        if (MapTools::WantsMouseCapture()) return true;
+        if (Toolbar::WantsMouseCapture()) return true;
         if (Viewports::IsPanning() || Viewports::IsOrbiting() || Viewports::IsFlyMode()) return true;
         if (Gizmo::HasHover() || Gizmo::GetAction() == GizmoAction::DRAGGING) return true;
 

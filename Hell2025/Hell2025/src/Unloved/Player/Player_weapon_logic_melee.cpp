@@ -16,26 +16,30 @@ void Player::UpdateMeleeLogic(float deltaTime) {
 
 void Player::FireMelee() {
     WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
-    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
+
+    if (!weaponInfo || weaponInfo->meleeAttacks.empty()) return;
 
     if (weaponInfo->audioFiles.fire.size()) {
         int rand = std::rand() % weaponInfo->audioFiles.fire.size();
         Audio::PlayAudio(weaponInfo->audioFiles.fire[rand], 1.0f);
     }
 
-    if (weaponInfo->animationNames.fire.size()) {
-        viewWeapon->PlayAnimation("MainLayer", weaponInfo->animationNames.fire, weaponInfo->animationSpeeds.fire);
-    }
-    BeginMeleeBulletWave();
+    const int randomAnimationIndex = std::rand() % weaponInfo->meleeAttacks.size();
+    const Bible::AnimationSlot animationSlot = weaponInfo->meleeAttacks[randomAnimationIndex].animationSlot;
+    PlayViewWeaponAnimation(animationSlot, weaponInfo->animationSpeeds.fire);
+
     m_weaponAction = WeaponAction::FIRE;
+    BeginMeleeAttack(animationSlot);
 }
 
 bool Player::CanFireMelee() {
-    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
+    WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
+    if (!weaponInfo) return false;
+
     WeaponAction weaponAction = GetCurrentWeaponAction();
     return (
         weaponAction == IDLE ||
-        weaponAction == FIRE && viewWeapon->AnimationIsPastFrameNumber("MainLayer", 5)
+        weaponAction == FIRE && IsViewWeaponAnimationPastFrameNumber(weaponInfo->animationCancelFrames.fire)
     );
 }
 

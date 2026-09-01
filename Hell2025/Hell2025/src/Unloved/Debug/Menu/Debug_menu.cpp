@@ -58,6 +58,7 @@ namespace Debug::Menu {
     struct RootPageEntry {
         std::string name;
         PageId page = ROOT_PAGE_ID;
+        IsVisibleFunction isVisibleFunction = nullptr;
     };
 
     enum struct FunctionTimingAPI {
@@ -78,6 +79,7 @@ namespace Debug::Menu {
     std::vector<Setting> g_menuSettings;
     std::vector<PageDefinition> g_pageDefinitions;
     std::vector<RootPageEntry> g_rootPageEntries;
+    std::vector<std::string> g_menuText;
     std::vector<FunctionTimingEntry> g_functionTimings;
 
     constexpr float KEY_REPEAT_INITIAL_DELAY = 0.36f;
@@ -137,11 +139,12 @@ namespace Debug::Menu {
         return static_cast<PageId>(g_pageDefinitions.size() - 1);
     }
 
-    PageId RegisterRootPage(const std::string& name, const std::string& heading, BuildFunction buildFunction, ApplyEditFunction applyFunction) {
+    PageId RegisterRootPage(const std::string& name, const std::string& heading, BuildFunction buildFunction, ApplyEditFunction applyFunction, IsVisibleFunction isVisibleFunction) {
         PageId page = RegisterPage(heading, ROOT_PAGE_ID, buildFunction, applyFunction);
         RootPageEntry& rootEntry = g_rootPageEntries.emplace_back();
         rootEntry.name = name;
         rootEntry.page = page;
+        rootEntry.isVisibleFunction = isVisibleFunction;
         return page;
     }
 
@@ -256,6 +259,10 @@ namespace Debug::Menu {
         setting.type = SettingType::LINE_BREAK;
     }
 
+    void AddText(const std::string& text) {
+        g_menuText.push_back(text);
+    }
+
     void AddOpenGLFunctionTiming(const std::string& functionName) {
         FunctionTimingEntry& entry = g_functionTimings.emplace_back();
         entry.api = FunctionTimingAPI::OPENGL;
@@ -270,6 +277,7 @@ namespace Debug::Menu {
 
     void BuildRootPage() {
         for (const RootPageEntry& rootEntry : g_rootPageEntries) {
+            if (rootEntry.isVisibleFunction && !rootEntry.isVisibleFunction()) continue;
             AddSubMenu(rootEntry.page, rootEntry.name, rootEntry.page);
         }
     }
@@ -278,6 +286,7 @@ namespace Debug::Menu {
         PageDefinition& pageDefinition = GetCurrentPageDefinition();
         g_menuHeading = pageDefinition.heading;
         g_menuSettings.clear();
+        g_menuText.clear();
         g_functionTimings.clear();
         if (pageDefinition.type == PageType::MENU && pageDefinition.buildFunction) pageDefinition.buildFunction();
 
@@ -476,6 +485,18 @@ namespace Debug::Menu {
         return false;
     }
 
+    int32_t RenderText(int32_t y, float scale) {
+        if (g_menuText.empty()) return y;
+
+        std::string text;
+        for (const std::string& line : g_menuText) {
+            text += WriteText(line);
+        }
+
+        UIBackEnd::BlitText(text, "StandardFont", 0, y, Alignment::TOP_LEFT, scale, TextureFilter::NEAREST);
+        return y + TextBlitter::GetTextSize(text, "StandardFont", scale).y;
+    }
+
     void RenderFunctionTimings(int32_t y, float scale) {
         if (g_functionTimings.empty()) return;
 
@@ -533,7 +554,8 @@ namespace Debug::Menu {
         const glm::ivec2 textSize = TextBlitter::GetTextSize(names, "StandardFont", scale);
         UIBackEnd::BlitText(names, "StandardFont", 0, 0, Alignment::TOP_LEFT, scale);
         UIBackEnd::BlitText(values, "StandardFont", textSize.x + valuePadding, 0, Alignment::TOP_LEFT, scale);
-        RenderFunctionTimings(textSize.y + timingPaddingTop, scale);
+        const int32_t timingY = RenderText(textSize.y + timingPaddingTop, scale);
+        RenderFunctionTimings(timingY, scale);
     }
 
     void Update() {

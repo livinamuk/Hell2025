@@ -224,6 +224,11 @@ namespace Unloved::EditorSession {
         ladder.insertMode = PlacementInsertMode::DIRECT;
         ladder.defaultEditorName = "Ladder";
 
+        PlacementToolInfo& ladderDismount = g_placementTools[PlacementTool::LADDER_DISMOUNT];
+        ladderDismount.rayMode = PlacementRayMode::WORLD;
+        ladderDismount.insertMode = PlacementInsertMode::DIRECT;
+        ladderDismount.defaultEditorName = "Ladder Dismount";
+
         PlacementToolInfo& lightHanging = g_placementTools[PlacementTool::LIGHT_HANGING];
         lightHanging.rayMode = PlacementRayMode::WORLD;
         lightHanging.insertMode = PlacementInsertMode::DIRECT;
@@ -353,6 +358,11 @@ namespace Unloved::EditorSession {
         shark.rayMode = PlacementRayMode::WORLD;
         shark.insertMode = PlacementInsertMode::DIRECT;
         shark.defaultEditorName = "Shark";
+
+        PlacementToolInfo& snake = g_placementTools[PlacementTool::SNAKE];
+        snake.rayMode = PlacementRayMode::WORLD;
+        snake.insertMode = PlacementInsertMode::DIRECT;
+        snake.defaultEditorName = "Snake";
 
         PlacementToolInfo& staircase = g_placementTools[PlacementTool::STAIRCASE];
         staircase.rayMode = PlacementRayMode::WORLD;

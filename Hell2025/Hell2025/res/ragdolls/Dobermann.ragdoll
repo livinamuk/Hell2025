@@ -1,0 +1,4574 @@
+{
+    "format": "hell.ragdoll",
+    "joints": [
+        {
+            "angularLimitDamping": 9800.0,
+            "angularLimitStiffness": 980000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.785398006439209,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.4188790023326874,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.785398006439209,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 2,
+            "limitEnabled": true,
+            "linearLimitDamping": 9800.0,
+            "linearLimitStiffness": 980000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_spine_01_to_rMarker_hip",
+            "parentFrame": [
+                1.0,
+                1.7881019687138178e-07,
+                -1.5140030882321298e-06,
+                0.0,
+                -1.1299767521677495e-07,
+                0.9990596175193787,
+                0.04335813969373703,
+                0.0,
+                1.5203322618617676e-06,
+                -0.04335813969373703,
+                0.9990596175193787,
+                0.0,
+                -4.573548977688732e-14,
+                0.14070990681648254,
+                6.828303611428055e-08,
+                1.0
+            ],
+            "parentMarkerId": 1
+        },
+        {
+            "angularLimitDamping": 9900.0,
+            "angularLimitStiffness": 990000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.785398006439209,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.31415900588035583,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.785398006439209,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 3,
+            "limitEnabled": true,
+            "linearLimitDamping": 9900.0,
+            "linearLimitStiffness": 990000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_spine_02_to_rMarker_spine_01",
+            "parentFrame": [
+                0.0,
+                1.0,
+                7.304789306772363e-08,
+                0.0,
+                0.0,
+                7.304789306772363e-08,
+                -1.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.462428472049325e-14,
+                0.053489800542593,
+                2.444034485904467e-08,
+                1.0
+            ],
+            "parentMarkerId": 2
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.785398006439209,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.41935500502586365,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.785398006439209,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 4,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_spine_03_to_rMarker_spine_02",
+            "parentFrame": [
+                0.0,
+                1.0,
+                -4.46177773483214e-06,
+                0.0,
+                0.0,
+                -4.46177773483214e-06,
+                -1.0,
+                0.0,
+                -1.0,
+                0.0,
+                -0.0,
+                0.0,
+                -7.662945798736498e-14,
+                0.12041894346475601,
+                3.836106543531059e-08,
+                1.0
+            ],
+            "parentMarkerId": 3
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.3635300099849701,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.48809099197387695,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.666916012763977,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 5,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_chest_to_rMarker_spine_03",
+            "parentFrame": [
+                0.0,
+                0.9999380111694336,
+                -0.011132900603115559,
+                0.0,
+                0.0,
+                -0.011132900603115559,
+                -0.9999380111694336,
+                0.0,
+                -1.0,
+                0.0,
+                -0.0,
+                0.0,
+                1.6773274392686832e-13,
+                0.13965873420238495,
+                -1.7201740476480154e-08,
+                1.0
+            ],
+            "parentMarkerId": 4
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.4886919856071472,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.6457719802856445,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.39006900787353516,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                -7.663068117835792e-07,
+                0.956358790397644,
+                0.2921949326992035,
+                0.0,
+                5.130748832016252e-06,
+                0.2921949326992035,
+                -0.956358790397644,
+                0.0,
+                -1.0,
+                7.663145424885442e-07,
+                -5.130747467774199e-06,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 6,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_neck_01_to_rMarker_chest",
+            "parentFrame": [
+                2.1923501662968192e-06,
+                0.9956120848655701,
+                0.09357640892267227,
+                0.0,
+                1.0840801223821472e-05,
+                0.09357640892267227,
+                -0.9956120848655701,
+                0.0,
+                -1.0,
+                3.197173555236077e-06,
+                -1.058808084053453e-05,
+                0.0,
+                9.589688255724066e-14,
+                0.16094782948493958,
+                -4.712221168823305e-10,
+                1.0
+            ],
+            "parentMarkerId": 5
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.4886919856071472,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.785398006439209,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.39006900787353516,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                -1.2399395927786827e-06,
+                0.8811757564544678,
+                0.47278887033462524,
+                0.0,
+                -3.116239213341032e-07,
+                0.47278887033462524,
+                -0.8811757564544678,
+                0.0,
+                -1.0,
+                -1.2399370916682528e-06,
+                -3.11634209992917e-07,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 7,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_neck_02_to_rMarker_neck_01",
+            "parentFrame": [
+                -3.4354186482232763e-06,
+                0.9248196482658386,
+                0.38040584325790405,
+                0.0,
+                -5.804307875223458e-06,
+                0.38040584325790405,
+                -0.9248196482658386,
+                0.0,
+                -1.0,
+                -5.385135409596842e-06,
+                4.061084382556146e-06,
+                0.0,
+                5.9956563097565e-14,
+                0.06241577863693237,
+                -3.813807225583332e-08,
+                1.0
+            ],
+            "parentMarkerId": 6
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.3839719891548157,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.4886919856071472,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.3839719891548157,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 8,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_neck_03_to_rMarker_neck_02",
+            "parentFrame": [
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                9.009360911384906e-14,
+                0.06612382084131241,
+                6.260644624944689e-08,
+                1.0
+            ],
+            "parentMarkerId": 7
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.3839719891548157,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.4886919856071472,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.3839719891548157,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                -0.0,
+                1.0,
+                0.0,
+                0.0,
+                -1.0,
+                -0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 9,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_head_to_rMarker_neck_03",
+            "parentFrame": [
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                -0.0,
+                1.0,
+                0.0,
+                0.0,
+                -1.0,
+                -0.0,
+                0.0,
+                0.0,
+                -8.110401456332128e-15,
+                0.067807137966156,
+                -5.819912729521093e-08,
+                1.0
+            ],
+            "parentMarkerId": 8
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.6283190250396729,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 1.1424180269241333,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.6977930068969727,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 10,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_back_upper_leg_L_to_rMarker_hip",
+            "parentFrame": [
+                0.26592299342155457,
+                0.5213840007781982,
+                0.8108289837837219,
+                0.0,
+                0.9639942646026611,
+                -0.1438266634941101,
+                -0.22367148101329803,
+                0.0,
+                1.0053501142692767e-07,
+                0.8411139249801636,
+                -0.5408580303192139,
+                0.0,
+                0.08356213569641113,
+                0.022657139226794243,
+                0.03373275697231293,
+                1.0
+            ],
+            "parentMarkerId": 1
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 1.0315190553665161,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 11,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_back_lower_leg_L_to_rMarker_back_upper_leg_L",
+            "parentFrame": [
+                0.0,
+                0.7086331248283386,
+                0.7055771350860596,
+                0.0,
+                0.0,
+                -0.7055771350860596,
+                0.7086331248283386,
+                0.0,
+                1.0,
+                0.0,
+                -0.0,
+                0.0,
+                6.149759368412333e-09,
+                0.21300537884235382,
+                9.073305662354869e-09,
+                1.0
+            ],
+            "parentMarkerId": 10
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 1.187304973602295,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 12,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_back_paw_L_to_rMarker_back_lower_leg_L",
+            "parentFrame": [
+                0.0,
+                0.6314750909805298,
+                -0.7753961682319641,
+                0.0,
+                0.0,
+                -0.7753961682319641,
+                -0.6314750909805298,
+                0.0,
+                -1.0,
+                0.0,
+                -0.0,
+                0.0,
+                9.057394834144361e-09,
+                0.18166878819465637,
+                -4.753238513899305e-08,
+                1.0
+            ],
+            "parentMarkerId": 11
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.6283190250396729,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 1.1424180269241333,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.6977930068969727,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                -0.00045062595745548606,
+                0.9999998807907104,
+                -0.00011233998520765454,
+                0.0,
+                -0.9999998807907104,
+                -0.0004506354744080454,
+                -8.482089469907805e-05,
+                0.0,
+                -8.487150626024231e-05,
+                0.000112301750050392,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 13,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_back_upper_leg_R_to_rMarker_hip",
+            "parentFrame": [
+                -0.26592713594436646,
+                0.5213842988014221,
+                0.8108274340629578,
+                0.0,
+                -0.9639931321144104,
+                -0.14382663369178772,
+                -0.2236764281988144,
+                0.0,
+                -2.7940404834225774e-06,
+                -0.8411137461662292,
+                0.540858268737793,
+                0.0,
+                -0.08356229960918427,
+                0.022657139226794243,
+                0.03373245149850845,
+                1.0
+            ],
+            "parentMarkerId": 1
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 1.0315190553665161,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                -0.0006633477751165628,
+                0.9999996423721313,
+                0.0005136558320373297,
+                0.0,
+                0.00010038798791356385,
+                -0.0005135893588885665,
+                0.9999998807907104,
+                0.0,
+                0.9999997615814209,
+                0.0006633992306888103,
+                -0.00010004726209444925,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 14,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_back_lower_leg_R_to_rMarker_back_upper_leg_R",
+            "parentFrame": [
+                -0.00037921193870715797,
+                0.7087128758430481,
+                0.7054969072341919,
+                0.0,
+                0.0002578089479357004,
+                -0.7054968476295471,
+                0.7087129950523376,
+                0.0,
+                0.9999998807907104,
+                0.00045063585275784135,
+                8.482031989842653e-05,
+                0.0,
+                2.2489110573786775e-10,
+                0.2130054533481598,
+                -1.175784980489425e-08,
+                1.0
+            ],
+            "parentMarkerId": 13
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 1.187304973602295,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0009850944625213742,
+                0.999999463558197,
+                -0.0002955361269414425,
+                0.0,
+                2.0045999917783774e-05,
+                -0.0002955560339614749,
+                -0.9999999403953552,
+                0.0,
+                -0.9999995231628418,
+                0.000985088525339961,
+                -2.0337138266768306e-05,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 15,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_back_paw_R_to_rMarker_back_lower_leg_R",
+            "parentFrame": [
+                -0.000496727938298136,
+                0.6318728923797607,
+                -0.7750718593597412,
+                0.0,
+                0.0004509648133534938,
+                -0.7750717401504517,
+                -0.6318730711936951,
+                0.0,
+                -0.9999997615814209,
+                -0.0006633991724811494,
+                0.00010004732757806778,
+                0.0,
+                -1.4679838677977841e-08,
+                0.18166877329349518,
+                -8.883652213853566e-08,
+                1.0
+            ],
+            "parentMarkerId": 14
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.3665190041065216,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.785398006439209,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 16,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_front_digit_01_R_to_rMarker_front_paw_R",
+            "parentFrame": [
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                -0.0,
+                -1.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.9344248425312571e-13,
+                0.0853598490357399,
+                -3.078411126011815e-08,
+                1.0
+            ],
+            "parentMarkerId": 26
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.3665190041065216,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.785398006439209,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 17,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_front_digit_01_L_to_rMarker_front_paw_L",
+            "parentFrame": [
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                -0.0,
+                -1.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                8.56259507742152e-14,
+                0.0853598415851593,
+                -5.623041587909938e-08,
+                1.0
+            ],
+            "parentMarkerId": 23
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.34906598925590515,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.785398006439209,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                -1.2567724638756772e-13,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                -1.0,
+                -1.2567724638756772e-13,
+                -0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 18,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_back_digit_01_L_to_rMarker_back_paw_L",
+            "parentFrame": [
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                -0.0,
+                -1.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                -3.501527512383973e-09,
+                0.15135161578655243,
+                2.177112179424512e-08,
+                1.0
+            ],
+            "parentMarkerId": 12
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.34906598925590515,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.785398006439209,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 19,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_back_digit_01_R_to_rMarker_back_paw_R",
+            "parentFrame": [
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                -1.469606500294901e-13,
+                -1.0,
+                0.0,
+                0.0,
+                -1.0,
+                1.469606500294901e-13,
+                0.0,
+                0.0,
+                7.259678636017952e-09,
+                0.15135161578655243,
+                2.927909115157945e-08,
+                1.0
+            ],
+            "parentMarkerId": 15
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.785398006439209,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.785398006439209,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.785398006439209,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 20,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_tail_01_to_rMarker_hip",
+            "parentFrame": [
+                0.0,
+                -1.0,
+                5.808377864013892e-06,
+                0.0,
+                0.0,
+                -5.808377864013892e-06,
+                -1.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                1.605539239335485e-07,
+                -0.04025539755821228,
+                -0.06333031505346298,
+                1.0
+            ],
+            "parentMarkerId": 1
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.785398006439209,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.26179900765419006,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 1.2811390161514282,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 21,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_front_upper_leg_L_to_rMarker_chest",
+            "parentFrame": [
+                0.0,
+                -0.9454948902130127,
+                0.32563695311546326,
+                0.0,
+                0.0,
+                -0.32563695311546326,
+                -0.9454948902130127,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.08356186747550964,
+                0.09831411391496658,
+                0.13476862013339996,
+                1.0
+            ],
+            "parentMarkerId": 5
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.4537859857082367,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 1.2001049518585205,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 22,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_front_lower_leg_L_to_rMarker_front_upper_leg_L",
+            "parentFrame": [
+                0.0,
+                0.734197735786438,
+                -0.678935706615448,
+                0.0,
+                0.0,
+                -0.678935706615448,
+                -0.734197735786438,
+                0.0,
+                -1.0,
+                0.0,
+                -0.0,
+                0.0,
+                5.207446918120695e-09,
+                0.24680973589420319,
+                2.908446994354108e-08,
+                1.0
+            ],
+            "parentMarkerId": 21
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.34906598925590515,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.3665190041065216,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 1.04482102394104,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                -1.0,
+                0.0,
+                -1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 23,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_front_paw_L_to_rMarker_front_lower_leg_L",
+            "parentFrame": [
+                0.0,
+                0.7852027416229248,
+                -0.6192387938499451,
+                0.0,
+                0.0,
+                -0.6192387938499451,
+                -0.7852027416229248,
+                0.0,
+                -1.0,
+                0.0,
+                -0.0,
+                0.0,
+                -1.0942806660807491e-09,
+                0.23911121487617493,
+                1.5012132337233197e-07,
+                1.0
+            ],
+            "parentMarkerId": 22
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.785398006439209,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.26179900765419006,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 1.2811390161514282,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                2.1426400209634267e-08,
+                1.0,
+                -2.6630701199792384e-07,
+                0.0,
+                5.528000102117403e-08,
+                2.6630701199792384e-07,
+                1.0,
+                0.0,
+                1.0,
+                -2.1426414420488982e-08,
+                -5.527999391574667e-08,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 24,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_front_upper_leg_R_to_rMarker_chest",
+            "parentFrame": [
+                -1.7080297993743443e-06,
+                -0.9454948902130127,
+                0.32563695311546326,
+                0.0,
+                4.959319539921125e-06,
+                -0.32563695311546326,
+                -0.9454948902130127,
+                0.0,
+                1.0,
+                4.261988765380531e-12,
+                5.245208740234375e-06,
+                0.0,
+                -0.08356256783008575,
+                0.09831411391496658,
+                0.13476818799972534,
+                1.0
+            ],
+            "parentMarkerId": 5
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.4537859857082367,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 1.2001049518585205,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                -5.003060010722038e-08,
+                1.0,
+                -2.3301799956243485e-07,
+                0.0,
+                -4.590339841570312e-08,
+                -2.3301799956243485e-07,
+                -1.0,
+                0.0,
+                -1.0,
+                -5.0030589449079343e-08,
+                4.590341262655784e-08,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 25,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_front_lower_leg_R_to_rMarker_front_upper_leg_R",
+            "parentFrame": [
+                -2.180040681309947e-08,
+                0.7341972589492798,
+                -0.678936243057251,
+                0.0,
+                -5.513361855946641e-08,
+                -0.678936243057251,
+                -0.7341972589492798,
+                0.0,
+                -1.0,
+                2.1426412644132142e-08,
+                5.528003654831082e-08,
+                0.0,
+                1.4981731411012333e-08,
+                0.24680979549884796,
+                1.4463460651370497e-08,
+                1.0
+            ],
+            "parentMarkerId": 24
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.34906598925590515,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 0.3665190041065216,
+                    "motion": "LIMITED"
+                },
+                {
+                    "limit": 1.04482102394104,
+                    "motion": "LIMITED"
+                }
+            ],
+            "childFrame": [
+                0.0,
+                1.0,
+                -2.3301799956243485e-07,
+                0.0,
+                0.0,
+                -2.3301799956243485e-07,
+                -1.0,
+                0.0,
+                -1.0,
+                0.0,
+                -0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 26,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_front_paw_R_to_rMarker_front_lower_leg_R",
+            "parentFrame": [
+                -6.770932969857313e-08,
+                0.7852023243904114,
+                -0.6192392706871033,
+                0.0,
+                -5.062602337346789e-09,
+                -0.6192392706871033,
+                -0.7852023243904114,
+                0.0,
+                -1.0,
+                -5.003056102736991e-08,
+                4.590344460098095e-08,
+                0.0,
+                -3.418242799924087e-09,
+                0.23911121487617493,
+                1.4430067096782295e-07,
+                1.0
+            ],
+            "parentMarkerId": 25
+        }
+    ],
+    "markers": [
+        {
+            "bodyTransform": [
+                1.0,
+                2.5351816930196946e-06,
+                -5.551012666020483e-13,
+                0.0,
+                -6.751597436509271e-13,
+                4.852752795159176e-07,
+                1.0,
+                0.0,
+                2.5351816930196946e-06,
+                -1.0,
+                4.852752795159176e-07,
+                0.0,
+                1.42069380348539e-14,
+                0.6410892009735107,
+                -0.29133009910583496,
+                1.0
+            ],
+            "boneName": "hip",
+            "bonePath": "Armature|root|hip",
+            "color": [
+                0.3488333225250244,
+                0.699999988079071,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 1,
+            "inputTransform": [
+                1.0,
+                2.5351816930196946e-06,
+                -5.551012666020483e-13,
+                0.0,
+                -6.751597436509271e-13,
+                4.852752795159176e-07,
+                1.0,
+                0.0,
+                2.5351816930196946e-06,
+                -1.0,
+                4.852752795159176e-07,
+                0.0,
+                1.42069380348539e-14,
+                0.6410892009735107,
+                -0.29133009910583496,
+                1.0
+            ],
+            "name": "rMarker_hip",
+            "restTransform": [
+                1.0,
+                2.5351816930196946e-06,
+                -5.551012666020483e-13,
+                0.0,
+                -6.751597436509271e-13,
+                4.852752795159176e-07,
+                1.0,
+                0.0,
+                2.5351816930196946e-06,
+                -1.0,
+                4.852752795159176e-07,
+                0.0,
+                1.42069380348539e-14,
+                0.6410892009735107,
+                -0.29133009910583496,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 4.228557109832764,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.221901997923851,
+                    0.221901997923851,
+                    0.221901997923851
+                ],
+                "length": 0.0,
+                "offset": [
+                    -1.1002300226437001e-07,
+                    0.04142260178923607,
+                    0.043398499488830566
+                ],
+                "radius": 0.1109509989619255,
+                "rotationRadians": [
+                    1.5707933902740479,
+                    -4.852758479501063e-07,
+                    1.5707961320877075
+                ],
+                "type": "SPHERE"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                4.0491850086255e-06,
+                1.788089036836027e-07,
+                0.0,
+                -3.0775872961186224e-09,
+                -0.04335765540599823,
+                0.9990595579147339,
+                0.0,
+                4.05312994189444e-06,
+                -0.9990596175193787,
+                -0.04335765540599823,
+                0.0,
+                4.657969702222958e-14,
+                0.6410892009735107,
+                -0.15062019228935242,
+                1.0
+            ],
+            "boneName": "spine_01",
+            "bonePath": "Armature|root|hip|spine_01",
+            "color": [
+                0.38966667652130127,
+                0.699999988079071,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 2,
+            "inputTransform": [
+                1.0,
+                4.0491850086255e-06,
+                1.788089036836027e-07,
+                0.0,
+                -3.0775875181632273e-09,
+                -0.04335765540599823,
+                0.9990596175193787,
+                0.0,
+                4.05312994189444e-06,
+                -0.9990596175193787,
+                -0.04335765540599823,
+                0.0,
+                4.657969702222958e-14,
+                0.6410892009735107,
+                -0.15062019228935242,
+                1.0
+            ],
+            "name": "rMarker_spine_01",
+            "restTransform": [
+                1.0,
+                4.0491850086255e-06,
+                1.788089036836027e-07,
+                0.0,
+                -3.0775875181632273e-09,
+                -0.04335765540599823,
+                0.9990596175193787,
+                0.0,
+                4.05312994189444e-06,
+                -0.9990596175193787,
+                -0.04335765540599823,
+                0.0,
+                4.657969702222958e-14,
+                0.6410892009735107,
+                -0.15062019228935242,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 2.3357133865356445,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.23862150311470032,
+                    0.14547359943389893,
+                    0.14547359943389893
+                ],
+                "length": 0.09314790368080139,
+                "offset": [
+                    -1.761609951245191e-07,
+                    0.05039849877357483,
+                    0.0434240996837616
+                ],
+                "radius": 0.07273679971694946,
+                "rotationRadians": [
+                    -1.5703740119934082,
+                    -1.5611979961395264,
+                    -1.5712189674377441
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                3.988620846939739e-06,
+                -1.1042894954016447e-07,
+                0.0,
+                1.3669000376026474e-09,
+                0.027332959696650505,
+                0.9996262192726135,
+                0.0,
+                3.990148798038717e-06,
+                -0.9996263384819031,
+                0.027332954108715057,
+                0.0,
+                -1.6448847839356517e-10,
+                0.6387699842453003,
+                -0.09718069434165955,
+                1.0
+            ],
+            "boneName": "spine_02",
+            "bonePath": "Armature|root|hip|spine_01|spine_02",
+            "color": [
+                0.21000000834465027,
+                0.6673333644866943,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 3,
+            "inputTransform": [
+                1.0,
+                3.988620846939739e-06,
+                -1.1042894954016447e-07,
+                0.0,
+                1.3668659537557915e-09,
+                0.027332959696650505,
+                0.9996262192726135,
+                0.0,
+                3.990148798038717e-06,
+                -0.9996263384819031,
+                0.027332963421940804,
+                0.0,
+                -1.6448847839356517e-10,
+                0.6387699842453003,
+                -0.09718069434165955,
+                1.0
+            ],
+            "name": "rMarker_spine_02",
+            "restTransform": [
+                1.0,
+                3.988620846939739e-06,
+                -1.1042894954016447e-07,
+                0.0,
+                1.3668662868226988e-09,
+                0.027332965284585953,
+                0.9996263980865479,
+                0.0,
+                3.990148798038717e-06,
+                -0.9996263980865479,
+                0.027332965284585953,
+                0.0,
+                -1.6448847839356517e-10,
+                0.6387699842453003,
+                -0.09718069434165955,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 1.905882716178894,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.25407296419143677,
+                    0.1242540031671524,
+                    0.1242540031671524
+                ],
+                "length": 0.12981897592544556,
+                "offset": [
+                    -1.950510011283768e-07,
+                    0.10346698760986328,
+                    0.04894149675965309
+                ],
+                "radius": 0.0621270015835762,
+                "rotationRadians": [
+                    -1.5709929466247559,
+                    1.550495982170105,
+                    1.5706000328063965
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                8.407894711126573e-06,
+                -1.7258550997212296e-06,
+                0.0,
+                4.0740869879096753e-13,
+                0.20107364654541016,
+                0.9795758724212646,
+                0.0,
+                8.5831970864092e-06,
+                -0.9795759916305542,
+                0.20107361674308777,
+                0.0,
+                1.8354786549164281e-13,
+                0.6420613527297974,
+                0.02319326251745224,
+                1.0
+            ],
+            "boneName": "spine_03",
+            "bonePath": "Armature|root|hip|spine_01|spine_02|spine_03",
+            "color": [
+                0.21000000834465027,
+                0.699999988079071,
+                0.42233332991600037,
+                1.0
+            ],
+            "id": 4,
+            "inputTransform": [
+                1.0,
+                8.407894711126573e-06,
+                -1.7258550997212296e-06,
+                0.0,
+                -9.255301332191518e-14,
+                0.20107364654541016,
+                0.9795758724212646,
+                0.0,
+                8.583196176914498e-06,
+                -0.9795759916305542,
+                0.20107367634773254,
+                0.0,
+                1.8354786549164281e-13,
+                0.6420613527297974,
+                0.02319326251745224,
+                1.0
+            ],
+            "name": "rMarker_spine_03",
+            "restTransform": [
+                1.0,
+                8.407894711126573e-06,
+                -1.7258550997212296e-06,
+                0.0,
+                -9.255303365070591e-14,
+                0.20107369124889374,
+                0.9795761108398438,
+                0.0,
+                8.5831970864092e-06,
+                -0.9795761108398438,
+                0.20107369124889374,
+                0.0,
+                1.8354786549164281e-13,
+                0.6420613527297974,
+                0.02319326251745224,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 3.1875839233398438,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.29078933596611023,
+                    0.15113060176372528,
+                    0.15113060176372528
+                ],
+                "length": 0.13965873420238495,
+                "offset": [
+                    -5.798120241706783e-07,
+                    0.1178019717335701,
+                    0.06755199283361435
+                ],
+                "radius": 0.07556530088186264,
+                "rotationRadians": [
+                    1.5709940195083618,
+                    1.5273900032043457,
+                    -1.5705989599227905
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                2.1877324343222426e-06,
+                -1.4463328170677414e-06,
+                0.0,
+                -3.833214399107804e-14,
+                0.5514875054359436,
+                0.8341829180717468,
+                0.0,
+                2.622603005875135e-06,
+                -0.8341830372810364,
+                0.5514874458312988,
+                0.0,
+                2.038106147609145e-13,
+                0.6701430678367615,
+                0.15999962389469147,
+                1.0
+            ],
+            "boneName": "chest",
+            "bonePath": "Armature|root|hip|spine_01|spine_02|spine_03|chest",
+            "color": [
+                0.2508334219455719,
+                0.21000000834465027,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 5,
+            "inputTransform": [
+                1.0,
+                2.1877324343222426e-06,
+                -1.4463328170677414e-06,
+                0.0,
+                -9.597200421526675e-13,
+                0.5514875054359436,
+                0.8341829180717468,
+                0.0,
+                2.622603687996161e-06,
+                -0.8341829180717468,
+                0.5514875054359436,
+                0.0,
+                2.038106147609145e-13,
+                0.6701430678367615,
+                0.15999962389469147,
+                1.0
+            ],
+            "name": "rMarker_chest",
+            "restTransform": [
+                1.0,
+                2.1877324343222426e-06,
+                -1.4463328170677414e-06,
+                0.0,
+                -9.59720258993102e-13,
+                0.5514876246452332,
+                0.8341830968856812,
+                0.0,
+                2.622604142743512e-06,
+                -0.8341830968856812,
+                0.5514876246452332,
+                0.0,
+                2.038106147609145e-13,
+                0.6701430678367615,
+                0.15999962389469147,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 2.113950729370117,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.2834606468677521,
+                    0.1225128024816513,
+                    0.1225128024816513
+                ],
+                "length": 0.16094784438610077,
+                "offset": [
+                    -1.8827300607426878e-07,
+                    0.09529908746480942,
+                    0.07178878784179688
+                ],
+                "radius": 0.06125640124082565,
+                "rotationRadians": [
+                    -1.5708849430084229,
+                    1.5411030054092407,
+                    1.5707080364227295
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                1.6696460534149082e-06,
+                -2.0224563286319608e-06,
+                0.0,
+                -7.057885634438599e-13,
+                0.771164059638977,
+                0.6366361975669861,
+                0.0,
+                2.6226023237541085e-06,
+                -0.6366361975669861,
+                0.7711638808250427,
+                0.0,
+                1.41532293697344e-13,
+                0.7589038014411926,
+                0.29425957798957825,
+                1.0
+            ],
+            "boneName": "neck_01",
+            "bonePath": "Armature|root|hip|spine_01|spine_02|spine_03|chest|neck_01",
+            "color": [
+                0.699999988079071,
+                0.4468333125114441,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 6,
+            "inputTransform": [
+                1.0,
+                1.6696460534149082e-06,
+                -2.0224563286319608e-06,
+                0.0,
+                -2.0113789106490643e-12,
+                0.771164059638977,
+                0.6366361975669861,
+                0.0,
+                2.6226023237541085e-06,
+                -0.6366361379623413,
+                0.7711639404296875,
+                0.0,
+                1.41532293697344e-13,
+                0.7589038014411926,
+                0.29425957798957825,
+                1.0
+            ],
+            "name": "rMarker_neck_01",
+            "restTransform": [
+                1.0,
+                1.6696460534149082e-06,
+                -2.0224563286319608e-06,
+                0.0,
+                -2.0113791274894988e-12,
+                0.7711641788482666,
+                0.6366363167762756,
+                0.0,
+                2.6226032332488103e-06,
+                -0.6366363167762756,
+                0.7711641788482666,
+                0.0,
+                1.41532293697344e-13,
+                0.7589038014411926,
+                0.29425957798957825,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 1.2028424739837646,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.18290077149868011,
+                    0.12048500031232834,
+                    0.12048500031232834
+                ],
+                "length": 0.06241576746106148,
+                "offset": [
+                    -5.7021399157974884e-08,
+                    0.018854497000575066,
+                    0.02174229361116886
+                ],
+                "radius": 0.06024250015616417,
+                "rotationRadians": [
+                    -1.57088303565979,
+                    1.540611982345581,
+                    1.570708990097046
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                1.2439654710760806e-06,
+                -2.308810053364141e-06,
+                0.0,
+                9.556860646820278e-14,
+                0.8803501129150391,
+                0.4743238687515259,
+                0.0,
+                2.622603687996161e-06,
+                -0.4743238687515259,
+                0.8803499937057495,
+                0.0,
+                -2.834749748576327e-14,
+                0.8070366382598877,
+                0.3339956998825073,
+                1.0
+            ],
+            "boneName": "neck_02",
+            "bonePath": "Armature|root|hip|spine_01|spine_02|spine_03|chest|neck_01|neck_02",
+            "color": [
+                0.21000000834465027,
+                0.699999988079071,
+                0.3161666989326477,
+                1.0
+            ],
+            "id": 7,
+            "inputTransform": [
+                1.0,
+                1.2439654710760806e-06,
+                -2.308810053364141e-06,
+                0.0,
+                -1.361633787493044e-12,
+                0.8803501129150391,
+                0.4743238687515259,
+                0.0,
+                2.6226034606224857e-06,
+                -0.4743238091468811,
+                0.8803499937057495,
+                0.0,
+                -2.834749748576327e-14,
+                0.8070366382598877,
+                0.3339956998825073,
+                1.0
+            ],
+            "name": "rMarker_neck_02",
+            "restTransform": [
+                1.0,
+                1.2439654710760806e-06,
+                -2.308810053364141e-06,
+                0.0,
+                -1.3616341127536957e-12,
+                0.8803503513336182,
+                0.4743240177631378,
+                0.0,
+                2.6226043701171875e-06,
+                -0.4743240177631378,
+                0.8803503513336182,
+                0.0,
+                -2.834749748576327e-14,
+                0.8070366382598877,
+                0.3339956998825073,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 1.1305557489395142,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.14295339584350586,
+                    0.14295339584350586,
+                    0.14295339584350586
+                ],
+                "length": 0.0,
+                "offset": [
+                    3.864664054812998e-14,
+                    0.0330619253218174,
+                    3.352760202801619e-08
+                ],
+                "radius": 0.07147669792175293,
+                "rotationRadians": [
+                    -1.5707989931106567,
+                    -1.0140848871742492e-06,
+                    1.5707963705062866
+                ],
+                "type": "SPHERE"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                1.1052189847760019e-06,
+                -2.3835652882553404e-06,
+                0.0,
+                -2.847913294079518e-10,
+                0.9072632193565369,
+                0.4205625057220459,
+                0.0,
+                2.6273346520611085e-06,
+                -0.4205624759197235,
+                0.9072631001472473,
+                0.0,
+                1.347701518526062e-13,
+                0.8652487397193909,
+                0.3653598725795746,
+                1.0
+            ],
+            "boneName": "neck_03",
+            "bonePath": "Armature|root|hip|spine_01|spine_02|spine_03|chest|neck_01|neck_02|neck_03",
+            "color": [
+                0.699999988079071,
+                0.30799999833106995,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 8,
+            "inputTransform": [
+                1.0,
+                1.1052189847760019e-06,
+                -2.3835652882553404e-06,
+                0.0,
+                -2.863175252443284e-10,
+                0.9072632193565369,
+                0.4205625057220459,
+                0.0,
+                2.627334424687433e-06,
+                -0.4205624461174011,
+                0.9072631001472473,
+                0.0,
+                1.347701518526062e-13,
+                0.8652487397193909,
+                0.3653598725795746,
+                1.0
+            ],
+            "name": "rMarker_neck_03",
+            "restTransform": [
+                1.0,
+                1.1052189847760019e-06,
+                -2.3835652882553404e-06,
+                0.0,
+                -2.8631763626663087e-10,
+                0.9072635173797607,
+                0.42056265473365784,
+                0.0,
+                2.6273355615558103e-06,
+                -0.42056265473365784,
+                0.9072635173797607,
+                0.0,
+                1.347701518526062e-13,
+                0.8652487397193909,
+                0.3653598725795746,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 1.006293535232544,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.13751140236854553,
+                    0.13751140236854553,
+                    0.13751140236854553
+                ],
+                "length": 0.0,
+                "offset": [
+                    1.244557367862005e-14,
+                    0.03390355780720711,
+                    -3.539024007181979e-08
+                ],
+                "radius": 0.06875570118427277,
+                "rotationRadians": [
+                    -1.5707989931106567,
+                    1.0438503750265227e-06,
+                    1.5707963705062866
+                ],
+                "type": "SPHERE"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                1.4988319207986933e-07,
+                -2.622618012537714e-06,
+                0.0,
+                -2.0096340147546243e-09,
+                0.9984139800071716,
+                0.0562925711274147,
+                0.0,
+                2.626896275614854e-06,
+                -0.05629250407218933,
+                0.9984138011932373,
+                0.0,
+                -1.944066956027779e-11,
+                0.9267677068710327,
+                0.39387696981430054,
+                1.0
+            ],
+            "boneName": "head",
+            "bonePath": "Armature|root|hip|spine_01|spine_02|spine_03|chest|neck_01|neck_02|neck_03|head",
+            "color": [
+                0.5448333024978638,
+                0.699999988079071,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 9,
+            "inputTransform": [
+                1.0,
+                1.4988319207986933e-07,
+                -2.622618012537714e-06,
+                0.0,
+                -2.011565802817472e-09,
+                0.9984139800071716,
+                0.0562925711274147,
+                0.0,
+                2.6268951387464767e-06,
+                -0.05629255995154381,
+                0.9984138011932373,
+                0.0,
+                -1.944066956027779e-11,
+                0.9267677068710327,
+                0.39387696981430054,
+                1.0
+            ],
+            "name": "rMarker_head",
+            "restTransform": [
+                1.0,
+                1.4988319207986933e-07,
+                -2.622618012537714e-06,
+                0.0,
+                -2.011566468951287e-09,
+                0.9984143376350403,
+                0.056292589753866196,
+                0.0,
+                2.6268965029885294e-06,
+                -0.056292589753866196,
+                0.9984143376350403,
+                0.0,
+                -1.944066956027779e-11,
+                0.9267677068710327,
+                0.39387696981430054,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 3.201937198638916,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.1313219964504242,
+                    0.12433095276355743,
+                    0.26532986760139465
+                ],
+                "length": 0.24251766502857208,
+                "offset": [
+                    3.6610199316555736e-08,
+                    0.02347739040851593,
+                    0.10854694992303848
+                ],
+                "radius": 0.14407099783420563,
+                "rotationRadians": [
+                    0.3298940062522888,
+                    -1.4230299427708815e-07,
+                    8.508540076945792e-07
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9999983310699463,
+                0.0018259008647873998,
+                0.00017575430683791637,
+                0.0,
+                0.0018021613359451294,
+                -0.9958037734031677,
+                0.09149511903524399,
+                0.0,
+                0.00034207780845463276,
+                -0.09149464219808578,
+                -0.9958053827285767,
+                0.0,
+                0.0835622176527977,
+                0.6073566675186157,
+                -0.2686729431152344,
+                1.0
+            ],
+            "boneName": "back_upper_leg_L",
+            "bonePath": "Armature|root|hip|back_upper_leg_L",
+            "color": [
+                0.699999988079071,
+                0.5611666440963745,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 10,
+            "inputTransform": [
+                0.9999983310699463,
+                0.0018259008647873998,
+                0.00017575430683791637,
+                0.0,
+                0.001802161568775773,
+                -0.9958038926124573,
+                0.09149512648582458,
+                0.0,
+                0.00034207786666229367,
+                -0.09149465709924698,
+                -0.9958055019378662,
+                0.0,
+                0.0835622176527977,
+                0.6073566675186157,
+                -0.2686729431152344,
+                1.0
+            ],
+            "name": "rMarker_back_upper_leg_L",
+            "restTransform": [
+                0.9999983310699463,
+                0.0018259008647873998,
+                0.00017575430683791637,
+                0.0,
+                0.001802161568775773,
+                -0.9958038926124573,
+                0.09149512648582458,
+                0.0,
+                0.00034207786666229367,
+                -0.09149465709924698,
+                -0.9958055019378662,
+                0.0,
+                0.0835622176527977,
+                0.6073566675186157,
+                -0.2686729431152344,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 1.7257702350616455,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.31576940417289734,
+                    0.10276400297880173,
+                    0.10276400297880173
+                ],
+                "length": 0.2130054086446762,
+                "offset": [
+                    -6.034809848642908e-05,
+                    0.13708600401878357,
+                    0.015293399803340435
+                ],
+                "radius": 0.051382001489400864,
+                "rotationRadians": [
+                    2.9126060009002686,
+                    0.13026000559329987,
+                    -1.5703120231628418
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9999963641166687,
+                0.002645256696268916,
+                0.0004416740557644516,
+                0.0,
+                0.0026519838720560074,
+                -0.9508281350135803,
+                -0.30970698595046997,
+                0.0,
+                -0.00039929835475049913,
+                0.30970704555511475,
+                -0.9508317112922668,
+                0.0,
+                0.083946093916893,
+                0.3952450752258301,
+                -0.2491839975118637,
+                1.0
+            ],
+            "boneName": "back_lower_leg_L",
+            "bonePath": "Armature|root|hip|back_upper_leg_L|back_lower_leg_L",
+            "color": [
+                0.21000000834465027,
+                0.30800002813339233,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 11,
+            "inputTransform": [
+                0.9999964237213135,
+                0.002645256696268916,
+                0.0004416740848682821,
+                0.0,
+                0.002651984104886651,
+                -0.9508283138275146,
+                -0.30970704555511475,
+                0.0,
+                -0.00039929847116582096,
+                0.3097071051597595,
+                -0.950831949710846,
+                0.0,
+                0.083946093916893,
+                0.3952450752258301,
+                -0.2491839975118637,
+                1.0
+            ],
+            "name": "rMarker_back_lower_leg_L",
+            "restTransform": [
+                0.9999964237213135,
+                0.002645256696268916,
+                0.0004416740848682821,
+                0.0,
+                0.002651984104886651,
+                -0.9508283138275146,
+                -0.30970704555511475,
+                0.0,
+                -0.00039929847116582096,
+                0.3097071051597595,
+                -0.950831949710846,
+                0.0,
+                0.083946093916893,
+                0.3952450752258301,
+                -0.2491839975118637,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.3577273488044739,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.2349366992712021,
+                    0.05326789245009422,
+                    0.05326789245009422
+                ],
+                "length": 0.18166880309581757,
+                "offset": [
+                    5.9881131164729595e-09,
+                    0.09083440154790878,
+                    -2.5087501853704453e-08
+                ],
+                "radius": 0.02663394622504711,
+                "rotationRadians": [
+                    1.572798490524292,
+                    2.761894108971319e-07,
+                    1.570796251296997
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9999921917915344,
+                -0.003941231407225132,
+                4.954266387358075e-06,
+                0.0,
+                -0.003940398804843426,
+                -0.9998049139976501,
+                -0.019346049055457115,
+                0.0,
+                8.12005964689888e-05,
+                0.0193458441644907,
+                -0.9998126029968262,
+                0.0,
+                0.08442788571119308,
+                0.2225092351436615,
+                -0.305448055267334,
+                1.0
+            ],
+            "boneName": "back_paw_L",
+            "bonePath": "Armature|root|hip|back_upper_leg_L|back_lower_leg_L|back_paw_L",
+            "color": [
+                0.699999988079071,
+                0.3569999933242798,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 12,
+            "inputTransform": [
+                0.9999922513961792,
+                -0.003941231872886419,
+                4.954266842105426e-06,
+                0.0,
+                -0.0039403983391821384,
+                -0.9998050928115845,
+                -0.019346052780747414,
+                0.0,
+                8.120057464111596e-05,
+                0.019345883280038834,
+                -0.9998128414154053,
+                0.0,
+                0.08442788571119308,
+                0.2225092351436615,
+                -0.305448055267334,
+                1.0
+            ],
+            "name": "rMarker_back_paw_L",
+            "restTransform": [
+                0.9999922513961792,
+                -0.003941231872886419,
+                4.954266842105426e-06,
+                0.0,
+                -0.0039403983391821384,
+                -0.9998050928115845,
+                -0.019346052780747414,
+                0.0,
+                8.120057464111596e-05,
+                0.019345883280038834,
+                -0.9998128414154053,
+                0.0,
+                0.08442788571119308,
+                0.2225092351436615,
+                -0.305448055267334,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.2269362062215805,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.19766885042190552,
+                    0.0463172011077404,
+                    0.0463172011077404
+                ],
+                "length": 0.15135164558887482,
+                "offset": [
+                    -3.0293563213490415e-09,
+                    0.07567582279443741,
+                    1.729540599626489e-08
+                ],
+                "radius": 0.0231586005538702,
+                "rotationRadians": [
+                    -1.548832893371582,
+                    -2.2854598569210793e-07,
+                    1.5707963705062866
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9999990463256836,
+                -0.0013693999499082565,
+                -0.00013246890739537776,
+                0.0,
+                -0.001351564540527761,
+                -0.9958147406578064,
+                0.091383196413517,
+                0.0,
+                -0.00025705466396175325,
+                -0.0913829356431961,
+                -0.9958157539367676,
+                0.0,
+                -0.0835622176527977,
+                0.6073565483093262,
+                -0.2686729431152344,
+                1.0
+            ],
+            "boneName": "back_upper_leg_R",
+            "bonePath": "Armature|root|hip|back_upper_leg_R",
+            "color": [
+                0.699999988079071,
+                0.6754999756813049,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 13,
+            "inputTransform": [
+                0.9999990463256836,
+                -0.0013693999499082565,
+                -0.00013246890739537776,
+                0.0,
+                -0.0013515646569430828,
+                -0.995814859867096,
+                0.0913832038640976,
+                0.0,
+                -0.00025705466396175325,
+                -0.0913829430937767,
+                -0.9958158135414124,
+                0.0,
+                -0.0835622176527977,
+                0.6073565483093262,
+                -0.2686729431152344,
+                1.0
+            ],
+            "name": "rMarker_back_upper_leg_R",
+            "restTransform": [
+                0.9999990463256836,
+                -0.0013693999499082565,
+                -0.00013246890739537776,
+                0.0,
+                -0.0013515646569430828,
+                -0.995814859867096,
+                0.0913832038640976,
+                0.0,
+                -0.00025705466396175325,
+                -0.0913829430937767,
+                -0.9958158135414124,
+                0.0,
+                -0.0835622176527977,
+                0.6073565483093262,
+                -0.2686729431152344,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 1.7257708311080933,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.3157694935798645,
+                    0.10276400297880173,
+                    0.10276400297880173
+                ],
+                "length": 0.21300548315048218,
+                "offset": [
+                    4.526490010903217e-05,
+                    0.13708800077438354,
+                    0.01528989989310503
+                ],
+                "radius": 0.051382001489400864,
+                "rotationRadians": [
+                    2.9125208854675293,
+                    -0.1301479935646057,
+                    1.570773959159851
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9999979138374329,
+                -0.0019834348931908607,
+                -0.00033168221125379205,
+                0.0,
+                -0.001988791162148118,
+                -0.9509888291358948,
+                -0.3092189133167267,
+                0.0,
+                0.000297889462672174,
+                0.3092188835144043,
+                -0.9509907960891724,
+                0.0,
+                -0.08385010808706284,
+                0.3952425420284271,
+                -0.24920780956745148,
+                1.0
+            ],
+            "boneName": "back_lower_leg_R",
+            "bonePath": "Armature|root|hip|back_upper_leg_R|back_lower_leg_R",
+            "color": [
+                0.699999988079071,
+                0.6754999756813049,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 14,
+            "inputTransform": [
+                0.9999979734420776,
+                -0.0019834348931908607,
+                -0.0003316822403576225,
+                0.0,
+                -0.0019887909293174744,
+                -0.9509888291358948,
+                -0.3092189133167267,
+                0.0,
+                0.0002978895208798349,
+                0.30921894311904907,
+                -0.9509907960891724,
+                0.0,
+                -0.08385010808706284,
+                0.3952425420284271,
+                -0.24920780956745148,
+                1.0
+            ],
+            "name": "rMarker_back_lower_leg_R",
+            "restTransform": [
+                0.9999979734420776,
+                -0.0019834348931908607,
+                -0.0003316822403576225,
+                0.0,
+                -0.0019887909293174744,
+                -0.9509888291358948,
+                -0.3092189133167267,
+                0.0,
+                0.0002978895208798349,
+                0.30921894311904907,
+                -0.9509907960891724,
+                0.0,
+                -0.08385010808706284,
+                0.3952425420284271,
+                -0.24920780956745148,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.9623433947563171,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.2652371823787689,
+                    0.08356840163469315,
+                    0.08356840163469315
+                ],
+                "length": 0.18166877329349518,
+                "offset": [
+                    4.113110207981663e-06,
+                    0.09397570043802261,
+                    0.007148310076445341
+                ],
+                "radius": 0.04178420081734657,
+                "rotationRadians": [
+                    1.5694669485092163,
+                    0.08772460371255875,
+                    1.5707780122756958
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9999955892562866,
+                0.002955941017717123,
+                -3.969614681409439e-06,
+                0.0,
+                0.002955291885882616,
+                -0.9998025894165039,
+                -0.019641559571027756,
+                0.0,
+                -6.20283026364632e-05,
+                0.01964138261973858,
+                -0.9998070001602173,
+                0.0,
+                -0.08421142399311066,
+                0.22247754037380219,
+                -0.3053831458091736,
+                1.0
+            ],
+            "boneName": "back_paw_R",
+            "bonePath": "Armature|root|hip|back_upper_leg_R|back_lower_leg_R|back_paw_R",
+            "color": [
+                0.21000000834465027,
+                0.699999988079071,
+                0.5039999485015869,
+                1.0
+            ],
+            "id": 15,
+            "inputTransform": [
+                0.9999956488609314,
+                0.002955941017717123,
+                -3.96961513615679e-06,
+                0.0,
+                0.0029552928172051907,
+                -0.9998027086257935,
+                -0.019641561433672905,
+                0.0,
+                -6.202812801348045e-05,
+                0.019641464576125145,
+                -0.9998070597648621,
+                0.0,
+                -0.08421142399311066,
+                0.22247754037380219,
+                -0.3053831458091736,
+                1.0
+            ],
+            "name": "rMarker_back_paw_R",
+            "restTransform": [
+                0.9999956488609314,
+                0.002955941017717123,
+                -3.96961513615679e-06,
+                0.0,
+                0.0029552928172051907,
+                -0.9998027086257935,
+                -0.019641561433672905,
+                0.0,
+                -6.202812801348045e-05,
+                0.019641464576125145,
+                -0.9998070597648621,
+                0.0,
+                -0.08421142399311066,
+                0.22247754037380219,
+                -0.3053831458091736,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.22693617641925812,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.19766883552074432,
+                    0.0463172011077404,
+                    0.0463172011077404
+                ],
+                "length": 0.15135163068771362,
+                "offset": [
+                    2.5352733246108983e-09,
+                    0.07567581534385681,
+                    1.7019829101627693e-08
+                ],
+                "radius": 0.0231586005538702,
+                "rotationRadians": [
+                    -1.5873147249221802,
+                    -2.2490446838219214e-07,
+                    1.570796251296997
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                -1.8199249325334677e-06,
+                2.1139351120275096e-12,
+                0.0,
+                -9.846345743955154e-13,
+                2.9813328694672236e-08,
+                1.0000001192092896,
+                0.0,
+                -1.8199267515228712e-06,
+                -0.9999998211860657,
+                1.3349850291888288e-07,
+                0.0,
+                -0.08356219530105591,
+                0.04703984782099724,
+                0.31171682476997375,
+                1.0
+            ],
+            "boneName": "front_digit_01_R",
+            "bonePath": "Armature|root|hip|spine_01|spine_02|spine_03|chest|front_upper_leg_R|front_lower_leg_R|front_paw_R|front_digit_01_R",
+            "color": [
+                0.21000000834465027,
+                0.43050000071525574,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 16,
+            "inputTransform": [
+                1.0,
+                -1.8199249325334677e-06,
+                2.1139351120275096e-12,
+                0.0,
+                -2.0596770816672105e-12,
+                2.981332514195856e-08,
+                1.0,
+                0.0,
+                -1.8199249325334677e-06,
+                -1.0,
+                2.981332514195856e-08,
+                0.0,
+                -0.08356219530105591,
+                0.04703984782099724,
+                0.31171682476997375,
+                1.0
+            ],
+            "name": "rMarker_front_digit_01_R",
+            "restTransform": [
+                1.0,
+                -1.8199249325334677e-06,
+                2.1139351120275096e-12,
+                0.0,
+                -2.0596770816672105e-12,
+                2.981332514195856e-08,
+                1.0,
+                0.0,
+                -1.8199249325334677e-06,
+                -1.0,
+                2.981332514195856e-08,
+                0.0,
+                -0.08356219530105591,
+                0.04703984782099724,
+                0.31171682476997375,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.06032422557473183,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.07035460323095322,
+                    0.034060001373291016,
+                    0.034060001373291016
+                ],
+                "length": 0.05124522000551224,
+                "offset": [
+                    4.0134899847998895e-08,
+                    0.011845899745821953,
+                    0.023056600242853165
+                ],
+                "radius": 0.026584699749946594,
+                "rotationRadians": [
+                    -1.5707939863204956,
+                    0.013271399773657322,
+                    1.570796012878418
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                1.8199252735939808e-06,
+                3.041848728197599e-13,
+                0.0,
+                -1.4975259259638468e-13,
+                5.761778538726503e-07,
+                0.9999994039535522,
+                0.0,
+                1.8199242504124413e-06,
+                -0.9999996423721313,
+                5.858007057213399e-07,
+                0.0,
+                0.0835622176527977,
+                0.04703991860151291,
+                0.3117169439792633,
+                1.0
+            ],
+            "boneName": "front_digit_01_L",
+            "bonePath": "Armature|root|hip|spine_01|spine_02|spine_03|chest|front_upper_leg_L|front_lower_leg_L|front_paw_L|front_digit_01_L",
+            "color": [
+                0.21000000834465027,
+                0.4713332951068878,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 17,
+            "inputTransform": [
+                1.0,
+                1.8199252735939808e-06,
+                3.041848728197599e-13,
+                0.0,
+                -1.352786155664476e-12,
+                5.761781949331635e-07,
+                1.0,
+                0.0,
+                1.8199252735939808e-06,
+                -1.0,
+                5.761781949331635e-07,
+                0.0,
+                0.0835622176527977,
+                0.04703991860151291,
+                0.3117169439792633,
+                1.0
+            ],
+            "name": "rMarker_front_digit_01_L",
+            "restTransform": [
+                1.0,
+                1.8199252735939808e-06,
+                3.041848728197599e-13,
+                0.0,
+                -1.352786155664476e-12,
+                5.761781949331635e-07,
+                1.0,
+                0.0,
+                1.8199252735939808e-06,
+                -1.0,
+                5.761781949331635e-07,
+                0.0,
+                0.0835622176527977,
+                0.04703991860151291,
+                0.3117169439792633,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.10002964735031128,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.07795999944210052,
+                    0.041665200144052505,
+                    0.041665200144052505
+                ],
+                "length": 0.05124526098370552,
+                "offset": [
+                    -3.1441452108538215e-08,
+                    0.015599533915519714,
+                    0.02032667025923729
+                ],
+                "radius": 0.03418999910354614,
+                "rotationRadians": [
+                    -1.5707989931106567,
+                    0.016384199261665344,
+                    1.570796012878418
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9905333518981934,
+                -0.045886579900979996,
+                -0.1293741762638092,
+                0.0,
+                0.12954071164131165,
+                0.0006613353616558015,
+                0.9915735125541687,
+                0.0,
+                -0.045414380729198456,
+                -0.9989461302757263,
+                0.006599220912903547,
+                0.0,
+                0.08383149653673172,
+                0.07118711620569229,
+                -0.30837613344192505,
+                1.0
+            ],
+            "boneName": "back_digit_01_L",
+            "bonePath": "Armature|root|hip|back_upper_leg_L|back_lower_leg_L|back_paw_L|back_digit_01_L",
+            "color": [
+                0.21000000834465027,
+                0.4794999659061432,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 18,
+            "inputTransform": [
+                0.9905335903167725,
+                -0.04588659107685089,
+                -0.1293742060661316,
+                0.0,
+                0.12954071164131165,
+                0.0006613375735469162,
+                0.9915738701820374,
+                0.0,
+                -0.045414384454488754,
+                -0.9989464282989502,
+                0.006599258631467819,
+                0.0,
+                0.08383149653673172,
+                0.07118711620569229,
+                -0.30837613344192505,
+                1.0
+            ],
+            "name": "rMarker_back_digit_01_L",
+            "restTransform": [
+                0.9905335903167725,
+                -0.04588659107685089,
+                -0.1293742060661316,
+                0.0,
+                0.12954071164131165,
+                0.0006613375735469162,
+                0.9915738701820374,
+                0.0,
+                -0.045414384454488754,
+                -0.9989464282989502,
+                0.006599258631467819,
+                0.0,
+                0.08383149653673172,
+                0.07118711620569229,
+                -0.30837613344192505,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.10727127641439438,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.07493770122528076,
+                    0.04400850087404251,
+                    0.04400850087404251
+                ],
+                "length": 0.048338379710912704,
+                "offset": [
+                    5.6784800108289346e-05,
+                    0.018202999606728554,
+                    0.04455919936299324
+                ],
+                "radius": 0.03530389815568924,
+                "rotationRadians": [
+                    -1.6054519414901733,
+                    -0.009526469744741917,
+                    1.6842219829559326
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9905782341957092,
+                0.04487236216664314,
+                0.12938754260540009,
+                0.0,
+                -0.1295400857925415,
+                0.000495941552799195,
+                0.9915739297866821,
+                0.0,
+                0.04443010315299034,
+                -0.9989925026893616,
+                0.006303960457444191,
+                0.0,
+                -0.08376412838697433,
+                0.07115577906370163,
+                -0.3083559572696686,
+                1.0
+            ],
+            "boneName": "back_digit_01_R",
+            "bonePath": "Armature|root|hip|back_upper_leg_R|back_lower_leg_R|back_paw_R|back_digit_01_R",
+            "color": [
+                0.24266664683818817,
+                0.21000000834465027,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 19,
+            "inputTransform": [
+                0.990578293800354,
+                0.04487236589193344,
+                0.12938755750656128,
+                0.0,
+                -0.1295400857925415,
+                0.0004959419602528214,
+                0.9915740489959717,
+                0.0,
+                0.04443010315299034,
+                -0.9989926218986511,
+                0.006304039619863033,
+                0.0,
+                -0.08376412838697433,
+                0.07115577906370163,
+                -0.3083559572696686,
+                1.0
+            ],
+            "name": "rMarker_back_digit_01_R",
+            "restTransform": [
+                0.990578293800354,
+                0.04487236589193344,
+                0.12938755750656128,
+                0.0,
+                -0.1295400857925415,
+                0.0004959419602528214,
+                0.9915740489959717,
+                0.0,
+                0.04443010315299034,
+                -0.9989926218986511,
+                0.006304039619863033,
+                0.0,
+                -0.08376412838697433,
+                0.07115577906370163,
+                -0.3083559572696686,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.10727127641439438,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.07493770122528076,
+                    0.04400850087404251,
+                    0.04400850087404251
+                ],
+                "length": 0.048338379710912704,
+                "offset": [
+                    -3.535980067681521e-05,
+                    0.01820649951696396,
+                    0.044556401669979095
+                ],
+                "radius": 0.03530389815568924,
+                "rotationRadians": [
+                    -1.6064419746398926,
+                    0.009247330017387867,
+                    -1.6842390298843384
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                -3.2731973078625742e-06,
+                -1.9591045656852657e-06,
+                0.0,
+                -4.4034337265928813e-13,
+                0.5135675072669983,
+                -0.858049213886261,
+                0.0,
+                3.814697265625e-06,
+                0.8580493330955505,
+                0.5135675668716431,
+                0.0,
+                1.2153190780128664e-13,
+                0.7044194936752319,
+                -0.33158552646636963,
+                1.0
+            ],
+            "boneName": "tail_01",
+            "bonePath": "Armature|root|hip|tail_01",
+            "color": [
+                0.6346666812896729,
+                0.699999988079071,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 20,
+            "inputTransform": [
+                1.0,
+                -3.2731973078625742e-06,
+                -1.9591045656852657e-06,
+                0.0,
+                -4.4034337265928813e-13,
+                0.5135675072669983,
+                -0.858049213886261,
+                0.0,
+                3.814696810877649e-06,
+                0.858049213886261,
+                0.5135675072669983,
+                0.0,
+                1.2153190780128664e-13,
+                0.7044194936752319,
+                -0.33158552646636963,
+                1.0
+            ],
+            "name": "rMarker_tail_01",
+            "restTransform": [
+                1.0,
+                -3.2731973078625742e-06,
+                -1.9591045656852657e-06,
+                0.0,
+                -4.4034337265928813e-13,
+                0.5135675072669983,
+                -0.858049213886261,
+                0.0,
+                3.814696810877649e-06,
+                0.858049213886261,
+                0.5135675072669983,
+                0.0,
+                1.2153190780128664e-13,
+                0.7044194936752319,
+                -0.33158552646636963,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.09582678973674774,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.08551307022571564,
+                    0.048828672617673874,
+                    0.048828672617673874
+                ],
+                "length": 0.03668440133333206,
+                "offset": [
+                    0.0,
+                    0.01834220066666603,
+                    2.644820007446924e-08
+                ],
+                "radius": 0.024414336308836937,
+                "rotationRadians": [
+                    -1.5708001852035522,
+                    -1.4419300669032964e-06,
+                    1.5707963705062866
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                -4.245288494075794e-07,
+                2.3288334887183737e-06,
+                0.0,
+                -5.1288207458810575e-08,
+                -0.9874419569969177,
+                -0.15798069536685944,
+                0.0,
+                2.366656417507329e-06,
+                0.15798071026802063,
+                -0.9874417781829834,
+                0.0,
+                0.0835622176527977,
+                0.6119405627250671,
+                0.31633469462394714,
+                1.0
+            ],
+            "boneName": "front_upper_leg_L",
+            "bonePath": "Armature|root|hip|spine_01|spine_02|spine_03|chest|front_upper_leg_L",
+            "color": [
+                0.21000000834465027,
+                0.37333330512046814,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 21,
+            "inputTransform": [
+                1.0,
+                -4.245288494075794e-07,
+                2.3288334887183737e-06,
+                0.0,
+                -5.128685387489895e-08,
+                -0.9874419569969177,
+                -0.15798069536685944,
+                0.0,
+                2.366654825891601e-06,
+                0.15798066556453705,
+                -0.9874417781829834,
+                0.0,
+                0.0835622176527977,
+                0.6119405627250671,
+                0.31633469462394714,
+                1.0
+            ],
+            "name": "rMarker_front_upper_leg_L",
+            "restTransform": [
+                1.0,
+                -4.245288494075794e-07,
+                2.3288334887183737e-06,
+                0.0,
+                -5.128686808575367e-08,
+                -0.9874421954154968,
+                -0.15798074007034302,
+                0.0,
+                2.3666557353863027e-06,
+                0.15798074007034302,
+                -0.9874421954154968,
+                0.0,
+                0.0835622176527977,
+                0.6119405627250671,
+                0.31633469462394714,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 1.0639986991882324,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.32510411739349365,
+                    0.07829439640045166,
+                    0.07829439640045166
+                ],
+                "length": 0.24680973589420319,
+                "offset": [
+                    2.6367921179826226e-09,
+                    0.12340486794710159,
+                    1.3199832338273154e-08
+                ],
+                "radius": 0.03914719820022583,
+                "rotationRadians": [
+                    1.098483920097351,
+                    -1.069636255124351e-07,
+                    1.570796251296997
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                1.5445357348653488e-07,
+                2.357365701755043e-06,
+                0.0,
+                3.573306983639668e-08,
+                -0.9987350106239319,
+                0.05027804896235466,
+                0.0,
+                2.362150326007395e-06,
+                -0.05027807876467705,
+                -0.9987348318099976,
+                0.0,
+                0.0835622102022171,
+                0.3682302236557007,
+                0.2773434817790985,
+                1.0
+            ],
+            "boneName": "front_lower_leg_L",
+            "bonePath": "Armature|root|hip|spine_01|spine_02|spine_03|chest|front_upper_leg_L|front_lower_leg_L",
+            "color": [
+                0.21000000834465027,
+                0.699999988079071,
+                0.610166609287262,
+                1.0
+            ],
+            "id": 22,
+            "inputTransform": [
+                1.0,
+                1.5445357348653488e-07,
+                2.357365701755043e-06,
+                0.0,
+                3.5734444736590376e-08,
+                -0.9987350106239319,
+                0.05027804896235466,
+                0.0,
+                2.3621489617653424e-06,
+                -0.05027804151177406,
+                -0.9987348318099976,
+                0.0,
+                0.0835622102022171,
+                0.3682302236557007,
+                0.2773434817790985,
+                1.0
+            ],
+            "name": "rMarker_front_lower_leg_L",
+            "restTransform": [
+                1.0,
+                1.5445357348653488e-07,
+                2.357365701755043e-06,
+                0.0,
+                3.5734451842017734e-08,
+                -0.998735249042511,
+                0.050278063863515854,
+                0.0,
+                2.362149871260044e-06,
+                -0.050278063863515854,
+                -0.998735249042511,
+                0.0,
+                0.0835622102022171,
+                0.3682302236557007,
+                0.2773434817790985,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.7871159911155701,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.3080764412879944,
+                    0.06896519660949707,
+                    0.06896519660949707
+                ],
+                "length": 0.23911122977733612,
+                "offset": [
+                    -2.838198120969082e-09,
+                    0.11955561488866806,
+                    7.19176895813689e-08
+                ],
+                "radius": 0.034482598304748535,
+                "rotationRadians": [
+                    -1.5707988739013672,
+                    -6.015416715854371e-07,
+                    1.5707963705062866
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                6.889630412842962e-07,
+                2.539325350880972e-06,
+                0.0,
+                -6.531250692186352e-13,
+                -0.9651081562042236,
+                0.2618502974510193,
+                0.0,
+                2.631129518704256e-06,
+                -0.26185035705566406,
+                -0.9651079773902893,
+                0.0,
+                0.0835622176527977,
+                0.1294214129447937,
+                0.28936538100242615,
+                1.0
+            ],
+            "boneName": "front_paw_L",
+            "bonePath": "Armature|root|hip|spine_01|spine_02|spine_03|chest|front_upper_leg_L|front_lower_leg_L|front_paw_L",
+            "color": [
+                0.699999988079071,
+                0.39783331751823425,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 23,
+            "inputTransform": [
+                1.0,
+                6.889630412842962e-07,
+                2.539325350880972e-06,
+                0.0,
+                7.512730129839718e-13,
+                -0.9651081562042236,
+                0.2618502974510193,
+                0.0,
+                2.631128381835879e-06,
+                -0.2618502378463745,
+                -0.9651079773902893,
+                0.0,
+                0.0835622176527977,
+                0.1294214129447937,
+                0.28936538100242615,
+                1.0
+            ],
+            "name": "rMarker_front_paw_L",
+            "restTransform": [
+                1.0,
+                6.889630412842962e-07,
+                2.539325350880972e-06,
+                0.0,
+                7.512732298244063e-13,
+                -0.9651084542274475,
+                0.26185038685798645,
+                0.0,
+                2.6311297460779315e-06,
+                -0.26185038685798645,
+                -0.9651084542274475,
+                0.0,
+                0.0835622176527977,
+                0.1294214129447937,
+                0.28936538100242615,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.1441224366426468,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.13158763945102692,
+                    0.04622780159115791,
+                    0.04622780159115791
+                ],
+                "length": 0.0853598415851593,
+                "offset": [
+                    2.197432680262068e-09,
+                    0.04267992079257965,
+                    -1.9987961508149965e-08
+                ],
+                "radius": 0.023113900795578957,
+                "rotationRadians": [
+                    -1.5707991123199463,
+                    4.68322411961708e-07,
+                    1.570796251296997
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                4.1210614654119126e-07,
+                -2.3868044536357047e-06,
+                0.0,
+                2.9859720029890013e-08,
+                -0.9874420166015625,
+                -0.15798097848892212,
+                0.0,
+                -2.421937324470491e-06,
+                0.1579810529947281,
+                -0.9874422550201416,
+                0.0,
+                -0.0835622176527977,
+                0.6119405627250671,
+                0.31633469462394714,
+                1.0
+            ],
+            "boneName": "front_upper_leg_R",
+            "bonePath": "Armature|root|hip|spine_01|spine_02|spine_03|chest|front_upper_leg_R",
+            "color": [
+                0.699999988079071,
+                0.3488333225250244,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 24,
+            "inputTransform": [
+                1.0,
+                4.1210614654119126e-07,
+                -2.3868044536357047e-06,
+                0.0,
+                2.9861222827776146e-08,
+                -0.9874420166015625,
+                -0.15798097848892212,
+                0.0,
+                -2.421936642349465e-06,
+                0.1579810231924057,
+                -0.9874422550201416,
+                0.0,
+                -0.0835622176527977,
+                0.6119405627250671,
+                0.31633469462394714,
+                1.0
+            ],
+            "name": "rMarker_front_upper_leg_R",
+            "restTransform": [
+                1.0,
+                4.1210614654119126e-07,
+                -2.3868044536357047e-06,
+                0.0,
+                2.9861226380489825e-08,
+                -0.987442135810852,
+                -0.1579809933900833,
+                0.0,
+                -2.4219364149757894e-06,
+                0.1579809933900833,
+                -0.987442135810852,
+                0.0,
+                -0.0835622176527977,
+                0.6119405627250671,
+                0.31633469462394714,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 1.0639989376068115,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.3251042366027832,
+                    0.07829439640045166,
+                    0.07829439640045166
+                ],
+                "length": 0.24680982530117035,
+                "offset": [
+                    5.66257707390605e-09,
+                    0.12340491265058517,
+                    -4.979604728561071e-09
+                ],
+                "radius": 0.03914719820022583,
+                "rotationRadians": [
+                    2.0431087017059326,
+                    4.035175749095288e-08,
+                    1.570796251296997
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                -1.0679291762016874e-07,
+                -2.405726718279766e-06,
+                0.0,
+                1.4295625128113443e-08,
+                -0.9987351298332214,
+                0.05027790740132332,
+                0.0,
+                -2.408054797342629e-06,
+                -0.05027778819203377,
+                -0.9987353682518005,
+                0.0,
+                -0.08356219530105591,
+                0.3682301640510559,
+                0.27734342217445374,
+                1.0
+            ],
+            "boneName": "front_lower_leg_R",
+            "bonePath": "Armature|root|hip|spine_01|spine_02|spine_03|chest|front_upper_leg_R|front_lower_leg_R",
+            "color": [
+                0.21000000834465027,
+                0.46316662430763245,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 25,
+            "inputTransform": [
+                1.0,
+                -1.0679291762016874e-07,
+                -2.405726718279766e-06,
+                0.0,
+                1.4297066641688616e-08,
+                -0.9987351298332214,
+                0.05027790740132332,
+                0.0,
+                -2.408053660474252e-06,
+                -0.050277918577194214,
+                -0.9987353682518005,
+                0.0,
+                -0.08356219530105591,
+                0.3682301640510559,
+                0.27734342217445374,
+                1.0
+            ],
+            "name": "rMarker_front_lower_leg_R",
+            "restTransform": [
+                1.0,
+                -1.0679291762016874e-07,
+                -2.405726718279766e-06,
+                0.0,
+                1.4297068418045455e-08,
+                -0.998735249042511,
+                0.050277914851903915,
+                0.0,
+                -2.4080534331005765e-06,
+                -0.050277914851903915,
+                -0.998735249042511,
+                0.0,
+                -0.08356219530105591,
+                0.3682301640510559,
+                0.27734342217445374,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.7871159315109253,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.3080763816833496,
+                    0.06896519660949707,
+                    0.06896519660949707
+                ],
+                "length": 0.23911119997501373,
+                "offset": [
+                    -1.0752404522307302e-09,
+                    0.11955559998750687,
+                    7.54654436718738e-08
+                ],
+                "radius": 0.034482598304748535,
+                "rotationRadians": [
+                    -1.570793628692627,
+                    -6.312162668109522e-07,
+                    1.5707963705062866
+                ],
+                "type": "CAPSULE"
+            }
+        },
+        {
+            "bodyTransform": [
+                1.0,
+                -6.889605970172852e-07,
+                -2.5393248961336212e-06,
+                0.0,
+                -1.0551561929967104e-13,
+                -0.9651082754135132,
+                0.2618502676486969,
+                0.0,
+                -2.6311297460779315e-06,
+                -0.2618500888347626,
+                -0.9651085138320923,
+                0.0,
+                -0.08356219530105591,
+                0.12942135334014893,
+                0.289365291595459,
+                1.0
+            ],
+            "boneName": "front_paw_R",
+            "bonePath": "Armature|root|hip|spine_01|spine_02|spine_03|chest|front_upper_leg_R|front_lower_leg_R|front_paw_R",
+            "color": [
+                0.699999988079071,
+                0.48766666650772095,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 26,
+            "inputTransform": [
+                1.0,
+                -6.889605970172852e-07,
+                -2.5393248961336212e-06,
+                0.0,
+                1.2755828294672145e-12,
+                -0.9651082754135132,
+                0.2618502676486969,
+                0.0,
+                -2.631128381835879e-06,
+                -0.2618502974510193,
+                -0.9651084542274475,
+                0.0,
+                -0.08356219530105591,
+                0.12942135334014893,
+                0.289365291595459,
+                1.0
+            ],
+            "name": "rMarker_front_paw_R",
+            "restTransform": [
+                1.0,
+                -6.889605970172852e-07,
+                -2.5393248961336212e-06,
+                0.0,
+                1.275583046307649e-12,
+                -0.9651085138320923,
+                0.2618503272533417,
+                0.0,
+                -2.631128381835879e-06,
+                -0.2618503272533417,
+                -0.9651085138320923,
+                0.0,
+                -0.08356219530105591,
+                0.12942135334014893,
+                0.289365291595459,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.14412377774715424,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "restitutionCombineMode": "MULTIPLY",
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.13158784806728363,
+                    0.04622799903154373,
+                    0.04622799903154373
+                ],
+                "length": 0.0853598490357399,
+                "offset": [
+                    -2.197577897433689e-09,
+                    0.04267992451786995,
+                    -1.7194059509506587e-08
+                ],
+                "radius": 0.023113999515771866,
+                "rotationRadians": [
+                    -1.5707933902740479,
+                    4.0286059288519027e-07,
+                    1.5707963705062866
+                ],
+                "type": "CAPSULE"
+            }
+        }
+    ],
+    "name": "Dobermann",
+    "skeletonSignature": 0,
+    "skinnedModelPresetName": "DOBERMANN",
+    "skinnedModelScale": 1.0,
+    "solver": {
+        "angularLimitDamping": 10000.0,
+        "angularLimitStiffness": 1000000.0,
+        "linearLimitDamping": 10000.0,
+        "linearLimitStiffness": 1000000.0
+    },
+    "targetMass": 30.0,
+    "testAnimationName": "",
+    "version": 4
+}

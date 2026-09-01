@@ -5,6 +5,7 @@
 #include "Hell/Common/String.h"
 #include "Hell/Debug/DebugDraw.h"
 #include "Hell/Input.h"
+#include "Hell/Logging.h"
 #include "Hell/Physics.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/Time.h"
@@ -17,6 +18,10 @@
 
 namespace {
     constexpr float FRAME_EPSILON = 0.000001f;
+
+
+    std::vector<BloodPoolDecal> g_bloodPoolDecals;
+
 
     std::vector<TestBloodDecal> g_bloodDecals;
     std::vector<TestParticle> g_particles;
@@ -95,9 +100,25 @@ namespace Unloved::BloodSystem {
     }
 
     void Update() {
-        return;
-        UpdateVATInstances();
-        UpdateParticles();
+
+        for (BloodPoolDecal& bloodPoolDecal : g_bloodPoolDecals) {
+            bloodPoolDecal.Update();
+        }
+
+
+        Player* player = Session::GetLocalPlayerByViewportIndex(0);
+        if (!player) return;
+
+        glm::vec3 pos = player->GetInteractHitPosition();
+        glm::vec3 normal = player->GetInteractHitNormal();
+
+        if (Hell::Input::KeyPressed(HELL_KEY_T)) {
+            SpawnBloodPoolDecal(pos, normal);
+        }
+
+        //return;
+        //UpdateVATInstances();
+        //UpdateParticles();
     }
 
     void UpdateVATInstances() {
@@ -271,3 +292,38 @@ void TestParticle::DebugDraw(int32_t randomSeed) {
         );
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+namespace Unloved::BloodSystem {
+
+    void SpawnBloodPoolDecal(const glm::vec3& position, const glm::vec3& normal) {
+        BloodPoolDecal& bloodPoolDecal = g_bloodPoolDecals.emplace_back();
+        bloodPoolDecal.position = position;
+        bloodPoolDecal.normal = normal;
+        bloodPoolDecal.scale = 0.3f;
+    }
+
+    const std::vector<BloodPoolDecal>& GetBloodPoolDecals() { return g_bloodPoolDecals; }
+}
+
+void BloodPoolDecal::Update() {
+    const float scalingSpeed = 0.25f;
+    float deltaTime = Hell::Time::DeltaTime();
+
+    lifeTime += deltaTime;
+
+    if (scale < 0.5) {
+        scale += scalingSpeed * deltaTime;
+    }
+}
+

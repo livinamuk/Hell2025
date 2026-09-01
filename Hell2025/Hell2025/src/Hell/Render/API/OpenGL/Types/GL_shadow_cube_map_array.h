@@ -1,12 +1,14 @@
 #pragma once
 #include "glad/gl.h"
 #include <cstddef>
+#include <cstdint>
 
 struct OpenGLShadowCubeMapArray {
     void Init(unsigned int numberOfCubemaps, int size);
     void CleanUp();
     void ClearDepthLayers(float clearValue = 1.0f);
     void ClearDepthLayer(int layerIndex, float clearValue = 1.0f);
+    void ClearDepthFaces(int layerIndex, uint8_t faceMask, float clearValue = 1.0f);
     unsigned int GetHandle()        const { return m_handle; }
     unsigned int GetSize()          const { return m_size; }
     unsigned int GetDepthTexture()  const { return m_depthTexture; }

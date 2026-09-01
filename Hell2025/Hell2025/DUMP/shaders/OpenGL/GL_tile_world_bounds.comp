@@ -1,0 +1,103 @@
+#version 460
+#include "../common/OpenGL/GL_binding_indices.glsl"
+#include "../common/constants.glsl"
+#include "../common/reconstruction.glsl"
+#include "../common/types.glsl"
+#include "../common/util.glsl"
+#include "../common/viewport.glsl"
+
+layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
+
+layout (binding = 0) uniform sampler2D u_depthTexture;
+
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+layout(std430, binding = SSBO_IDX_TILE_WORLD_BOUNDS_OUTPUT) buffer tileWorldBoundsBuffer { TileWorldBounds tileWorldBounds[]; };
+
+uniform int u_tileXCount;
+uniform int u_tileYCount;
+
+shared uint minWorldSpaceXInt;
+shared uint maxWorldSpaceXInt;
+shared uint minWorldSpaceYInt;
+shared uint maxWorldSpaceYInt;
+shared uint minWorldSpaceZInt;
+shared uint maxWorldSpaceZInt;
+
+shared uint validDepthSampleCount;
+
+uint OrderPreservingFloatMap(float value) {
+    uint uvalue = floatBitsToUint(value);
+    uint mask = -int(uvalue >> 31) | 0x80000000;
+    return uvalue ^ mask;
+}
+
+float InverseOrderPreservingFloatMap(uint value) {
+    uint mask = ((value >> 31) - 1) | 0x80000000;
+    return uintBitsToFloat(value ^ mask);
+}
+
+void main() {
+	ivec2 px = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 resolution = ivec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
+	bool inBounds = all(lessThan(px, resolution));
+
+	uint tileIndex = gl_WorkGroupID.y * u_tileXCount + gl_WorkGroupID.x;
+
+	// Defaults
+	if (gl_LocalInvocationIndex == 0) {
+		minWorldSpaceXInt = 0xFFFFFFFF;
+		minWorldSpaceYInt = 0xFFFFFFFF;
+		minWorldSpaceZInt = 0xFFFFFFFF;
+		maxWorldSpaceXInt = 0;
+		maxWorldSpaceYInt = 0;
+		maxWorldSpaceZInt = 0;
+		validDepthSampleCount = 0;
+	}
+	barrier();
+
+    // Out-of-bounds invocations in a partial edge tile must still participate
+    // in both barriers, but they must not fetch from the depth texture.
+    if (inBounds) {
+        ivec2 outputImageSize = textureSize(u_depthTexture, 0);
+        uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+        ivec4 viewportRect = ivec4(viewportDataArr[viewportIndex].xOffset, viewportDataArr[viewportIndex].yOffset, viewportDataArr[viewportIndex].width, viewportDataArr[viewportIndex].height);
+        if (ViewportContainsPixel(px, outputImageSize, viewportRect)) {
+            mat4 inverseProjectionView = viewportDataArr[viewportIndex].inverseJitteredProjectionViewReverseZ;
+            vec2 viewportUV = ViewportUVFromPixel(px, outputImageSize, viewportRect);
+            float depth = texelFetch(u_depthTexture, px, 0).r;
+
+            // Background pixels are irrelevant to the tile's world-space bounds.
+            if (depth > 0.000001) {
+                vec3 worldSpacePosition = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
+
+                uint worldSpaceXInt = OrderPreservingFloatMap(worldSpacePosition.x);
+                uint worldSpaceYInt = OrderPreservingFloatMap(worldSpacePosition.y);
+                uint worldSpaceZInt = OrderPreservingFloatMap(worldSpacePosition.z);
+                atomicMin(minWorldSpaceXInt, worldSpaceXInt);
+                atomicMin(minWorldSpaceYInt, worldSpaceYInt);
+                atomicMin(minWorldSpaceZInt, worldSpaceZInt);
+                atomicMax(maxWorldSpaceXInt, worldSpaceXInt);
+                atomicMax(maxWorldSpaceYInt, worldSpaceYInt);
+                atomicMax(maxWorldSpaceZInt, worldSpaceZInt);
+                atomicAdd(validDepthSampleCount, 1);
+            }
+        }
+    }
+    barrier();
+
+	// Get this tiles min max world pos
+	float worldSpaceXMin = InverseOrderPreservingFloatMap(minWorldSpaceXInt);
+	float worldSpaceYMin = InverseOrderPreservingFloatMap(minWorldSpaceYInt);
+	float worldSpaceZMin = InverseOrderPreservingFloatMap(minWorldSpaceZInt);
+	float worldSpaceXMax = InverseOrderPreservingFloatMap(maxWorldSpaceXInt);
+	float worldSpaceYMax = InverseOrderPreservingFloatMap(maxWorldSpaceYInt);
+	float worldSpaceZMax = InverseOrderPreservingFloatMap(maxWorldSpaceZInt);
+	vec3 worldSpaceMin = vec3(worldSpaceXMin, worldSpaceYMin, worldSpaceZMin);
+	vec3 worldSpaceMax = vec3(worldSpaceXMax, worldSpaceYMax, worldSpaceZMax);
+
+	if (gl_LocalInvocationIndex == 0) {
+		tileWorldBounds[tileIndex].boundsMin = vec4(worldSpaceMin, float(validDepthSampleCount));
+		tileWorldBounds[tileIndex].boundsMax = vec4(worldSpaceMax, 0.0);
+	}
+}

@@ -1,0 +1,29 @@
+#version 460
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(binding = 0, rgba16f) uniform image2D u_gBufferFinalLighting;
+layout(binding = 1, rgba16f) uniform image2D u_transparencyComposite;
+
+void main() {
+    ivec2 px = ivec2(gl_GlobalInvocationID.xy);
+
+    ivec2 size = imageSize(u_gBufferFinalLighting);
+    if (px.x >= size.x || px.y >= size.y) return;
+
+    vec4 finalLighting = imageLoad(u_gBufferFinalLighting, px);
+    vec3 tranparencyColor = imageLoad(u_transparencyComposite, px).rgb;
+
+    if (tranparencyColor.rgb == vec3(0,0,0)) {
+        //imageStore(u_gBufferFinalLighting, px, vec4(1,0,0,1));
+        return;
+    }
+
+   tranparencyColor = clamp(tranparencyColor, 0, 1);
+
+   vec3 composite = finalLighting.rgb + tranparencyColor.rgb;
+   composite = clamp(composite, 0, 1);
+
+   composite = tranparencyColor;
+
+   imageStore(u_gBufferFinalLighting, px, vec4(composite, 1.0));
+}

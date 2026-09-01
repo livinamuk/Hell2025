@@ -196,7 +196,7 @@ namespace Unloved::EditorSession::Placement {
 
         uint64_t CreateDirectObject(PlacementTool tool, const PlacementToolInfo& toolInfo, const PlacementHit& hit) {
             GenericObjectType genericObjectType = GenericObjectType::UNDEFINED;
-            const char* pickUpName = nullptr;
+            Bible::Item pickUpItem = Bible::Item::UNDEFINED;
 
             switch (tool) {
                 case PlacementTool::DDGI_VOLUME: {
@@ -227,7 +227,6 @@ namespace Unloved::EditorSession::Placement {
                     GenericAnimatedObjectCreateInfo createInfo;
                     createInfo.position = hit.position;
                     createInfo.type = GenericAnimatedObjectType::RAT_KING;
-                    createInfo.animationName = "RatKid_GlockIdle3";
                     createInfo.defaultEditorName = toolInfo.defaultEditorName;
                     return World::AddGenericAnimatedObject(createInfo);
                 }
@@ -242,6 +241,12 @@ namespace Unloved::EditorSession::Placement {
                     createInfo.position = hit.position;
                     createInfo.defaultEditorName = toolInfo.defaultEditorName;
                     return World::AddShark(createInfo);
+                }
+                case PlacementTool::SNAKE: {
+                    SnakeCreateInfo createInfo;
+                    createInfo.position = hit.position;
+                    createInfo.defaultEditorName = toolInfo.defaultEditorName;
+                    return World::AddSnake(createInfo);
                 }
                 case PlacementTool::HOUSE_LOCATION: {
                     const std::vector<std::string>& houseNames = ObjectOptions::GetHouseNames();
@@ -268,6 +273,7 @@ namespace Unloved::EditorSession::Placement {
                 case PlacementTool::MERMAID: {
                     MermaidCreateInfo createInfo;
                     createInfo.position = hit.position;
+                    createInfo.shopTeleportPosition = hit.position + glm::vec3(0.0f, 1.65f, 0.0f);
                     createInfo.defaultEditorName = toolInfo.defaultEditorName;
                     return World::AddMermaid(createInfo);
                 }
@@ -312,6 +318,12 @@ namespace Unloved::EditorSession::Placement {
                     createInfo.position = hit.position + glm::vec3(0.0f, 1.0f, 0.0f);
                     createInfo.defaultEditorName = toolInfo.defaultEditorName;
                     return World::AddLadder(createInfo);
+                }
+                case PlacementTool::LADDER_DISMOUNT: {
+                    LadderDismountCreateInfo createInfo;
+                    createInfo.position = hit.position;
+                    createInfo.defaultEditorName = toolInfo.defaultEditorName;
+                    return World::AddLadderDismount(createInfo);
                 }
                 case PlacementTool::LIGHT_HANGING: {
                     LightCreateInfo createInfo;
@@ -377,29 +389,28 @@ namespace Unloved::EditorSession::Placement {
                 case PlacementTool::GENERIC_PLANT_BLACKBERRIES:      genericObjectType = GenericObjectType::PLANT_BLACKBERRIES;      break;
                 case PlacementTool::GENERIC_PLANT_TREE:              genericObjectType = GenericObjectType::PLANT_TREE;              break;
                 case PlacementTool::GENERIC_TOILET:                  genericObjectType = GenericObjectType::TOILET;                  break;
-                case PlacementTool::PICKUP_12_GAUGE_BUCKSHOT:        pickUpName = "12GaugeBuckShot"; break;
-                case PlacementTool::PICKUP_AKS74U:                   pickUpName = "AKS74U";          break;
-                case PlacementTool::PICKUP_BLACK_SKULL:              pickUpName = "BlackSkull";      break;
-                case PlacementTool::PICKUP_GLOCK:                    pickUpName = "Glock";           break;
-                case PlacementTool::PICKUP_GOLDEN_GLOCK:             pickUpName = "GoldenGlock";     break;
-                case PlacementTool::PICKUP_KNIFE:                    pickUpName = "Knife";           break;
-                case PlacementTool::PICKUP_P90:                      pickUpName = "P90";             break;
-                case PlacementTool::PICKUP_PILLS:                    pickUpName = "Pills";           break;
-                case PlacementTool::PICKUP_REMINGTON_870:            pickUpName = "Remington870";    break;
-                case PlacementTool::PICKUP_SMALL_KEY:                pickUpName = "SmallKey";        break;
-                case PlacementTool::PICKUP_SMALL_KEY_SILVER:         pickUpName = "SmallKeySilver";  break;
-                case PlacementTool::PICKUP_SPAS:                     pickUpName = "SPAS";            break;
-                case PlacementTool::PICKUP_TOKAREV:                  pickUpName = "Tokarev";         break;
+                case PlacementTool::PICKUP_12_GAUGE_BUCKSHOT:        pickUpItem = Bible::Item::SHOTGUN_SHELLS;   break;
+                case PlacementTool::PICKUP_AKS74U:                   pickUpItem = Bible::Item::AKS74U;           break;
+                case PlacementTool::PICKUP_BLACK_SKULL:              pickUpItem = Bible::Item::BLACK_SKULL;      break;
+                case PlacementTool::PICKUP_GLOCK:                    pickUpItem = Bible::Item::GLOCK;            break;
+                case PlacementTool::PICKUP_GOLDEN_GLOCK:             pickUpItem = Bible::Item::GOLDEN_GLOCK;     break;
+                case PlacementTool::PICKUP_KNIFE:                    pickUpItem = Bible::Item::KNIFE;            break;
+                case PlacementTool::PICKUP_P90:                      pickUpItem = Bible::Item::P90;              break;
+                case PlacementTool::PICKUP_PILLS:                    pickUpItem = Bible::Item::PILLS;            break;
+                case PlacementTool::PICKUP_REMINGTON_870:            pickUpItem = Bible::Item::REMINGTON_870;    break;
+                case PlacementTool::PICKUP_SMALL_KEY:                pickUpItem = Bible::Item::SMALL_KEY;        break;
+                case PlacementTool::PICKUP_SMALL_KEY_SILVER:         pickUpItem = Bible::Item::SMALL_KEY_SILVER; break;
+                case PlacementTool::PICKUP_SPAS:                     pickUpItem = Bible::Item::SPAS;             break;
+                case PlacementTool::PICKUP_TOKAREV:                  pickUpItem = Bible::Item::TOKAREV;          break;
                 default: break;
             }
 
-            if (pickUpName) {
+            if (pickUpItem != Bible::Item::UNDEFINED) {
                 PickUpCreateInfo createInfo;
                 createInfo.position = hit.position;
-                createInfo.name = pickUpName;
+                createInfo.item = pickUpItem;
                 createInfo.respawn = true;
                 createInfo.saveToFile = true;
-                createInfo.type = Bible::GetItemType(pickUpName);
                 createInfo.defaultEditorName = toolInfo.defaultEditorName;
                 return World::AddPickUp(createInfo);
             }

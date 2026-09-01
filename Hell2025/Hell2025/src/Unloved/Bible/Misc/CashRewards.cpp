@@ -1,6 +1,6 @@
 #include "Unloved/Bible/Bible.h"
 
-namespace Bible {
+namespace Unloved::Bible {
 
     constexpr int playerKill = 100;
     constexpr int playerHeadshotKill = 250;

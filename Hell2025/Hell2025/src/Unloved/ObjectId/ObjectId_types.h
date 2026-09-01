@@ -30,6 +30,7 @@ enum class ObjectType : uint16_t {
     POWER_POLE_SET,
     RAGDOLL_STANDALONE,
     SHARK,
+    SNAKE,
     SPAWN_POINT_CAMPAIGN,
     SPAWN_POINT_DEATHMATCH,
     STAIRCASE,
@@ -41,7 +42,7 @@ enum class ObjectType : uint16_t {
     WATER_PLANE_BOTTOM,
     WINDOW,
 
-    ANIMATED_GAME_OBJECT,
+    SKINNED_GAME_OBJECT,
     CHRISMAS_PRESENT,
     DOBERMANN,
     GENERIC_OBJECT,
@@ -57,6 +58,8 @@ enum class ObjectType : uint16_t {
     GENERIC_ANIMATED_OBJECT,
     PLANAR_QUAD_OBJECT,
     POINT_PAIR_OBJECT,
+    LADDER_DISMOUNT,
+    ANIMATOR,
 
     UNDEFINED
 };

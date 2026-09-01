@@ -1,0 +1,119 @@
+#version 460
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+#include "../common/constants.glsl"
+#include "../common/types.glsl"
+#include "../common/reconstruction.glsl"
+#include "../common/util.glsl"
+#include "../common/viewport.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
+
+layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
+
+layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
+layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2D storageImagesRGBA16F[];
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsTileWorldBounds data;
+} pc;
+
+shared uint minWorldSpaceXInt;
+shared uint maxWorldSpaceXInt;
+shared uint minWorldSpaceYInt;
+shared uint maxWorldSpaceYInt;
+shared uint minWorldSpaceZInt;
+shared uint maxWorldSpaceZInt;
+
+shared uint validDepthSampleCount;
+
+uint OrderPreservingFloatMap(float value) {
+    uint uvalue = floatBitsToUint(value);
+    uint mask = -int(uvalue >> 31) | 0x80000000;
+    return uvalue ^ mask;
+}
+
+float InverseOrderPreservingFloatMap(uint value) {
+    uint mask = ((value >> 31) - 1) | 0x80000000;
+    return uintBitsToFloat(value ^ mask);
+}
+
+
+void main() {
+    ivec2 px = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 resolution = imageSize(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING]);
+    bool inBounds = px.x < resolution.x && px.y < resolution.y;
+
+    uint tileXCount = pc.data.tileXCount;
+    uint tileIndex = gl_WorkGroupID.y * tileXCount + gl_WorkGroupID.x;
+
+	// Defaults
+	if (gl_LocalInvocationIndex == 0) {
+	    minWorldSpaceXInt = 0xFFFFFFFF;
+	    minWorldSpaceYInt = 0xFFFFFFFF;
+	    minWorldSpaceZInt = 0xFFFFFFFF;
+	    maxWorldSpaceXInt = 0;
+	    maxWorldSpaceYInt = 0;
+	    maxWorldSpaceZInt = 0;
+	    validDepthSampleCount = 0;
+	}
+	barrier();
+
+    RendererData rendererData = pc.data.frame.rendererDataBuffer.rendererData;
+    ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
+    TileWorldBoundsBuffer tileWorldBounds = pc.data.frame.tileWorldBoundsBuffer;
+
+    if (inBounds) {
+        uint viewportIndex = ViewportIndexFromPixel(px, resolution, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+        ivec4 viewportRect = ivec4(viewportDataBuffer.viewportData[viewportIndex].xOffset, viewportDataBuffer.viewportData[viewportIndex].yOffset, viewportDataBuffer.viewportData[viewportIndex].width, viewportDataBuffer.viewportData[viewportIndex].height);
+        if (ViewportContainsPixel(px, resolution, viewportRect)) {
+            mat4 inverseProjectionView = viewportDataBuffer.viewportData[viewportIndex].inverseProjectionViewReverseZ;
+            vec2 viewportUV = ViewportUVFromPixel(px, resolution, viewportRect);
+            float depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0).r;
+
+            if (depth > 0.000001) {
+                vec3 worldSpacePosition = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
+                uint worldSpaceXInt = OrderPreservingFloatMap(worldSpacePosition.x);
+                uint worldSpaceYInt = OrderPreservingFloatMap(worldSpacePosition.y);
+                uint worldSpaceZInt = OrderPreservingFloatMap(worldSpacePosition.z);
+                atomicMin(minWorldSpaceXInt, worldSpaceXInt);
+                atomicMin(minWorldSpaceYInt, worldSpaceYInt);
+                atomicMin(minWorldSpaceZInt, worldSpaceZInt);
+                atomicMax(maxWorldSpaceXInt, worldSpaceXInt);
+                atomicMax(maxWorldSpaceYInt, worldSpaceYInt);
+                atomicMax(maxWorldSpaceZInt, worldSpaceZInt);
+                atomicAdd(validDepthSampleCount, 1);
+            }
+        }
+    }
+    barrier();
+
+	// Get this tiles min max world pos
+	float worldSpaceXMin = InverseOrderPreservingFloatMap(minWorldSpaceXInt);
+	float worldSpaceYMin = InverseOrderPreservingFloatMap(minWorldSpaceYInt);
+	float worldSpaceZMin = InverseOrderPreservingFloatMap(minWorldSpaceZInt);
+	float worldSpaceXMax = InverseOrderPreservingFloatMap(maxWorldSpaceXInt);
+	float worldSpaceYMax = InverseOrderPreservingFloatMap(maxWorldSpaceYInt);
+	float worldSpaceZMax = InverseOrderPreservingFloatMap(maxWorldSpaceZInt);
+	vec3 worldSpaceMin = vec3(worldSpaceXMin, worldSpaceYMin, worldSpaceZMin);
+	vec3 worldSpaceMax = vec3(worldSpaceXMax, worldSpaceYMax, worldSpaceZMax);
+
+	if (gl_LocalInvocationIndex == 0) {
+	    tileWorldBounds.tileWorldBounds[tileIndex].boundsMin = vec4(worldSpaceMin, float(validDepthSampleCount));
+	    tileWorldBounds.tileWorldBounds[tileIndex].boundsMax = vec4(worldSpaceMax, 0.0);
+	}
+
+    //vec4 color = imageLoad(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], px);
+    //color.rgb = vec3(worldSpaceMax);
+    //
+    //imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], px, color);
+
+    // Lines
+	//if (gl_LocalInvocationIndex.x < TILE_SIZE || gl_LocalInvocationIndex.x % TILE_SIZE == 0 || gl_LocalInvocationIndex.x < TILE_SIZE || gl_LocalInvocationIndex.x % TILE_SIZE == 1) {
+    //    imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], texel, vec4(0, 0, 0, 1));
+	//}
+}

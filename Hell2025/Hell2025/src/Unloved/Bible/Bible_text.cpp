@@ -2,7 +2,7 @@
 #include "Hell/Common/Constants.h"
 #include "Hell/Common/Random.h"
 
-namespace Bible {
+namespace Unloved::Bible {
     const std::string& PickRandom(const std::vector<std::string>& vector) {
         if (vector.empty()) return UNDEFINED_STRING;
 

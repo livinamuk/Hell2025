@@ -1,0 +1,32 @@
+#version 460
+#extension GL_EXT_nonuniform_qualifier : require
+
+layout(local_size_x = 24, local_size_y = 24, local_size_z = 1) in;
+
+#include "../common/Vulkan/VK_binding_indices.glsl"
+
+layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
+layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2DMS texturesMS[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2D rgba16fImages[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA8, rgba8) uniform image2D rgba8Images[];
+
+void main() {
+    ivec2 px = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 outputImageSize = imageSize(rgba16fImages[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING]);
+
+    vec4 hair0 = texelFetch(sampler2DMS(texturesMS[VULKAN_TEXTURE_IDX_HAIR_LIGHTING], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 0);
+    if (hair0.rgb == vec3(0.0)) {
+        return;
+    }
+
+    vec4 hair1 = texelFetch(sampler2DMS(texturesMS[VULKAN_TEXTURE_IDX_HAIR_LIGHTING], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 1);
+    vec4 hair2 = texelFetch(sampler2DMS(texturesMS[VULKAN_TEXTURE_IDX_HAIR_LIGHTING], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 2);
+    vec4 hair3 = texelFetch(sampler2DMS(texturesMS[VULKAN_TEXTURE_IDX_HAIR_LIGHTING], samplers[VULKAN_SAMPLER_IDX_NEAREST]), px, 3);
+    vec4 lighting = imageLoad(rgba16fImages[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], px);
+
+    vec4 hair = (hair0 + hair1 + hair2 + hair3) / 4;
+    vec3 finalColor = hair.rgb + lighting.rgb * (1.0 - hair.a);
+
+    imageStore(rgba16fImages[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], px, vec4(finalColor, 1.0));
+    imageStore(rgba8Images[VULKAN_STORAGE_IMAGE_RGBA8_IDX_EMISSIVE], px, vec4(0.0, 0.0, 0.0, 1.0));
+}

@@ -1,7 +1,7 @@
 #include "Unloved/Bible/Bible.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
-namespace Bible {
+namespace Unloved::Bible {
     using namespace Unloved;
 
     void ConfigureMeshNodesToilet(uint64_t id, MeshNodes* meshNodes) {

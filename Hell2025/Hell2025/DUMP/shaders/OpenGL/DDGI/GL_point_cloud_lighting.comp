@@ -1,0 +1,122 @@
+#version 450
+
+#extension GL_ARB_bindless_texture : enable
+#extension GL_EXT_nonuniform_qualifier : enable
+
+#include "../../common/raytracing.glsl"
+#include "../../common/lighting.glsl"
+#include "../../common/util.glsl"
+
+layout(local_size_x = 128) in;
+
+layout(std430, binding = 4) buffer lightsBuffer     { Light lights[];  };
+layout(std430, binding = 5) buffer lightsAABBBuffer { AABB  lightsAABB[];  };
+layout(std430, binding = 6) buffer PointCloudBuffer { CloudPoint points[]; };
+readonly restrict layout(std430, binding = 7) buffer textureSamplersBuffer { uvec2 textureSamplers[]; };
+layout(std430, binding = 8) buffer PointCloudDirtyFlagsBuffer { uint pointCloudDirtyFlags[]; };
+
+uniform int u_lightCount;
+uniform bool u_forceUpdate;
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+
+    if (idx >= points.length())
+        return;
+
+    vec3 pointPosition = points[idx].position.xyz;
+    vec3 pointNormal = points[idx].normal.xyz;
+
+    vec3 directLight = vec3(0.0);
+
+
+    // Does this point even need updating?
+    bool needsUpdate = u_forceUpdate;
+    if (!needsUpdate) {
+        for (int i = 0; i < u_lightCount; i++) {
+            Light light = lights[i];
+
+            // Is light dirty?
+            if (light.isDirtyForRaytracing == 0) continue;
+
+            // Light was dirty. so now check the point is within the light's tight aabb bounds
+            // AABB lightAABB = lightsAABB[i];
+
+            //if (PointInAABBBounds(pointPosition.xyz, lightAABB.boundsMin.xyz, lightAABB.boundsMax.xyz)) {
+            //    needsUpdate = true;
+            //    break;
+            //}
+
+            // Above is sketchy. For now do point vs sphere intersection
+            vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
+            if (PointInSphere(pointPosition.xyz, lightPosition, light.radius)) {
+                needsUpdate = true;
+                break;
+            }
+        }
+    }
+    
+    /// Don't raytracing if you don't need to
+    if (!needsUpdate) { 
+        pointCloudDirtyFlags[idx] = 0u;
+        return;
+    }
+
+    uint pointDirty = 1u;
+    
+    // Accumulate light from all sources
+    for (int i = 0; i < u_lightCount; i++) {
+        Light light = lights[i];
+
+        vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
+
+        vec3 diff = lightPosition - pointPosition;
+        float distSq = dot(diff, diff);
+        float radiusSq = light.radius * light.radius;
+
+        // Skip if point is outside light radius
+        if (distSq >= radiusSq) continue;
+
+        float dist = sqrt(distSq);
+        vec3 lightDir = diff / dist;
+
+        float ndotl = dot(pointNormal, lightDir);
+        if (ndotl <= 0.0) continue;
+
+        vec3 rayOrigin = pointPosition;
+        vec3 rayDir = lightDir;
+        float minDistance = 0.001;
+        float maxDistance = dist;
+
+        // Check line of sight between probe and light
+        if (!AnyHit(rayOrigin, rayDir, minDistance, maxDistance)) {
+            float lightAttenuation = smoothstep(light.radius, 0.0, dist);
+            vec3 lightcolor = vec3(light.colorR, light.colorG, light.colorB);
+
+            float candelas = 1.0;
+
+            // Determine IES candelas mask if this light has an IES Profile
+            if (light.iesTextureIndex != 0) {
+                sampler2D iesSampler = sampler2D(textureSamplers[(light.iesTextureIndex)]);
+                candelas = ApplyIESProfile(pointPosition.xyz, light, iesSampler);
+            }
+
+            directLight += vec3(lightAttenuation * ndotl) * lightcolor * candelas;
+        }
+    }
+
+    // TODO: get basecolor & metallic from the underlying texture somehow
+    // TODO: get basecolor & metallic from the underlying texture somehow
+    // TODO: get basecolor & metallic from the underlying texture somehow
+    vec3 baseColor =  points[idx].baseColor.xyz;
+    //baseColor = vec3(1.0, 1.0, 1.0);
+    float metallic = 0.0;
+
+    // Strip diffuse bounce from metallic surfaces
+    vec3 diffuseColor = baseColor * (1.0 - metallic);
+
+    // Write color
+    vec3 outgoingRadiance = (directLight * diffuseColor) / 3.14159265359;
+    points[idx].directLightingRGB_dirty = vec4(outgoingRadiance, 1.0); // w is unused
+    pointCloudDirtyFlags[idx] = pointDirty;
+}

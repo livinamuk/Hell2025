@@ -1,0 +1,432 @@
+#version 460
+
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+// Port of FidelityFX SDK 1.1.4 Reflection DNSR Reproject
+
+#include "../common/normal_encoding.glsl"
+#include "../common/reconstruction.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
+#include "../common/viewport.glsl"
+#include "VK_indirect_specular_amd_config.glsl"
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
+layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2D storageImagesRGBA16F[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_R16F, r16f) uniform image2D storageImagesR16F[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_R11G11B10F, r11f_g11f_b10f) uniform image2D storageImagesR11G11B10F[];
+layout(set = 0, binding = DESC_IDX_SSBOS, std430) readonly buffer AMDStorageBuffer { uint data[]; } amdStorageBuffers[];
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsIndirectSpecularAMDReproject data;
+} pc;
+
+const float GAUSSIAN_K = 3.0;
+const float AVG_RADIANCE_LUMINANCE_WEIGHT = 0.3;
+const float REPROJECT_SURFACE_DISCARD_VARIANCE_WEIGHT = 1.5;
+const float DISOCCLUSION_NORMAL_WEIGHT = 1.4;
+const float DISOCCLUSION_DEPTH_WEIGHT = 1.0;
+const float DISOCCLUSION_THRESHOLD = 0.9;
+const float REPROJECTION_NORMAL_SIMILARITY_THRESHOLD = 0.9999;
+const int LOCAL_NEIGHBORHOOD_RADIUS = 4;
+
+shared uint g_shared0[16][16];
+shared uint g_shared1[16][16];
+
+uvec2 RemapForWaveReduction(uint lane) {
+    uint x = (((lane >> 2u) & 7u) & ~1u) | (lane & 1u);
+    uint y = (((lane >> 3u) & 7u) & ~3u) | ((lane >> 1u) & 3u);
+    return uvec2(x, y);
+}
+
+void StoreShared(ivec2 index, vec3 radiance) {
+    g_shared0[index.y][index.x] = packHalf2x16(radiance.xy);
+    g_shared1[index.y][index.x] = packHalf2x16(radiance.zz);
+}
+
+void StoreShared(ivec2 index, vec4 value) {
+    g_shared0[index.y][index.x] = packHalf2x16(value.xy);
+    g_shared1[index.y][index.x] = packHalf2x16(value.zw);
+}
+
+vec4 LoadSharedRaw(ivec2 index) {
+    return vec4(unpackHalf2x16(g_shared0[index.y][index.x]), unpackHalf2x16(g_shared1[index.y][index.x]));
+}
+
+vec3 LoadSharedRadiance(ivec2 index) {
+    return LoadSharedRaw(index).xyz;
+}
+
+vec3 LoadRadiance(ivec2 pixel) {
+    return texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_INPUT], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixel, 0).rgb;
+}
+
+float LoadRayLength(ivec2 pixel) {
+    return texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_INPUT], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixel, 0).a;
+}
+
+float LoadDepth(ivec2 pixel) {
+    return texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixel, 0).r;
+}
+
+vec3 LoadWorldNormal(ivec2 pixel) {
+    vec2 encoded = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_NORMAL_XY_ROUGHNESS_MISC], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixel, 0).rg;
+    return DecodeOct(encoded);
+}
+
+float LoadRoughness(ivec2 pixel) {
+    return texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_EXTRACTED_ROUGHNESS], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixel, 0).r;
+}
+
+vec2 LoadMotionVector(ivec2 pixel) {
+    vec2 currentMinusPreviousNDC = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_VELOCITY_XY_OCCLUSION_SUBSURFACE], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixel, 0).rg;
+    // AMD adds a current-to-previous UV vector but you store the opposite direction in NDC and uses a positive-height Vulkan viewport
+    
+    return -currentMinusPreviousNDC * 0.5;
+}
+
+vec3 SampleRadianceHistory(vec2 uv) {
+    return textureLod(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_HISTORY], samplers[VULKAN_SAMPLER_IDX_LINEAR]), uv, 0.0).rgb;
+}
+
+vec3 LoadRadianceHistory(ivec2 pixel) {
+    return texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_HISTORY], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixel, 0).rgb;
+}
+
+vec3 SampleWorldNormalHistory(vec2 uv) {
+    vec3 compressed = textureLod(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_NORMAL_HISTORY], samplers[VULKAN_SAMPLER_IDX_LINEAR]), uv, 0.0).rgb;
+    return normalize(compressed * 2.0 - 1.0);
+}
+
+vec3 LoadWorldNormalHistory(ivec2 pixel) {
+    vec3 compressed = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_NORMAL_HISTORY], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixel, 0).rgb;
+    return normalize(compressed * 2.0 - 1.0);
+}
+
+float SampleRoughnessHistory(vec2 uv) {
+    return textureLod(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_ROUGHNESS_HISTORY], samplers[VULKAN_SAMPLER_IDX_LINEAR]), uv, 0.0).r;
+}
+
+float SampleDepthHistory(vec2 uv) {
+    return textureLod(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_DEPTH_HISTORY], samplers[VULKAN_SAMPLER_IDX_LINEAR]), uv, 0.0).r;
+}
+
+float LoadDepthHistory(ivec2 pixel) {
+    return texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_DEPTH_HISTORY], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixel,0).r;
+}
+
+float SampleVarianceHistory(vec2 uv) {
+    return textureLod(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_VARIANCE_HISTORY], samplers[VULKAN_SAMPLER_IDX_LINEAR]), uv, 0.0).r;
+}
+
+float SampleCountHistory(vec2 uv) {
+    return textureLod(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_SAMPLE_COUNT_HISTORY], samplers[VULKAN_SAMPLER_IDX_LINEAR]), uv, 0.0).r;
+}
+
+float Luminance(vec3 value) {
+    return max(dot(value, vec3(0.299, 0.587, 0.114)), 0.001);
+}
+
+float ComputeTemporalVariance(vec3 a, vec3 b) {
+    float luminanceA = Luminance(a);
+    float luminanceB = Luminance(b);
+    float difference = abs(luminanceA - luminanceB) / max(max(luminanceA, luminanceB), 0.5);
+    return difference * difference;
+}
+
+float KernelWeight(float offset) {
+    float radius = float(LOCAL_NEIGHBORHOOD_RADIUS) + 1.0;
+    return exp(-GAUSSIAN_K * offset * offset / (radius * radius));
+}
+
+struct Moments {
+    vec3 mean;
+    vec3 variance;
+};
+
+Moments EstimateLocalNeighborhood(ivec2 groupThreadID) {
+    Moments estimate;
+    estimate.mean = vec3(0.0);
+    estimate.variance = vec3(0.0);
+
+    float accumulatedWeight = 0.0;
+    
+    for (int y = -LOCAL_NEIGHBORHOOD_RADIUS; y <= LOCAL_NEIGHBORHOOD_RADIUS; ++y) {
+        for (int x = -LOCAL_NEIGHBORHOOD_RADIUS; x <= LOCAL_NEIGHBORHOOD_RADIUS; ++x) {
+            vec3 radiance = LoadSharedRadiance(groupThreadID + ivec2(x, y));
+            float weight = KernelWeight(float(x)) * KernelWeight(float(y));
+            accumulatedWeight += weight;
+            estimate.mean += radiance * weight;
+            estimate.variance += radiance * radiance * weight;
+        }
+    }
+
+    estimate.mean /= accumulatedWeight;
+    estimate.variance /= accumulatedWeight;
+    estimate.variance = abs(estimate.variance - estimate.mean * estimate.mean);
+    
+    return estimate;
+}
+
+void InitializeShared(ivec2 dispatchThreadID, ivec2 groupThreadID) {
+    const ivec2 offsets[4] = ivec2[4](ivec2(0, 0), ivec2(8, 0), ivec2(0, 8), ivec2(8, 8));
+    vec3 radiance[4];
+    dispatchThreadID -= 4;
+
+    for (int i = 0; i < 4; ++i) {
+        radiance[i] = LoadRadiance(dispatchThreadID + offsets[i]);
+    }
+
+    for (int i = 0; i < 4; ++i) {
+        StoreShared(groupThreadID + offsets[i], radiance[i]);
+    }
+}
+
+float LinearViewDepthFromScreenUV(vec2 screenUV, float depth, ivec4 viewportRect, ivec2 fullSize, mat4 inverseProjection) {
+    vec2 viewportUV = ViewportUVFromScreenUV(screenUV, fullSize, viewportRect);
+    vec2 viewportNDC = ViewportNDCFromViewportUV(viewportUV);
+    return LinearViewDepthFromNDC(viewportNDC, depth, inverseProjection);
+}
+
+vec2 GetSurfaceReprojection(ivec2 dispatchThreadID, vec2 screenUV, ivec4 viewportRect, ivec2 fullSize) {
+    vec2 viewportUV = ViewportUVFromScreenUV(screenUV, fullSize, viewportRect);
+    vec2 viewportMotion = LoadMotionVector(dispatchThreadID);
+    viewportMotion.y = -viewportMotion.y;
+    return ScreenUVFromViewportUV(viewportUV + viewportMotion, fullSize, viewportRect);
+}
+
+vec2 GetHitReprojection(ivec2 dispatchThreadID, vec2 screenUV, float reflectedRayLength, ivec4 viewportRect, ivec2 fullSize, mat4 inverseProjection, mat4 inverseView, mat4 previousProjectionView) {
+    float z = LoadDepth(dispatchThreadID);
+    vec2 viewportUV = ViewportUVFromScreenUV(screenUV, fullSize, viewportRect);
+    vec2 viewportNDC = ViewportNDCFromViewportUV(viewportUV);
+    vec4 viewPositionH = inverseProjection * vec4(viewportNDC, z, 1.0);
+    vec3 viewSpaceRay = viewPositionH.xyz / viewPositionH.w;
+    float surfaceDepth = length(viewSpaceRay);
+    float rayLength = surfaceDepth + reflectedRayLength;
+    viewSpaceRay /= surfaceDepth;
+    viewSpaceRay *= rayLength;
+    vec3 worldHitPosition = (inverseView * vec4(viewSpaceRay, 1.0)).xyz;
+    vec4 previousClip = previousProjectionView * vec4(worldHitPosition, 1.0);
+    vec2 previousViewportUV = ViewportUVFromClipPosition(previousClip);
+    return ScreenUVFromViewportUV(previousViewportUV, fullSize, viewportRect);
+}
+
+float GetDisocclusionFactor(vec3 normal, vec3 historyNormal, float linearDepth, float historyLinearDepth) {
+    return exp(-abs(1.0 - max(0.0, dot(normal, historyNormal))) * DISOCCLUSION_NORMAL_WEIGHT) * exp(-abs(historyLinearDepth - linearDepth) / linearDepth * DISOCCLUSION_DEPTH_WEIGHT);
+}
+
+float Dot2(vec3 value) {
+    return dot(value, value);
+}
+
+void PickReprojection(ivec2 dispatchThreadID, ivec2 groupThreadID, ivec2 screenSize, ivec4 viewportRect, mat4 inverseProjection, mat4 inverseView, mat4 previousProjectionView, float roughness, float rayLength, out float disocclusionFactor, out vec2 reprojectionUV, out vec3 reprojection) {
+    Moments localNeighborhood = EstimateLocalNeighborhood(groupThreadID);
+
+    vec2 uv = ScreenUVFromPixel(dispatchThreadID, screenSize);
+    vec3 normal = LoadWorldNormal(dispatchThreadID);
+    vec3 historyNormal;
+    float historyLinearDepth;
+    vec2 surfaceReprojectionUV = GetSurfaceReprojection(dispatchThreadID, uv, viewportRect, screenSize);
+    vec2 hitReprojectionUV = GetHitReprojection(dispatchThreadID, uv, rayLength, viewportRect, screenSize, inverseProjection, inverseView, previousProjectionView);
+    vec3 surfaceNormal = SampleWorldNormalHistory(surfaceReprojectionUV);
+    vec3 hitNormal = SampleWorldNormalHistory(hitReprojectionUV);
+    vec3 surfaceHistory = SampleRadianceHistory(surfaceReprojectionUV);
+    vec3 hitHistory = SampleRadianceHistory(hitReprojectionUV);
+    float hitNormalSimilarity = dot(normalize(hitNormal), normalize(normal));
+    float surfaceNormalSimilarity = dot(normalize(surfaceNormal), normalize(normal));
+    float hitRoughness = SampleRoughnessHistory(hitReprojectionUV);
+    float surfaceRoughness = SampleRoughnessHistory(surfaceReprojectionUV);
+
+    if (hitNormalSimilarity > REPROJECTION_NORMAL_SIMILARITY_THRESHOLD
+        && hitNormalSimilarity + 1.0e-3 > surfaceNormalSimilarity
+        && abs(hitRoughness - roughness) < abs(surfaceRoughness - roughness) + 1.0e-3) {
+        historyNormal = hitNormal;
+        float historyDepth = SampleDepthHistory(hitReprojectionUV);
+        historyLinearDepth = LinearViewDepthFromScreenUV(hitReprojectionUV, historyDepth, viewportRect, screenSize, inverseProjection);
+        reprojectionUV = hitReprojectionUV;
+        reprojection = hitHistory;
+    } 
+    else {
+        if (Dot2(surfaceHistory - localNeighborhood.mean)
+            < REPROJECT_SURFACE_DISCARD_VARIANCE_WEIGHT * length(localNeighborhood.variance)) {
+            historyNormal = surfaceNormal;
+            float historyDepth = SampleDepthHistory(surfaceReprojectionUV);
+            historyLinearDepth = LinearViewDepthFromScreenUV(surfaceReprojectionUV, historyDepth, viewportRect, screenSize, inverseProjection);
+            reprojectionUV = surfaceReprojectionUV;
+            reprojection = surfaceHistory;
+        } 
+        else {
+            disocclusionFactor = 0.0;
+            return;
+        }
+    }
+
+    float depth = LoadDepth(dispatchThreadID);
+    float linearDepth = LinearViewDepthFromScreenUV(uv, depth, viewportRect, screenSize, inverseProjection);
+    disocclusionFactor = GetDisocclusionFactor(normal, historyNormal, linearDepth, historyLinearDepth);
+
+    if (disocclusionFactor > DISOCCLUSION_THRESHOLD) return;
+
+    if (disocclusionFactor < DISOCCLUSION_THRESHOLD) {
+        vec2 texelSize = 1.0 / vec2(screenSize);
+        for (int y = -1; y <= 1; ++y) {
+            for (int x = -1; x <= 1; ++x) {
+                vec2 candidateUV = reprojectionUV + vec2(x, y) * texelSize;
+                vec3 candidateNormal = SampleWorldNormalHistory(candidateUV);
+                float candidateDepth = SampleDepthHistory(candidateUV);
+                float candidateLinearDepth = LinearViewDepthFromScreenUV(candidateUV, candidateDepth, viewportRect, screenSize, inverseProjection);
+                float weight = GetDisocclusionFactor(normal, candidateNormal, linearDepth, candidateLinearDepth);
+                if (weight > disocclusionFactor) {
+                    disocclusionFactor = weight;
+                    reprojectionUV = candidateUV;
+                }
+            }
+        }
+        reprojection = SampleRadianceHistory(reprojectionUV);
+    }
+
+    if (disocclusionFactor < DISOCCLUSION_THRESHOLD) {
+        float uvx = fract(float(screenSize.x) * reprojectionUV.x + 0.5);
+        float uvy = fract(float(screenSize.y) * reprojectionUV.y + 0.5);
+        ivec2 texel = ivec2(vec2(screenSize) * reprojectionUV - 0.5);
+        vec3 reprojection00 = LoadRadianceHistory(texel + ivec2(0, 0));
+        vec3 reprojection10 = LoadRadianceHistory(texel + ivec2(1, 0));
+        vec3 reprojection01 = LoadRadianceHistory(texel + ivec2(0, 1));
+        vec3 reprojection11 = LoadRadianceHistory(texel + ivec2(1, 1));
+        vec3 normal00 = LoadWorldNormalHistory(texel + ivec2(0, 0));
+        vec3 normal10 = LoadWorldNormalHistory(texel + ivec2(1, 0));
+        vec3 normal01 = LoadWorldNormalHistory(texel + ivec2(0, 1));
+        vec3 normal11 = LoadWorldNormalHistory(texel + ivec2(1, 1));
+        float depth00 = LinearViewDepthFromScreenUV(reprojectionUV, LoadDepthHistory(texel + ivec2(0, 0)), viewportRect, screenSize, inverseProjection);
+        float depth10 = LinearViewDepthFromScreenUV(reprojectionUV, LoadDepthHistory(texel + ivec2(1, 0)), viewportRect, screenSize, inverseProjection);
+        float depth01 = LinearViewDepthFromScreenUV(reprojectionUV, LoadDepthHistory(texel + ivec2(0, 1)), viewportRect, screenSize, inverseProjection);
+        float depth11 = LinearViewDepthFromScreenUV(reprojectionUV, LoadDepthHistory(texel + ivec2(1, 1)), viewportRect, screenSize, inverseProjection);
+        vec4 weights;
+        weights.x = GetDisocclusionFactor(normal, normal00, linearDepth, depth00) > DISOCCLUSION_THRESHOLD * 0.5 ? 1.0 : 0.0;
+        weights.y = GetDisocclusionFactor(normal, normal10, linearDepth, depth10) > DISOCCLUSION_THRESHOLD * 0.5 ? 1.0 : 0.0;
+        weights.z = GetDisocclusionFactor(normal, normal01, linearDepth, depth01) > DISOCCLUSION_THRESHOLD * 0.5 ? 1.0 : 0.0;
+        weights.w = GetDisocclusionFactor(normal, normal11, linearDepth, depth11) > DISOCCLUSION_THRESHOLD * 0.5 ? 1.0 : 0.0;
+        weights *= vec4((1.0 - uvx) * (1.0 - uvy), uvx * (1.0 - uvy), (1.0 - uvx) * uvy, uvx * uvy);
+        float weightSum = max(weights.x + weights.y + weights.z + weights.w, 1.0e-3);
+        weights /= weightSum;
+        reprojection = reprojection00 * weights.x + reprojection10 * weights.y + reprojection01 * weights.z + reprojection11 * weights.w;
+        historyLinearDepth = depth00 * weights.x + depth10 * weights.y + depth01 * weights.z + depth11 * weights.w;
+        historyNormal = normal00 * weights.x + normal10 * weights.y + normal01 * weights.z + normal11 * weights.w;
+        disocclusionFactor = GetDisocclusionFactor(normal, historyNormal, linearDepth, historyLinearDepth);
+    }
+
+    disocclusionFactor = disocclusionFactor < DISOCCLUSION_THRESHOLD ? 0.0 : disocclusionFactor;
+}
+
+void StoreReprojected(ivec2 pixel, vec3 radiance) {
+    imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_INDIRECT_SPECULAR_AMD_REPROJECTED], pixel, vec4(radiance, 0.0));
+}
+
+void StoreVariance(ivec2 pixel, float variance) {
+    imageStore(storageImagesR16F[VULKAN_STORAGE_IMAGE_R16F_IDX_INDIRECT_SPECULAR_AMD_VARIANCE], pixel, vec4(variance));
+}
+
+void StoreSampleCount(ivec2 pixel, float count) {
+    imageStore(storageImagesR16F[VULKAN_STORAGE_IMAGE_R16F_IDX_INDIRECT_SPECULAR_AMD_SAMPLE_COUNT], pixel, vec4(count));
+}
+
+void Reproject(ivec2 dispatchThreadID, ivec2 groupThreadID, ivec2 screenSize) {
+    InitializeShared(dispatchThreadID, groupThreadID);
+    memoryBarrierShared();
+    barrier();
+
+    groupThreadID += 4;
+
+    float roughness = LoadRoughness(dispatchThreadID);
+    vec3 radiance = LoadRadiance(dispatchThreadID);
+    float rayLength = LoadRayLength(dispatchThreadID);
+
+    if (roughness < VK_INDIRECT_SPECULAR_AMD_ROUGHNESS_THRESHOLD) {
+        RendererData rendererData = pc.data.frame.rendererDataBuffer.rendererData;
+        uint viewportIndex = ViewportIndexFromPixel(dispatchThreadID, screenSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+        ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
+        ivec4 viewportRect = ivec4(viewportDataBuffer.viewportData[viewportIndex].xOffset, viewportDataBuffer.viewportData[viewportIndex].yOffset, viewportDataBuffer.viewportData[viewportIndex].width, viewportDataBuffer.viewportData[viewportIndex].height);
+        mat4 inverseProjection = viewportDataBuffer.viewportData[viewportIndex].inverseProjectionReverseZ;
+        mat4 inverseView = viewportDataBuffer.viewportData[viewportIndex].inverseView;
+        mat4 previousProjectionView = viewportDataBuffer.viewportData[viewportIndex].prevProjectionViewReverseZ;
+        
+        float disocclusionFactor;
+        vec2 reprojectionUV;
+        vec3 reprojection;
+
+        PickReprojection(dispatchThreadID, groupThreadID, screenSize, viewportRect, inverseProjection, inverseView, previousProjectionView, roughness, rayLength, disocclusionFactor, reprojectionUV, reprojection);
+
+        if (reprojectionUV.x > 0.0 && reprojectionUV.y > 0.0 && reprojectionUV.x < 1.0 && reprojectionUV.y < 1.0) {
+            float previousVariance = SampleVarianceHistory(reprojectionUV);
+            float sampleCount = SampleCountHistory(reprojectionUV) * disocclusionFactor;
+            float maxSamples = max(8.0, 32.0 * (1.0 - exp(-roughness * 100.0)));
+
+            sampleCount = min(maxSamples, sampleCount + 1.0);
+            
+            float newVariance = ComputeTemporalVariance(radiance, reprojection);
+
+            if (disocclusionFactor < DISOCCLUSION_THRESHOLD) {
+                StoreReprojected(dispatchThreadID, vec3(0.0));
+                StoreVariance(dispatchThreadID, 1.0);
+                StoreSampleCount(dispatchThreadID, 1.0);
+            } 
+            else {
+                StoreReprojected(dispatchThreadID, reprojection);
+                StoreVariance(dispatchThreadID, mix(newVariance, previousVariance, 1.0 / sampleCount));
+                StoreSampleCount(dispatchThreadID, sampleCount);
+                radiance = mix(radiance, reprojection, 0.3);
+            }
+        } 
+        else {
+            StoreReprojected(dispatchThreadID, vec3(0.0));
+            StoreVariance(dispatchThreadID, 1.0);
+            StoreSampleCount(dispatchThreadID, 1.0);
+        }
+    }
+
+    float weight = max(exp(-Luminance(radiance) * AVG_RADIANCE_LUMINANCE_WEIGHT), 1.0e-2);
+    radiance *= weight;
+
+    if (any(greaterThanEqual(dispatchThreadID, screenSize)) || any(isinf(radiance)) || any(isnan(radiance)) || weight > 1.0e3) {
+        radiance = vec3(0.0);
+        weight = 0.0;
+    }
+
+    groupThreadID -= 4;
+    StoreShared(groupThreadID, vec4(radiance, weight));
+    memoryBarrierShared();
+    barrier();
+
+    for (int size = 2; size <= 8; size *= 2) {
+        int ox = groupThreadID.x * size;
+        int oy = groupThreadID.y * size;
+        int ix = ox + size / 2;
+        int iy = oy + size / 2;
+        if (ix < 8 && iy < 8) {vec4 sum = LoadSharedRaw(ivec2(ox, oy)) + LoadSharedRaw(ivec2(ix, oy)) + LoadSharedRaw(ivec2(ox, iy)) + LoadSharedRaw(ivec2(ix, iy)); StoreShared(ivec2(ox, oy), sum);}
+        memoryBarrierShared();
+        barrier();
+    }
+
+    if (all(equal(groupThreadID, ivec2(0)))) {
+        vec4 sum = LoadSharedRaw(ivec2(0));
+        vec3 average = sum.xyz / max(sum.w, 1.0e-3);
+        imageStore(storageImagesR11G11B10F[VULKAN_STORAGE_IMAGE_R11G11B10F_IDX_INDIRECT_SPECULAR_AMD_AVERAGE], dispatchThreadID / 8, vec4(average, 0.0));
+    }
+}
+
+void main() {
+    uint packedCoords = amdStorageBuffers[VULKAN_SSBO_IDX_INDIRECT_SPECULAR_AMD_DENOISER_TILE_LIST].data[gl_WorkGroupID.x];
+    ivec2 tileBase = ivec2(int(packedCoords & 0xffffu), int((packedCoords >> 16u) & 0xffffu));
+    ivec2 dispatchThreadID = tileBase + ivec2(gl_LocalInvocationID.xy);
+    ivec2 dispatchGroupID = dispatchThreadID / 8;
+    ivec2 remappedGroupThreadID = ivec2(RemapForWaveReduction(gl_LocalInvocationIndex));
+    ivec2 remappedDispatchThreadID = dispatchGroupID * 8 + remappedGroupThreadID;
+    ivec2 screenSize = textureSize(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_INPUT], samplers[VULKAN_SAMPLER_IDX_NEAREST]),0);
+    Reproject(remappedDispatchThreadID, remappedGroupThreadID, screenSize);
+
+}

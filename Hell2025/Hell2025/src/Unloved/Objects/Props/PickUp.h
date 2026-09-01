@@ -5,7 +5,7 @@
 
 #include "Hell/Math/Transform.h"
 
-#include "Unloved/Bible/Info/ItemInfo.h"
+#include "Unloved/Bible/Bible_enums.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 
 namespace Unloved {
@@ -34,8 +34,9 @@ struct PickUp {
     MeshNodes& GetMeshNodes()                           { return m_meshNodes; }
     const bool IsDirty() const                          { return m_meshNodes.IsDirty(); }
     const PickUpCreateInfo& GetCreateInfo() const       { return m_createInfo; }
-    const std::string GetName() const                   { return m_createInfo.name; }
-    const ItemType GetType() const                      { return m_createInfo.type; }
+    const std::string& GetName() const;
+    Bible::Item GetItem() const                         { return m_createInfo.item; }
+    ItemType GetType() const;
     const std::vector<RenderItem>& GetRenderItems()     { return m_meshNodes.GetRenderItems(); }
     const glm::vec3& GetPosition() const                { return m_createInfo.position; }
     const glm::vec3& GetRotation() const                { return m_initialTransform.rotation; }

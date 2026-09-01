@@ -2,6 +2,7 @@
 
 #include "Hell/Common/Constants.h"
 
+#include "Unloved/Bible/Bible_enums.h"
 #include "Unloved/Common/Enums.h"
 #include "Unloved/Common/Types.h"
 #include "Unloved/Objects/ObjectEnums.h"
@@ -11,12 +12,16 @@
 
 #include <string>
 
+namespace Unloved::Bible {
+
 struct ItemInfo {
+    Item m_item = Item::UNDEFINED;
     std::string m_name = UNDEFINED_STRING;
     std::string m_modelName = UNDEFINED_STRING;
     std::string m_collisionModelName = UNDEFINED_STRING;
     PhysicsShapeType m_physicsShapeType = PhysicsShapeType::BOX;
     ItemType m_type = ItemType::USELESS;
+    Ammo m_ammo = Ammo::UNDEFINED;
     float m_mass = 1.0f;
     int m_cost = 1;
 
@@ -63,6 +68,10 @@ struct ItemInfo {
     const std::string& GetCollisionModelName() const    { return m_collisionModelName; }
     const std::string& GetModelName() const             { return m_modelName; }
     const std::string& GetName() const                  { return m_name; }
+    Ammo GetAmmo() const                                { return m_ammo; }
+    Item GetItem() const                                { return m_item; }
     ItemType GetType() const                            { return m_type; }
     PhysicsShapeType GetPhysicsShapeType() const        { return m_physicsShapeType ;}
 };
+
+}

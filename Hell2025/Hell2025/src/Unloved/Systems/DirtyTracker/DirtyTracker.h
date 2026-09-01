@@ -29,5 +29,7 @@ namespace Unloved::DirtyTracker {
     const std::vector<uint64_t>& GetDirtyDoorIds();
     const std::vector<uint64_t>& GetStaticDirtyLightIds();
     const std::vector<uint64_t>& GetCompositeDirtyLightIds();
+    uint8_t GetStaticDirtyLightFaceMask(uint64_t lightId);
+    uint8_t GetCompositeDirtyLightFaceMask(uint64_t lightId);
 
 }

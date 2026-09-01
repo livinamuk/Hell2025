@@ -2,6 +2,9 @@
 
 #include "EditorViewports.h"
 
+#include "Unloved/EditorSession/BoneMask/EditorBoneMask.h"
+#include "Unloved/EditorSession/Ragdoll/EditorRagdoll.h"
+
 #include "Hell/Audio.h"
 #include "Hell/Common/String.h"
 #include "Hell/File/File.h"
@@ -25,7 +28,7 @@ namespace Unloved::EditorSession::Workspace {
         bool g_hasMode = false;
 
         bool IsWorldCurrent() {
-            return g_hasMode && g_worldGeneration == World::GetGeneration();
+            return IsWorldBacked() && g_worldGeneration == World::GetGeneration();
         }
 
         bool FileNameExists(const std::string& directory, const std::string& extension, const std::string& name) {
@@ -34,6 +37,17 @@ namespace Unloved::EditorSession::Workspace {
                 if (Hell::String::ToLower(fileInfo.name) == lowerName) return true;
             }
             return false;
+        }
+
+        const std::string* GetStoredName(EditorSessionMode mode) {
+            switch (mode) {
+                case EditorSessionMode::HOUSE:     return &g_houseName;
+                case EditorSessionMode::MAP:       return &g_mapName;
+                case EditorSessionMode::RAGDOLL:   return nullptr;
+                case EditorSessionMode::BONE_MASK: return nullptr;
+            }
+
+            return nullptr;
         }
 
         bool PrepareHouse(const std::string& houseName) {
@@ -79,17 +93,36 @@ namespace Unloved::EditorSession::Workspace {
                 case EditorSessionMode::MAP:
                     MapManager::UpdateCreateInfoCollectionFromWorld(g_mapName);
                     break;
+                case EditorSessionMode::RAGDOLL:
+                case EditorSessionMode::BONE_MASK:
+                    break;
             }
         }
     }
 
     bool Open(EditorSessionMode mode) {
-        const std::string& name = mode == EditorSessionMode::MAP ? g_mapName : g_houseName;
-        if (!name.empty()) {
-            if (mode == EditorSessionMode::MAP) {
-                return OpenMap(name);
+        if (mode == EditorSessionMode::BONE_MASK && BoneMaskEditor::HasDocument()) {
+            g_mode = EditorSessionMode::BONE_MASK;
+            g_worldGeneration = 0;
+            g_hasMode = true;
+            return true;
+        }
+
+        if (mode == EditorSessionMode::RAGDOLL && RagdollEditor::HasDocument()) {
+            g_mode = EditorSessionMode::RAGDOLL;
+            g_worldGeneration = 0;
+            g_hasMode = true;
+            return true;
+        }
+
+        const std::string* name = GetStoredName(mode);
+        if (name && !name->empty()) {
+            switch (mode) {
+                case EditorSessionMode::HOUSE:     return OpenHouse(*name);
+                case EditorSessionMode::MAP:       return OpenMap(*name);
+                case EditorSessionMode::RAGDOLL:   break;
+                case EditorSessionMode::BONE_MASK: break;
             }
-            return OpenHouse(name);
         }
 
         g_mode = mode;
@@ -97,6 +130,76 @@ namespace Unloved::EditorSession::Workspace {
         g_hasMode = false;
 
         return false;
+    }
+
+    bool OpenBoneMask(const std::string& path, std::string& error) {
+        if (!BoneMaskEditor::Open(path, error)) return false;
+
+        g_mode = EditorSessionMode::BONE_MASK;
+        g_worldGeneration = 0;
+        g_hasMode = true;
+        return true;
+    }
+
+    bool ImportRagdoll(const std::string& path, std::string& error) {
+        if (!RagdollEditor::ImportLegacy(path, error)) {
+            return false;
+        }
+
+        g_mode = EditorSessionMode::RAGDOLL;
+        g_worldGeneration = 0;
+        g_hasMode = true;
+
+        return true;
+    }
+
+    bool OpenRagdoll(const std::string& path, std::string& error) {
+        if (!RagdollEditor::OpenNative(path, error)) return false;
+
+        g_mode = EditorSessionMode::RAGDOLL;
+        g_worldGeneration = 0;
+        g_hasMode = true;
+        return true;
+    }
+
+    bool SaveBoneMask(std::string& error) {
+        if (!g_hasMode || g_mode != EditorSessionMode::BONE_MASK) {
+            error = "No bone mask is open";
+            return false;
+        }
+        if (!BoneMaskEditor::Save(error)) return false;
+
+        Debug::BlitQuickDebugMessage("Bone mask saved");
+        Hell::Audio::PlayAudio(AUDIO_SELECT, 1.0f);
+        return true;
+    }
+
+    bool SaveRagdoll(std::string& error) {
+        if (!g_hasMode || g_mode != EditorSessionMode::RAGDOLL) {
+            error = "No ragdoll is open";
+            return false;
+        }
+        if (!RagdollEditor::Save(error)) return false;
+
+        Debug::BlitQuickDebugMessage("Ragdoll saved");
+        Hell::Audio::PlayAudio(AUDIO_SELECT, 1.0f);
+        return true;
+    }
+
+    bool SaveRagdollAs(const std::string& name, std::string& error) {
+        if (!g_hasMode || g_mode != EditorSessionMode::RAGDOLL) {
+            error = "No ragdoll is open";
+            return false;
+        }
+        if (NameExists(EditorSessionMode::RAGDOLL, name)) {
+            error = "Ragdoll '" + name + "' already exists";
+            return false;
+        }
+        if (!RagdollEditor::SaveAs(name, error)) return false;
+
+        Debug::BlitQuickDebugMessage("Ragdoll saved as '" + name + "'");
+        Hell::Audio::PlayAudio(AUDIO_SELECT, 1.0f);
+        return true;
     }
 
     bool OpenHouse(const std::string& name) {
@@ -165,6 +268,40 @@ namespace Unloved::EditorSession::Workspace {
         return true;
     }
 
+    bool NewBoneMask(const std::string& name, std::string& error) {
+        if (name.empty()) {
+            error = "Enter a bone mask name";
+            return false;
+        }
+        if (NameExists(EditorSessionMode::BONE_MASK, name)) {
+            error = "Bone mask '" + name + "' already exists";
+            return false;
+        }
+        BoneMaskEditor::New(name);
+
+        g_mode = EditorSessionMode::BONE_MASK;
+        g_worldGeneration = 0;
+        g_hasMode = true;
+        return true;
+    }
+
+    bool NewRagdoll(const std::string& name, std::string& error) {
+        if (name.empty()) {
+            error = "Enter a ragdoll name";
+            return false;
+        }
+        if (NameExists(EditorSessionMode::RAGDOLL, name)) {
+            error = "Ragdoll '" + name + "' already exists";
+            return false;
+        }
+        if (!RagdollEditor::New(name, error)) return false;
+
+        g_mode = EditorSessionMode::RAGDOLL;
+        g_worldGeneration = 0;
+        g_hasMode = true;
+        return true;
+    }
+
     void Close() {
         if (!IsWorldCurrent()) return;
         Commit();
@@ -188,6 +325,13 @@ namespace Unloved::EditorSession::Workspace {
     }
 
     void Discard() {
+        if (g_mode == EditorSessionMode::RAGDOLL) {
+            RagdollEditor::Reset();
+        }
+        if (g_mode == EditorSessionMode::BONE_MASK) {
+            BoneMaskEditor::Reset();
+        }
+
         g_hasMode = false;
         g_worldGeneration = 0;
     }
@@ -246,28 +390,45 @@ namespace Unloved::EditorSession::Workspace {
         return g_hasMode;
     }
 
+    bool IsWorldBacked() {
+        return g_hasMode && (g_mode == EditorSessionMode::HOUSE || g_mode == EditorSessionMode::MAP);
+    }
+
     EditorSessionMode GetMode() {
         return g_mode;
     }
 
     const std::string& GetName() {
-        return g_mode == EditorSessionMode::MAP ? g_mapName : g_houseName;
+        if (g_mode == EditorSessionMode::RAGDOLL) {
+            return RagdollEditor::GetName();
+        }
+        if (g_mode == EditorSessionMode::BONE_MASK) {
+            return BoneMaskEditor::GetName();
+        }
+
+        static const std::string emptyName;
+        const std::string* name = GetStoredName(g_mode);
+        return name ? *name : emptyName;
     }
 
     bool NameExists(EditorSessionMode mode, const std::string& name) {
         if (name.empty()) return false;
 
         const std::string lowerName = Hell::String::ToLower(name);
+        const std::string* currentName = GetStoredName(mode);
 
-        if (g_hasMode && g_mode == mode) {
-            const std::string& currentName = mode == EditorSessionMode::MAP ? g_mapName : g_houseName;
-
-            if (Hell::String::ToLower(currentName) == lowerName) {
-                return true;
-            }
+        if (g_hasMode && g_mode == mode && currentName && Hell::String::ToLower(*currentName) == lowerName) {
+            return true;
         }
 
-        return mode == EditorSessionMode::MAP ? FileNameExists("res/maps", "map", name) : FileNameExists("res/houses", "house", name);
+        switch (mode) {
+            case EditorSessionMode::HOUSE:     return FileNameExists("res/houses", "house", name);
+            case EditorSessionMode::MAP:       return FileNameExists("res/maps", "map", name);
+            case EditorSessionMode::RAGDOLL:   return FileNameExists("res/ragdolls", "ragdoll", name);
+            case EditorSessionMode::BONE_MASK: return FileNameExists("res/bone_masks", "bonemask", name);
+        }
+
+        return false;
     }
 
     bool SetHouseName(const std::string& name) {

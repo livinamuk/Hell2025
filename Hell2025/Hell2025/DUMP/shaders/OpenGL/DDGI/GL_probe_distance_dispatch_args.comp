@@ -1,0 +1,24 @@
+#version 450
+#include "../../common/ddgi.glsl"
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+struct DispatchIndirectCommand {
+    uint num_groups_x;
+    uint num_groups_y;
+    uint num_groups_z;
+};
+
+layout(std430, binding = 4) readonly buffer DDGIVolumeBuffer { DDGIVolume volume; };
+layout(std430, binding = 5) buffer ProbeStateBuffer          { ProbeState probeStates[]; };
+layout(std430, binding = 6) buffer ProbeDistanceCounter      { uint probeDistanceCounter; };
+layout(std430, binding = 7) buffer ProbeDistanceInidices     { uint probeDistanceIndices[]; };
+layout(std430, binding = 8) buffer ProbeDispatchArgs         { DispatchIndirectCommand command; };
+
+void main() {
+    command.num_groups_x = probeDistanceCounter;
+    //command.num_groups_x = (probeDistanceCounter + 63u) / 64u; // Significantly slower
+    //command.num_groups_x = (probeDistanceCounter + 31u) / 32u; // Significantly slower
+    command.num_groups_y = 1u;
+    command.num_groups_z = 1u;
+}

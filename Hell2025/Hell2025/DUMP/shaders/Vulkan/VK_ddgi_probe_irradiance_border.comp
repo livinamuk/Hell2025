@@ -1,0 +1,68 @@
+#version 460
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+#extension GL_EXT_nonuniform_qualifier : require
+
+#include "../common/ddgi.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2DArray storageImagesRGBA16F[];
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsDDGIProbeBorder data;
+} pc;
+
+DDGIVolume GetVolume() {
+    DDGIVolume volume;
+    volume.origin = pc.data.volumeOrigin;
+    volume.probeSpacing = pc.data.probeSpacing;
+    volume.probeCounts = pc.data.probeCounts;
+    volume.totalProbes = int(pc.data.totalProbes);
+    volume.probeOffset = pc.data.probeOffset;
+    return volume;
+}
+
+void main() {
+    uint irradianceAtlasIndex = pc.data.irradianceAtlasStorageImageIndex;
+    uint pIdx = gl_GlobalInvocationID.x;
+    DDGIVolume volume = GetVolume();
+    if (pIdx >= uint(volume.totalProbes)) return;
+
+    ivec3 gridCoord = DDGIGetProbeCoords(int(pIdx), volume);
+    int probeBaseX = gridCoord.x * 8;
+    int probeBaseY = gridCoord.z * 8;
+    int layer = gridCoord.y;
+
+    for (int i = 0; i < 6; i++) {
+        int src = 6 - i;
+        int dst = i + 1;
+
+        vec4 top = imageLoad(storageImagesRGBA16F[irradianceAtlasIndex], ivec3(probeBaseX + src, probeBaseY + 1, layer));
+        imageStore(storageImagesRGBA16F[irradianceAtlasIndex], ivec3(probeBaseX + dst, probeBaseY + 0, layer), top);
+
+        vec4 bottom = imageLoad(storageImagesRGBA16F[irradianceAtlasIndex], ivec3(probeBaseX + src, probeBaseY + 6, layer));
+        imageStore(storageImagesRGBA16F[irradianceAtlasIndex], ivec3(probeBaseX + dst, probeBaseY + 7, layer), bottom);
+
+        vec4 left = imageLoad(storageImagesRGBA16F[irradianceAtlasIndex], ivec3(probeBaseX + 1, probeBaseY + src, layer));
+        imageStore(storageImagesRGBA16F[irradianceAtlasIndex], ivec3(probeBaseX + 0, probeBaseY + dst, layer), left);
+
+        vec4 right = imageLoad(storageImagesRGBA16F[irradianceAtlasIndex], ivec3(probeBaseX + 6, probeBaseY + src, layer));
+        imageStore(storageImagesRGBA16F[irradianceAtlasIndex], ivec3(probeBaseX + 7, probeBaseY + dst, layer), right);
+    }
+
+    vec4 c0 = imageLoad(storageImagesRGBA16F[irradianceAtlasIndex], ivec3(probeBaseX + 6, probeBaseY + 6, layer));
+    imageStore(storageImagesRGBA16F[irradianceAtlasIndex], ivec3(probeBaseX + 0, probeBaseY + 0, layer), c0);
+
+    vec4 c1 = imageLoad(storageImagesRGBA16F[irradianceAtlasIndex], ivec3(probeBaseX + 1, probeBaseY + 6, layer));
+    imageStore(storageImagesRGBA16F[irradianceAtlasIndex], ivec3(probeBaseX + 7, probeBaseY + 0, layer), c1);
+
+    vec4 c2 = imageLoad(storageImagesRGBA16F[irradianceAtlasIndex], ivec3(probeBaseX + 6, probeBaseY + 1, layer));
+    imageStore(storageImagesRGBA16F[irradianceAtlasIndex], ivec3(probeBaseX + 0, probeBaseY + 7, layer), c2);
+
+    vec4 c3 = imageLoad(storageImagesRGBA16F[irradianceAtlasIndex], ivec3(probeBaseX + 1, probeBaseY + 1, layer));
+    imageStore(storageImagesRGBA16F[irradianceAtlasIndex], ivec3(probeBaseX + 7, probeBaseY + 7, layer), c3);
+}

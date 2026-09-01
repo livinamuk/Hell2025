@@ -1,0 +1,97 @@
+#version 460
+#extension GL_EXT_nonuniform_qualifier : require
+
+// Reverse Z hierarchical depth buffer based on AMD FidelityFX SPD
+
+#include "../common/Vulkan/VK_binding_indices.glsl"
+
+layout(local_size_x = 32, local_size_y = 8, local_size_z = 1) in;
+
+layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
+layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_R32F, r32f) coherent uniform image2D storageImagesR32F[];
+
+layout(set = 0, binding = DESC_IDX_SSBOS, std430) coherent buffer HiZAtomicCounter {
+    uint counter;
+} storageBuffers[];
+
+#define A_GPU
+#define A_GLSL
+#include "../common/AMD/FidelityFX-SPD/ffx_a.h"
+
+shared AF1 g_group_shared_depth_values[16][16];
+shared AU1 g_group_shared_counter;
+
+#define DS_FALLBACK
+
+AF4 SpdLoadSourceImage(ASU2 index, AU1 slice) {
+    AF1 depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), ivec2(index), 0).r;
+    return AF4(depth);
+}
+
+AF4 SpdLoad(ASU2 index, AU1 slice) {
+    AF1 depth = imageLoad(storageImagesR32F[VULKAN_STORAGE_IMAGE_R32F_IDX_HIZ_MIP_0 + 6], ivec2(index)).r;
+    return AF4(depth);
+}
+
+void SpdStore(ASU2 pixel, AF4 outputValue, AU1 index, AU1 slice) {
+    imageStore(storageImagesR32F[VULKAN_STORAGE_IMAGE_R32F_IDX_HIZ_MIP_0 + index + 1], ivec2(pixel), AF4(outputValue.x));
+}
+
+void SpdResetAtomicCounter(AU1 slice) {
+    storageBuffers[VULKAN_SSBO_IDX_HIZ_ATOMIC_COUNTER].counter = 0u;
+}
+
+void SpdIncreaseAtomicCounter(AU1 slice) {
+    g_group_shared_counter = atomicAdd(
+        storageBuffers[VULKAN_SSBO_IDX_HIZ_ATOMIC_COUNTER].counter,
+        1u);
+}
+
+AU1 SpdGetAtomicCounter() {
+    return g_group_shared_counter;
+}
+
+AF4 SpdLoadIntermediate(AU1 x, AU1 y) {
+    return AF4(g_group_shared_depth_values[x][y]);
+}
+
+void SpdStoreIntermediate(AU1 x, AU1 y, AF4 value) {
+    g_group_shared_depth_values[x][y] = value.x;
+}
+
+AF4 SpdReduce4(AF4 v0, AF4 v1, AF4 v2, AF4 v3) {
+    return max(max(v0, v1), max(v2, v3));
+}
+
+#include "../common/AMD/FidelityFX-SPD/ffx_spd.h"
+
+AU1 GetThreadgroupCount(AU2 imageSize) {
+    return ((imageSize.x + 63u) / 64u) * ((imageSize.y + 63u) / 64u);
+}
+
+AF1 GetMipsCount(AF2 textureSize) {
+    AF1 maxDimension = max(textureSize.x, textureSize.y);
+    return 1.0 + floor(log2(maxDimension));
+}
+
+void main() {
+    ivec2 depthImageSizeSigned = textureSize(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
+    AU2 depthImageSize = AU2(depthImageSizeSigned);
+
+    // Copy the most detailed level into the hierarchy before invoking SPD.
+    for (int i = 0; i < 2; ++i) {
+        for (int j = 0; j < 8; ++j) {
+            AU2 index = AU2(2u * gl_GlobalInvocationID.x + AU1(i), 8u * gl_GlobalInvocationID.y + AU1(j));
+            if (index.x < depthImageSize.x && index.y < depthImageSize.y) {
+                AF1 depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), ivec2(index), 0).r;
+                imageStore(storageImagesR32F[VULKAN_STORAGE_IMAGE_R32F_IDX_HIZ_MIP_0], ivec2(index), AF4(depth));
+            }
+        }
+    }
+
+    AF1 mipCount = GetMipsCount(AF2(depthImageSize));
+    AU1 threadgroupCount = GetThreadgroupCount(depthImageSize);
+
+    SpdDownsample(AU2(gl_WorkGroupID.xy), AU1(gl_LocalInvocationIndex), AU1(mipCount), threadgroupCount, 0u);
+}

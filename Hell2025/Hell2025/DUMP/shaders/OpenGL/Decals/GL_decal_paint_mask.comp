@@ -1,0 +1,45 @@
+#version 460 core
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(r8, binding = 1) uniform image2DArray MaskOutputImageArray;
+
+uniform int u_layerIndex;
+
+layout (binding = 1) uniform sampler2D UVTexture;
+layout (binding = 2) uniform sampler2D DecalTexture;
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);    
+    ivec2 maskSize = imageSize(MaskOutputImageArray).xy;
+    ivec2 uvMapSize = textureSize(UVTexture, 0);
+
+    vec2 uv_screenspace = (vec2(pixelCoords) + 0.5) / vec2(uvMapSize);     
+    vec2 geometry_uv = texture(UVTexture, uv_screenspace).xy;
+
+    // Bail if no geometry at this pixel
+    if (geometry_uv == vec2(0,0)) {
+        //return;
+    }
+    
+    float decalValue = texture(DecalTexture, uv_screenspace).r;
+
+    decalValue *= 0.75;
+    //decalValue *= 2.0;
+
+
+    // Bail if no decal at this pixel
+    if (decalValue == 0) {
+        //return;
+    }
+
+    vec2 p = geometry_uv * vec2(maskSize) - vec2(0.5);
+    ivec2 outputPixelCoords = ivec2(floor(p + 0.5));
+    
+    // Array version
+    ivec3 outputArrayPixelCoords = ivec3(outputPixelCoords, u_layerIndex);
+    float oldValue2 = imageLoad(MaskOutputImageArray, outputArrayPixelCoords).r;
+    vec4 outputColor2 = vec4(oldValue2 + decalValue, 0, 0, 1);
+    outputColor2 = vec4(oldValue2 + decalValue * 0.5, 0, 0, 1); // test for less brutal painting
+    imageStore(MaskOutputImageArray, outputArrayPixelCoords, outputColor2);
+}

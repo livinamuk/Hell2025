@@ -1,0 +1,61 @@
+#version 450
+#include "../../common/ddgi.glsl"
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+restrict layout(std430, binding = 4) readonly buffer DDGIVolumeBuffer { DDGIVolume volume; };
+
+layout(rgba16f, binding = 0) uniform image2DArray u_irradianceAtlas;
+
+void main() {
+    uint pIdx = gl_GlobalInvocationID.x;
+    if (pIdx >= uint(volume.totalProbes)) return;
+
+    ivec3 gridCoord = DDGIGetProbeCoords(int(pIdx), volume);
+
+    // Irradiance uses 8x8 footprint (6 interior texels + 2 border texels)
+    int probeBaseX = gridCoord.x * 8;
+    int probeBaseY = gridCoord.z * 8;
+    int layer = gridCoord.y;
+
+    // Handle the 4 Edges (Row/Column reflection)
+    for (int i = 0; i < 6; i++) {
+        // Source index (flipped)
+        int src = 6 - i; 
+        // Destination index (1-based offset for interior)
+        int dst = i + 1;
+
+        // Top border (y=0) pulls from Bottom interior (y=1) but flipped X
+        vec4 top = imageLoad(u_irradianceAtlas, ivec3(probeBaseX + src, probeBaseY + 1, layer));
+        imageStore(u_irradianceAtlas, ivec3(probeBaseX + dst, probeBaseY + 0, layer), top);
+
+        // Bottom border (y=7) pulls from Top interior (y=6) but flipped X
+        vec4 bottom = imageLoad(u_irradianceAtlas, ivec3(probeBaseX + src, probeBaseY + 6, layer));
+        imageStore(u_irradianceAtlas, ivec3(probeBaseX + dst, probeBaseY + 7, layer), bottom);
+
+        // Left border (x=0) pulls from Right interior (x=1) but flipped Y
+        vec4 left = imageLoad(u_irradianceAtlas, ivec3(probeBaseX + 1, probeBaseY + src, layer));
+        imageStore(u_irradianceAtlas, ivec3(probeBaseX + 0, probeBaseY + dst, layer), left);
+
+        // Right border (x=7) pulls from Left interior (x=6) but flipped Y
+        vec4 right = imageLoad(u_irradianceAtlas, ivec3(probeBaseX + 6, probeBaseY + src, layer));
+        imageStore(u_irradianceAtlas, ivec3(probeBaseX + 7, probeBaseY + dst, layer), right);
+    }
+
+    // Handle the 4 Corners (Diagonal reflection)
+    // Top-Left corner (0,0) -> Bottom-Right interior (6,6)
+    vec4 c0 = imageLoad(u_irradianceAtlas, ivec3(probeBaseX + 6, probeBaseY + 6, layer));
+    imageStore(u_irradianceAtlas, ivec3(probeBaseX + 0, probeBaseY + 0, layer), c0);
+
+    // Top-Right corner (7,0) -> Bottom-Left interior (1,6)
+    vec4 c1 = imageLoad(u_irradianceAtlas, ivec3(probeBaseX + 1, probeBaseY + 6, layer));
+    imageStore(u_irradianceAtlas, ivec3(probeBaseX + 7, probeBaseY + 0, layer), c1);
+
+    // Bottom-Left corner (0,7) -> Top-Right interior (6,1)
+    vec4 c2 = imageLoad(u_irradianceAtlas, ivec3(probeBaseX + 6, probeBaseY + 1, layer));
+    imageStore(u_irradianceAtlas, ivec3(probeBaseX + 0, probeBaseY + 7, layer), c2);
+
+    // Bottom-Right corner (7,7) -> Top-Left interior (1,1)
+    vec4 c3 = imageLoad(u_irradianceAtlas, ivec3(probeBaseX + 1, probeBaseY + 1, layer));
+    imageStore(u_irradianceAtlas, ivec3(probeBaseX + 7, probeBaseY + 7, layer), c3);
+}

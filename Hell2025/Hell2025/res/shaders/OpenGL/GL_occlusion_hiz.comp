@@ -1,0 +1,30 @@
+#version 460
+
+// Reverse-Z conservative occlusion pyramid. Each texel stores the farthest
+// occluder in its source footprint, which is the minimum reverse depth.
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(binding = 0) uniform sampler2D u_sourceTexture;
+layout(r32f, binding = 0) writeonly uniform image2D u_outputMip;
+
+uniform int u_sourceMip;
+
+void main() {
+    const ivec2 outputPixel = ivec2(gl_GlobalInvocationID.xy);
+    const ivec2 outputSize = imageSize(u_outputMip);
+    if (any(greaterThanEqual(outputPixel, outputSize))) return;
+
+    const ivec2 sourceSize = textureSize(u_sourceTexture, u_sourceMip);
+    const ivec2 sourceBase = outputPixel * 2;
+    float minimumDepth = 1.0;
+
+    for (int y = 0; y < 2; y++) {
+        for (int x = 0; x < 2; x++) {
+            const ivec2 sourcePixel = min(sourceBase + ivec2(x, y), sourceSize - ivec2(1));
+            minimumDepth = min(minimumDepth, texelFetch(u_sourceTexture, sourcePixel, u_sourceMip).r);
+        }
+    }
+
+    imageStore(u_outputMip, outputPixel, vec4(minimumDepth));
+}

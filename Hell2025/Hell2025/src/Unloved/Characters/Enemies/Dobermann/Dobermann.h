@@ -1,8 +1,13 @@
 #pragma once
+
+#include "Hell/Physics/Types/CharacterController.h"
+
+#include "Unloved/Bible/Bible_enums.h"
+#include "Unloved/Systems/Animator/AnimatorInstance.h"
 #include "Unloved/Common/Types.h"
 #include "Unloved/Common/CreateInfo.h"
-#include "Unloved/Objects/Renderables/AnimatedGameObject.h"
-#include "Hell/Physics/Types/CharacterController.h"
+#include "Unloved/Objects/Effects/BloodPoolState.h"
+#include "Unloved/Objects/Renderables/SkinnedGameObject.h"
 
 namespace Unloved {
 
@@ -30,14 +35,16 @@ namespace Unloved {
 
         void DebugDraw();
 
-        Unloved::AnimatedGameObject* GetAnimatedGameObject(); 
+        AnimatorInstance* GetAnimatorInstance();
         CharacterController* GetCharacterController();
+        SkinnedGameObject* GetSkinnedGameObject();
+        Ragdoll* GetRagdoll();
+
         glm::vec3 GetPosition();
 
         const glm::vec3& GetForward() const             { return m_forward; }
         const glm::vec3& GetRotation() const            { return m_createInfo.rotation; }
         uint64_t GetObjectId() const                    { return m_objectId; }
-	    uint64_t GetRagdollId()                       { return m_RagdollId; }
         bool IsAlive() const                            { return m_health > 0.0f; }
         bool IsDead() const                             { return !IsAlive(); }
         const DobermannState GetDobermannState() const  { return m_state; }
@@ -46,20 +53,27 @@ namespace Unloved {
 
     private:
         void CreateCharacterController(const glm::vec3& position);
-        void UpdateAnimatedGameObjectRotation();
+        void UpdateSkinnedGameObjectRotation();
+        void PlayAnimation(Bible::AnimationSlot animationSlot, float speed);
+        void PlayAndLoopAnimation(Bible::AnimationSlot animationSlot, float speed);
+        bool IsAnimationComplete();
 
         DobermannCreateInfo m_createInfo;
-	    uint64_t g_animatedGameObjectObjectId = 0;
-	    uint64_t m_objectId = 0;
-	    uint64_t m_RagdollId = 0;
+
+        uint64_t m_objectId = 0;
+        uint64_t m_animatorInstanceId = 0;
         uint64_t m_characterControllerId = 0;
+        uint64_t m_skinnedGameObjectId = 0;
+        uint32_t m_animationLayerIndex = 0;
+
 	    float m_health = 0.0f;
         float m_initalHealth = 1.0f;
-        DobermannState m_state = DobermannState::LAY;
         glm::vec3 m_target = glm::vec3(0.0f);
         std::vector<glm::vec3> m_path;
-
         glm::vec3 m_initalForward = glm::vec3(0.0f, 0.0f, 1.0f);
         glm::vec3 m_forward = glm::vec3(0.0f);
+
+        DobermannState m_state = DobermannState::LAY;
+        BloodPoolState m_bloodPoolState;
     };
 }

@@ -1,0 +1,202 @@
+#version 430
+layout(local_size_x = 8, local_size_y = 1, local_size_z = 8) in;
+
+#define BINDING_SSBO_IN 0
+#define BINDING_SSBO_OUT 1
+
+layout(std430, binding = BINDING_SSBO_IN) readonly buffer Block { vec2 data[];} fft_in;
+layout(std430, binding = BINDING_SSBO_OUT) writeonly buffer BlockOut { vec2 data[]; } fft_out;
+
+#define FFT_RADIX 64
+#define FFT_BANK_CONFLICT_PADDING 1u
+#define FFT_SHARED_SIZE (uint(FFT_RADIX) + FFT_BANK_CONFLICT_PADDING)
+
+#define PI 3.14159265359
+#define SQRT_1_2 0.70710678118
+
+#define FFT_OUTPUT_STEP 1u
+#define FFT_OUTPUT_SHIFT 0u
+
+#define TWIDDLE_1_8 (vec2(+SQRT_1_2, +SQRT_1_2))
+#define TWIDDLE_3_8 (vec2(-SQRT_1_2, +SQRT_1_2))
+
+vec2 cmul(vec2 a, vec2 b) {
+    vec2 r3 = a.yx;
+    vec2 r1 = b.xx;
+    vec2 R0 = a * r1;
+    vec2 r2 = b.yy;
+    vec2 R1 = r2 * r3;
+    return R0 + vec2(-R1.x, R1.y);
+}
+
+vec2 load_global(uint offset) {
+    return fft_in.data[offset];
+}
+
+void store_global(uint offset, vec2 v) {
+    fft_out.data[offset] = v;
+}
+
+vec2 twiddle(uint k, uint p) {
+    float angle = PI * float(k) / float(p);
+    return vec2(cos(angle), sin(angle));
+}
+
+vec2 cmul_plus_j(vec2 v) {
+    return vec2(-v.y, v.x);
+}
+
+void butterfly(inout vec2 a, inout vec2 b, vec2 w) {
+    vec2 t = cmul(b, w);
+    b = a - t;
+    a = a + t;
+}
+
+void butterfly_p1(inout vec2 a, inout vec2 b) {
+    vec2 t = b;
+    b = a - t;
+    a = a + t;
+}
+
+void butterfly_p1_plus_j(inout vec2 a, inout vec2 b) {
+    vec2 t = b;
+    b = vec2(-1.0, 1.0) * (a.yx - t.yx);
+    a = a + t;
+}
+
+void FFT8_p1(inout vec2 a, inout vec2 b, inout vec2 c, inout vec2 d, inout vec2 e, inout vec2 f, inout vec2 g, inout vec2 h) {
+    butterfly_p1(a, e);
+    butterfly_p1(b, f);
+    butterfly_p1_plus_j(c, g);
+    butterfly_p1_plus_j(d, h);
+
+    butterfly_p1(a, c);
+    butterfly_p1_plus_j(b, d);
+    butterfly_p1(e, g);
+    butterfly_p1(f, h);
+
+    butterfly_p1(a, b);
+    butterfly_p1(c, d);
+    butterfly(e, f, TWIDDLE_1_8);
+    butterfly(g, h, TWIDDLE_3_8);
+}
+
+void FFT8(inout vec2 a, inout vec2 b, inout vec2 c, inout vec2 d, inout vec2 e, inout vec2 f, inout vec2 g, inout vec2 h, uint i, uint p) {
+    uint k = i & (p - 1u);
+
+    vec2 w = twiddle(k, p);
+    butterfly(a, e, w);
+    butterfly(b, f, w);
+    butterfly(c, g, w);
+    butterfly(d, h, w);
+
+    vec2 w0 = twiddle(k, 2u * p);
+    vec2 w1 = cmul_plus_j(w0);
+
+    butterfly(a, c, w0);
+    butterfly(b, d, w0);
+    butterfly(e, g, w1);
+    butterfly(f, h, w1);
+
+    vec2 W0 = twiddle(k, 4u * p);
+    vec2 W1 = cmul(W0, TWIDDLE_1_8);
+    vec2 W2 = cmul_plus_j(W0);
+    vec2 W3 = cmul_plus_j(W1);
+
+    butterfly(a, b, W0);
+    butterfly(c, d, W2);
+    butterfly(e, f, W1);
+    butterfly(g, h, W3);
+}
+
+uint get_shared_base(uint fft) {
+    return FFT_SHARED_SIZE * (gl_LocalInvocationID.y * gl_WorkGroupSize.x + fft);
+}
+
+shared float tmpx[FFT_SHARED_SIZE * gl_WorkGroupSize.x * gl_WorkGroupSize.y];
+shared float tmpy[FFT_SHARED_SIZE * gl_WorkGroupSize.x * gl_WorkGroupSize.y];
+
+void store_shared(uint offset, vec2 v) {
+    tmpx[offset] = v.x;
+    tmpy[offset] = v.y;
+}
+
+void load_shared(uint offset, out vec2 v) {
+    v.x = tmpx[offset];
+    v.y = tmpy[offset];
+}
+
+void store_shared(vec2 a, vec2 b, vec2 c, vec2 d, vec2 e, vec2 f, vec2 g, vec2 h, uint block, uint base) {
+    store_shared(base + 8u * block + 0u, a);
+    store_shared(base + 8u * block + 1u, e);
+    store_shared(base + 8u * block + 2u, c);
+    store_shared(base + 8u * block + 3u, g);
+    store_shared(base + 8u * block + 4u, b);
+    store_shared(base + 8u * block + 5u, f);
+    store_shared(base + 8u * block + 6u, d);
+    store_shared(base + 8u * block + 7u, h);
+
+    memoryBarrierShared();
+    barrier();
+}
+
+void load_shared(out vec2 a, out vec2 b, out vec2 c, out vec2 d, out vec2 e, out vec2 f, out vec2 g, out vec2 h, uint block, uint base) {
+    load_shared(base + block + 0u * gl_WorkGroupSize.z, a);
+    load_shared(base + block + 1u * gl_WorkGroupSize.z, b);
+    load_shared(base + block + 2u * gl_WorkGroupSize.z, c);
+    load_shared(base + block + 3u * gl_WorkGroupSize.z, d);
+    load_shared(base + block + 4u * gl_WorkGroupSize.z, e);
+    load_shared(base + block + 5u * gl_WorkGroupSize.z, f);
+    load_shared(base + block + 6u * gl_WorkGroupSize.z, g);
+    load_shared(base + block + 7u * gl_WorkGroupSize.z, h);
+}
+
+void FFT64_p1_horiz(uvec2 i) {
+    uint octa_samples = gl_NumWorkGroups.x * gl_WorkGroupSize.x;
+    uint offset = i.y * octa_samples * 64u;
+
+    uint fft = gl_LocalInvocationID.x;
+    uint block = gl_LocalInvocationID.z;
+    uint base = get_shared_base(fft);
+
+    vec2 a = load_global(offset + i.x + (block +  0u) * octa_samples);
+    vec2 b = load_global(offset + i.x + (block +  8u) * octa_samples);
+    vec2 c = load_global(offset + i.x + (block + 16u) * octa_samples);
+    vec2 d = load_global(offset + i.x + (block + 24u) * octa_samples);
+    vec2 e = load_global(offset + i.x + (block + 32u) * octa_samples);
+    vec2 f = load_global(offset + i.x + (block + 40u) * octa_samples);
+    vec2 g = load_global(offset + i.x + (block + 48u) * octa_samples);
+    vec2 h = load_global(offset + i.x + (block + 56u) * octa_samples);
+
+    FFT8_p1(a, b, c, d, e, f, g, h);
+
+    store_shared(a, b, c, d, e, f, g, h, block, base);
+    load_shared(a, b, c, d, e, f, g, h, block, base);
+
+    const uint p = 8u;
+    FFT8(a, b, c, d, e, f, g, h, FFT_OUTPUT_STEP * block, p);
+
+    uint k = (FFT_OUTPUT_STEP * block) & (p - 1u);
+    uint j = ((FFT_OUTPUT_STEP * block - k) * 8u) + k;
+
+    store_global(offset + 64u * i.x + ((j + 0u * p) >> FFT_OUTPUT_SHIFT), a);
+    store_global(offset + 64u * i.x + ((j + 1u * p) >> FFT_OUTPUT_SHIFT), e);
+    store_global(offset + 64u * i.x + ((j + 2u * p) >> FFT_OUTPUT_SHIFT), c);
+    store_global(offset + 64u * i.x + ((j + 3u * p) >> FFT_OUTPUT_SHIFT), g);
+    store_global(offset + 64u * i.x + ((j + 4u * p) >> FFT_OUTPUT_SHIFT), b);
+    store_global(offset + 64u * i.x + ((j + 5u * p) >> FFT_OUTPUT_SHIFT), f);
+    store_global(offset + 64u * i.x + ((j + 6u * p) >> FFT_OUTPUT_SHIFT), d);
+    store_global(offset + 64u * i.x + ((j + 7u * p) >> FFT_OUTPUT_SHIFT), h);
+}
+
+void FFT64_horiz() {
+    FFT64_p1_horiz(gl_GlobalInvocationID.xy);
+}
+
+void FFT64() {
+    FFT64_horiz();
+}
+
+void main() {
+    FFT64();
+}

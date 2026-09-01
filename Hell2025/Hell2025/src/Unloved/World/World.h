@@ -11,7 +11,7 @@
 struct GPULight;
 
 namespace Unloved {
-    struct AnimatedGameObject;
+    struct SkinnedGameObject;
     struct BulletCasing;
     struct ChristmasLightSet;
     struct ChristmasTree;
@@ -28,6 +28,7 @@ namespace Unloved {
     struct Jetty;
     struct Kangaroo;
     struct Ladder;
+    struct LadderDismount;
     struct Light;
     struct SpotLight;
     struct Map;
@@ -44,6 +45,7 @@ namespace Unloved {
     struct PointPairObject;
     struct Road;
     struct Shark;
+    struct Snake;
     struct SpawnPoint;
     struct SpriteSheetObject;
     struct Staircase;
@@ -109,7 +111,8 @@ namespace Unloved::World {
 
     MeshNode* GetMeshNodeByObjectIdAndLocalNodeIndex(uint64_t objectId, int32_t meshNodeLocalIndex);
 
-    uint64_t AddAnimatedGameObject();
+    uint64_t CreateSkinnedGameObject();
+
     uint64_t AddChristmasLights(ChristmasLightsCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddBulletCasing(BulletCasingCreateInfo createInfo);
     uint64_t AddChristmasTree(ChristmasTreeCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
@@ -126,6 +129,7 @@ namespace Unloved::World {
     uint64_t AddWorldPlane(WorldPlaneCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddKangaroo(KangarooCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddLadder(LadderCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    uint64_t AddLadderDismount(LadderDismountCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddJetty(JettyCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddLight(LightCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddSpotLight(uint64_t ownerObjectId = 0, int32_t ownerViewportIndex = -1);
@@ -137,6 +141,7 @@ namespace Unloved::World {
     uint64_t AddPlanarQuadObject(PlanarQuadObjectCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddPointPairObject(PointPairCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddShark(SharkCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
+    uint64_t AddSnake(SnakeCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddSpawnPointCampaign(SpawnPointCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddSpawnPointDeathMatch(SpawnPointCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
     uint64_t AddStaircase(StaircaseCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
@@ -145,7 +150,7 @@ namespace Unloved::World {
     uint64_t AddWire(WireCreateInfo createInfo);
     uint64_t AddWindow(WindowCreateInfo createInfo, SpawnOffset spawnOffset = SpawnOffset());
 
-    AnimatedGameObject* GetAnimatedGameObjectByObjectId(uint64_t objectId);
+    SkinnedGameObject* GetSkinnedGameObjectByObjectId(uint64_t objectId);
     BulletCasing* GetBulletCasingByObjectId(uint64_t objectId);
     ChristmasLightSet* GetChristmasLightsByObjectId(uint64_t objectId);
     ChristmasTree* GetChristmasTreeByObjectId(uint64_t objectId);
@@ -165,6 +170,7 @@ namespace Unloved::World {
     Kangaroo* GetKangarooByObjectId(uint64_t objectId);
     Jetty* GetJettyById(uint64_t objectId);
     Ladder* GetLadderByObjectId(uint64_t objectId);
+    LadderDismount* GetLadderDismountByObjectId(uint64_t objectId);
     Light* GetLightByObjectId(uint64_t objectId);
     Light* GetLightByIndex(int32_t index);
     uint32_t GetLightCount();
@@ -180,6 +186,7 @@ namespace Unloved::World {
     PlanarQuadObject* GetPlanarQuadObjectByObjectId(uint64_t objectId);
     PointPairObject* GetPointPairObjectByObjectId(uint64_t objectId);
     Shark* GetSharkByObjectId(uint64_t objectId);
+    Snake* GetSnakeByObjectId(uint64_t objectId);
     SpawnPoint* GetSpawnPointCampaignByObjectId(uint64_t objectId);
     SpawnPoint* GetSpawnPointDeathMatchByObjectId(uint64_t objectId);
     Staircase* GetStaircaseByObjectId(uint64_t objectId);
@@ -189,7 +196,7 @@ namespace Unloved::World {
     Wire* GetWireByObjectId(uint64_t objectId);
     Window* GetWindowByObjectId(uint64_t objectId);
 
-    Hell::SlotMap<AnimatedGameObject>& GetAnimatedGameObjects();
+    Hell::SlotMap<SkinnedGameObject>& GetSkinnedGameObjects();
     Hell::SlotMap<BulletCasing>& GetBulletCasings();
     Hell::SlotMap<ChristmasLightSet>& GetChristmasLightSets();
     Hell::SlotMap<ChristmasTree>& GetChristmasTrees();
@@ -207,6 +214,7 @@ namespace Unloved::World {
     Hell::SlotMap<Kangaroo>& GetKangaroos();
     Hell::SlotMap<Jetty>& GetJetties();
     Hell::SlotMap<Ladder>& GetLadders();
+    Hell::SlotMap<LadderDismount>& GetLadderDismounts();
     Hell::SlotMap<Light>& GetLights();
     Hell::SlotMap<SpotLight>& GetSpotLights();
     std::vector<Map>& GetMaps();
@@ -219,6 +227,7 @@ namespace Unloved::World {
     Hell::SlotMap<PointPairObject>& GetPointPairObjects();
     Hell::SlotMap<Road>& GetRoads();
     Hell::SlotMap<Shark>& GetSharks();
+    Hell::SlotMap<Snake>& GetSnakes();
     Hell::SlotMap<SpawnPoint>& GetSpawnPointsCampaign();
     Hell::SlotMap<SpawnPoint>& GetSpawnPointsDeathMatch();
     Hell::SlotMap<SpriteSheetObject>& GetBubbleSpriteSheetObjects();

@@ -1,0 +1,47 @@
+#version 450
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(rgba16f, binding = 0) uniform readonly image2D srcColorImage;
+layout(rgba16f, binding = 1) uniform writeonly image2D dstColorImage;
+layout(binding = 2) uniform sampler2D srcColorTextureSampler;
+
+vec4 DownsampleBox2x(ivec2 dstPixelCoordinate) {
+    ivec2 srcBasePixelCoordinate = dstPixelCoordinate * 2;
+
+    vec4 srcColor00 = imageLoad(srcColorImage, srcBasePixelCoordinate + ivec2(0, 0));
+    vec4 srcColor10 = imageLoad(srcColorImage, srcBasePixelCoordinate + ivec2(1, 0));
+    vec4 srcColor01 = imageLoad(srcColorImage, srcBasePixelCoordinate + ivec2(0, 1));
+    vec4 srcColor11 = imageLoad(srcColorImage, srcBasePixelCoordinate + ivec2(1, 1));
+
+    return 0.25 * (srcColor00 + srcColor10 + srcColor01 + srcColor11);
+}
+
+vec4 DownsampleLinear(ivec2 dstPixelCoordinate) {
+    ivec2 dstImageSize = imageSize(dstColorImage);
+    ivec2 srcImageSize = textureSize(srcColorTextureSampler, 0);
+    vec2 dstPixelCenter = vec2(dstPixelCoordinate) + vec2(0.5);
+    vec2 srcPixelCoordinateFloat = dstPixelCenter * (vec2(srcImageSize) / vec2(dstImageSize));
+    vec2 srcUV = srcPixelCoordinateFloat / vec2(srcImageSize);
+
+    return textureLod(srcColorTextureSampler, srcUV, 0.0);
+}
+
+void main() {
+    ivec2 dstPixelCoordinate = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 dstImageSize = imageSize(dstColorImage);
+
+    if (dstPixelCoordinate.x >= dstImageSize.x || dstPixelCoordinate.y >= dstImageSize.y) {
+        return;
+    }
+
+    vec4 dstColor;
+
+    if (false) {
+        dstColor = DownsampleBox2x(dstPixelCoordinate);
+    } else {
+        dstColor = DownsampleLinear(dstPixelCoordinate);
+    }
+
+    imageStore(dstColorImage, dstPixelCoordinate, dstColor);
+}

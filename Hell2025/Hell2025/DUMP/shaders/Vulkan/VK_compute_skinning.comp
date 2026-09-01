@@ -1,0 +1,122 @@
+#version 460
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+#include "../common/Vulkan/VK_push_constants.glsl"
+
+#define SKINNING_WORKGROUP_SIZE 128
+layout(local_size_x = SKINNING_WORKGROUP_SIZE) in;
+
+struct Vertex {
+    vec3 position;
+    vec3 normal;
+    vec2 uv;
+    vec3 tangent;
+};
+
+struct VertexWeight {
+    ivec4 boneID;
+    vec4 weight;
+};
+
+struct SkinningDispatchGroup {
+    uint jobIndex;
+    uint vertexOffset;
+    uint padding0;
+    uint padding1;
+};
+
+struct SkinningJob {
+    uint vertexCount;
+    uint indexCount;
+    uint sourceBaseVertex;
+    uint sourceBaseIndex;
+
+    uint sourceVertexWeightOffset;
+    uint skinnedBaseVertex;
+    uint skinningTransformOffset;
+    uint padding;
+};
+
+layout(buffer_reference, scalar) buffer VertexBuffer                         { Vertex data[]; };
+layout(buffer_reference, scalar) buffer PreviousSkinnedPositionBuffer        { vec3 positions[]; };
+layout(buffer_reference, scalar) readonly buffer ReadonlyVertexBuffer        { Vertex data[]; };
+layout(buffer_reference, scalar) readonly buffer SkinningTransformBuffer     { mat4 data[]; };
+layout(buffer_reference, scalar) readonly buffer VertexWeightBuffer          { VertexWeight data[]; };
+layout(buffer_reference, scalar) readonly buffer SkinningDispatchGroupBuffer { SkinningDispatchGroup data[]; };
+layout(buffer_reference, scalar) readonly buffer SkinningJobBuffer           { SkinningJob data[]; };
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsSkinning data;
+} pc;
+
+void main() {
+    VertexBuffer outputVertices = VertexBuffer(pc.data.outputVerticesDeviceAddress);
+    PreviousSkinnedPositionBuffer previousSkinnedPositions = PreviousSkinnedPositionBuffer(pc.data.previousSkinnedPositionsDeviceAddress);
+    ReadonlyVertexBuffer inputVertices = ReadonlyVertexBuffer(pc.data.inputVerticesDeviceAddress);
+    SkinningDispatchGroupBuffer skinningDispatchGroups= SkinningDispatchGroupBuffer(pc.data.skinningDispatchGroupsDeviceAddress);
+    SkinningJobBuffer skinningJobs = SkinningJobBuffer(pc.data.skinningJobsDeviceAddress);
+    SkinningTransformBuffer skinningTransforms = SkinningTransformBuffer(pc.data.skinningTransformsDeviceAddress);
+    SkinningTransformBuffer previousSkinningTransforms = SkinningTransformBuffer(pc.data.previousSkinningTransformsDeviceAddress);
+    VertexWeightBuffer vertexWeights = VertexWeightBuffer(pc.data.vertexWeightsDeviceAddress);
+    
+    SkinningDispatchGroup group = skinningDispatchGroups.data[gl_WorkGroupID.x];
+    SkinningJob job = skinningJobs.data[group.jobIndex];
+
+    // Bail if this workgroups local vertex will exceed the vertex count of the job
+    uint localVertexIndex = group.vertexOffset + gl_LocalInvocationID.x;
+    if (localVertexIndex >= job.vertexCount) return;
+    
+    uint sourceVertexIndex = job.sourceBaseVertex + localVertexIndex;
+    uint sourceVertexWeightIndex = job.sourceVertexWeightOffset + localVertexIndex;
+    uint skinnedVertexIndex = job.skinnedBaseVertex + localVertexIndex;
+
+    Vertex vertexIn = inputVertices.data[sourceVertexIndex];
+    VertexWeight vertexWeight = vertexWeights.data[sourceVertexWeightIndex];
+
+    vec4 vertexPosition = vec4(vertexIn.position, 1.0);
+    vec3 vertexNormal = vertexIn.normal;
+    vec3 vertexTangent = vertexIn.tangent;
+    ivec4 boneIDs = vertexWeight.boneID;
+    vec4 weights = vertexWeight.weight;
+
+    mat4 skinMat = mat4(0.0);
+    mat4 previousSkinMat = mat4(0.0);
+
+    for(int i = 0; i < 4; i++) {
+        float weight = weights[i];
+        if (weight < 0.0001) continue;
+
+        uint skinningTransformIndex = uint(boneIDs[i]) + job.skinningTransformOffset;
+        skinMat += skinningTransforms.data[skinningTransformIndex] * weight;
+        previousSkinMat += previousSkinningTransforms.data[skinningTransformIndex] * weight;
+    }
+
+    mat3 skinMat3 = mat3(skinMat);
+
+    vec3 totalLocalPos = (skinMat * vertexPosition).xyz;
+    vec3 totalNormal = normalize(skinMat3 * vertexNormal);
+
+    vec3 totalTangent = normalize(skinMat3 * vertexTangent);
+    totalTangent = normalize(totalTangent - totalNormal * dot(totalNormal, totalTangent));
+
+    Vertex vertexOut;
+    vertexOut.position[0] = totalLocalPos.x;
+    vertexOut.position[1] = totalLocalPos.y;
+    vertexOut.position[2] = totalLocalPos.z;
+
+    vertexOut.normal[0] = totalNormal.x;
+    vertexOut.normal[1] = totalNormal.y;
+    vertexOut.normal[2] = totalNormal.z;
+
+    vertexOut.tangent[0] = totalTangent.x;
+    vertexOut.tangent[1] = totalTangent.y;
+    vertexOut.tangent[2] = totalTangent.z;
+
+    vertexOut.uv[0] = vertexIn.uv[0];
+    vertexOut.uv[1] = vertexIn.uv[1];
+
+    outputVertices.data[skinnedVertexIndex] = vertexOut;
+    previousSkinnedPositions.positions[skinnedVertexIndex] = (previousSkinMat * vertexPosition).xyz;
+}

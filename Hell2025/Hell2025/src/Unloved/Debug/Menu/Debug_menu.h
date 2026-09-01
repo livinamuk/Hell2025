@@ -33,13 +33,14 @@ namespace Debug::Menu {
     using DisplayFunction = void(*)();
     using ApplyEditFunction = void(*)(uint32_t, const Value&);
     using RegisterFunction = void(*)();
+    using IsVisibleFunction = bool(*)();
 
     // You gotta drop one of these in each menu cpp
     struct Registrar {
         explicit Registrar(RegisterFunction registerFunction);
     };
 
-    PageId RegisterRootPage(const std::string& name, const std::string& heading, BuildFunction buildFunction, ApplyEditFunction applyFunction);
+    PageId RegisterRootPage(const std::string& name, const std::string& heading, BuildFunction buildFunction, ApplyEditFunction applyFunction, IsVisibleFunction isVisibleFunction = nullptr);
     PageId RegisterPage(const std::string& heading, PageId parent, BuildFunction buildFunction, ApplyEditFunction applyFunction);
     PageId RegisterDisplayPage(PageId parent, DisplayFunction displayFunction);
 
@@ -51,6 +52,7 @@ namespace Debug::Menu {
     void AddSubMenu(uint32_t id, const std::string& name, PageId targetPage);
     void AddAction(uint32_t id, const std::string& name);
     void AddLineBreak();
+    void AddText(const std::string& text);
     void AddOpenGLFunctionTiming(const std::string& functionName);
     void AddVulkanFunctionTiming(const std::string& functionName);
 }

@@ -1,0 +1,68 @@
+#version 460
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+#extension GL_EXT_nonuniform_qualifier : require
+
+#include "../common/ddgi.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RG16F, rg16f) uniform image2DArray storageImagesRG16F[];
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsDDGIProbeBorder data;
+} pc;
+
+DDGIVolume GetVolume() {
+    DDGIVolume volume;
+    volume.origin = pc.data.volumeOrigin;
+    volume.probeSpacing = pc.data.probeSpacing;
+    volume.probeCounts = pc.data.probeCounts;
+    volume.totalProbes = int(pc.data.totalProbes);
+    volume.probeOffset = pc.data.probeOffset;
+    return volume;
+}
+
+void main() {
+    uint distanceAtlasIndex = pc.data.distanceAtlasStorageImageIndex;
+    uint pIdx = gl_GlobalInvocationID.x;
+    DDGIVolume volume = GetVolume();
+    if (pIdx >= uint(volume.totalProbes)) return;
+
+    ivec3 gridCoord = DDGIGetProbeCoords(int(pIdx), volume);
+    int probeBaseX = gridCoord.x * 16;
+    int probeBaseY = gridCoord.z * 16;
+    int layer = gridCoord.y;
+
+    for (int i = 0; i < 14; i++) {
+        int src = 14 - i;
+        int dst = i + 1;
+
+        vec2 top = imageLoad(storageImagesRG16F[distanceAtlasIndex], ivec3(probeBaseX + src, probeBaseY + 1, layer)).rg;
+        imageStore(storageImagesRG16F[distanceAtlasIndex], ivec3(probeBaseX + dst, probeBaseY + 0, layer), vec4(top, 0.0, 1.0));
+
+        vec2 bottom = imageLoad(storageImagesRG16F[distanceAtlasIndex], ivec3(probeBaseX + src, probeBaseY + 14, layer)).rg;
+        imageStore(storageImagesRG16F[distanceAtlasIndex], ivec3(probeBaseX + dst, probeBaseY + 15, layer), vec4(bottom, 0.0, 1.0));
+
+        vec2 left = imageLoad(storageImagesRG16F[distanceAtlasIndex], ivec3(probeBaseX + 1, probeBaseY + src, layer)).rg;
+        imageStore(storageImagesRG16F[distanceAtlasIndex], ivec3(probeBaseX + 0, probeBaseY + dst, layer), vec4(left, 0.0, 1.0));
+
+        vec2 right = imageLoad(storageImagesRG16F[distanceAtlasIndex], ivec3(probeBaseX + 14, probeBaseY + src, layer)).rg;
+        imageStore(storageImagesRG16F[distanceAtlasIndex], ivec3(probeBaseX + 15, probeBaseY + dst, layer), vec4(right, 0.0, 1.0));
+    }
+
+    vec2 c0 = imageLoad(storageImagesRG16F[distanceAtlasIndex], ivec3(probeBaseX + 14, probeBaseY + 14, layer)).rg;
+    imageStore(storageImagesRG16F[distanceAtlasIndex], ivec3(probeBaseX + 0, probeBaseY + 0, layer), vec4(c0, 0.0, 1.0));
+
+    vec2 c1 = imageLoad(storageImagesRG16F[distanceAtlasIndex], ivec3(probeBaseX + 1, probeBaseY + 14, layer)).rg;
+    imageStore(storageImagesRG16F[distanceAtlasIndex], ivec3(probeBaseX + 15, probeBaseY + 0, layer), vec4(c1, 0.0, 1.0));
+
+    vec2 c2 = imageLoad(storageImagesRG16F[distanceAtlasIndex], ivec3(probeBaseX + 14, probeBaseY + 1, layer)).rg;
+    imageStore(storageImagesRG16F[distanceAtlasIndex], ivec3(probeBaseX + 0, probeBaseY + 15, layer), vec4(c2, 0.0, 1.0));
+
+    vec2 c3 = imageLoad(storageImagesRG16F[distanceAtlasIndex], ivec3(probeBaseX + 1, probeBaseY + 1, layer)).rg;
+    imageStore(storageImagesRG16F[distanceAtlasIndex], ivec3(probeBaseX + 15, probeBaseY + 15, layer), vec4(c3, 0.0, 1.0));
+}

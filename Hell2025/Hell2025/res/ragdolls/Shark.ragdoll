@@ -1,0 +1,5286 @@
+{
+    "format": "hell.ragdoll",
+    "joints": [
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9982116222381592,
+                -0.05977774038910866,
+                -0.000707677099853754,
+                0.0,
+                0.05976689234375954,
+                -0.9976251125335693,
+                -0.034237541258335114,
+                0.0,
+                0.0013406462967395782,
+                -0.03421860188245773,
+                0.9994134902954102,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 1,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Spine_01_to_rMarker_Spine_00",
+            "parentFrame": [
+                -1.0,
+                1.2246468525851679e-16,
+                -7.945487501198363e-24,
+                0.0,
+                -1.2246468525851679e-16,
+                -1.0,
+                6.487982773251133e-08,
+                0.0,
+                1.4693679385278594e-39,
+                6.487982773251133e-08,
+                1.0,
+                0.0,
+                9.808792889032247e-09,
+                -0.1680869311094284,
+                -0.4136938750743866,
+                1.0
+            ],
+            "parentMarkerId": 30
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9995055198669434,
+                0.030889378860592842,
+                -0.005861697718501091,
+                0.0,
+                -0.031019868329167366,
+                -0.9992387294769287,
+                0.023656504228711128,
+                0.0,
+                -0.005126500502228737,
+                0.023826638236641884,
+                0.9997029900550842,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 2,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Spine_02_to_rMarker_BN_Spine_01",
+            "parentFrame": [
+                -1.0,
+                1.2246468525851679e-16,
+                -2.1469013618658122e-23,
+                0.0,
+                -1.2246468525851679e-16,
+                -1.0,
+                1.753077896182731e-07,
+                0.0,
+                -2.938735877055719e-39,
+                1.753077896182731e-07,
+                1.0,
+                0.0,
+                2.313569424927664e-08,
+                -3.721680172930064e-07,
+                -0.6899995803833008,
+                1.0
+            ],
+            "parentMarkerId": 1
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9998060464859009,
+                -0.006831920240074396,
+                -0.018473513424396515,
+                0.0,
+                0.007012158166617155,
+                -0.9999282360076904,
+                -0.00970944669097662,
+                0.0,
+                -0.01840585470199585,
+                -0.009837103076279163,
+                0.9997822046279907,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 3,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Spine_03_to_rMarker_BN_Spine_02",
+            "parentFrame": [
+                -1.0,
+                1.2246468525851679e-16,
+                1.3034758155776588e-23,
+                0.0,
+                -1.2246468525851679e-16,
+                -1.0,
+                -1.0643687886613407e-07,
+                0.0,
+                1.4693679385278594e-39,
+                -1.0643687886613407e-07,
+                1.0,
+                0.0,
+                -7.98891974795879e-09,
+                -3.3652899134040126e-08,
+                -0.6800001859664917,
+                1.0
+            ],
+            "parentMarkerId": 2
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9999772310256958,
+                -0.0030228246469050646,
+                -0.006024724338203669,
+                0.0,
+                0.0032271367963403463,
+                -0.9994099140167236,
+                -0.034196171909570694,
+                0.0,
+                -0.00591780012473464,
+                -0.03421483561396599,
+                0.9993969798088074,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 4,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Spine_04_to_rMarker_BN_Spine_03",
+            "parentFrame": [
+                -1.0,
+                1.2246468525851679e-16,
+                -1.8175775771058407e-32,
+                0.0,
+                -1.2246468525851679e-16,
+                -1.0,
+                1.4841646450829826e-16,
+                0.0,
+                6.776679373474815e-42,
+                1.4841646450829826e-16,
+                1.0,
+                0.0,
+                1.6090645260646852e-08,
+                -1.322201796938316e-07,
+                -0.5600012540817261,
+                1.0
+            ],
+            "parentMarkerId": 3
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9997662305831909,
+                -0.002017861930653453,
+                -0.021532457321882248,
+                0.0,
+                0.0019741703290492296,
+                -0.9999960660934448,
+                0.00205016415566206,
+                0.0,
+                -0.021536506712436676,
+                0.0020071757026016712,
+                0.9997660517692566,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 5,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Spine_05_to_rMarker_BN_Spine_04",
+            "parentFrame": [
+                -1.0,
+                1.2246468525851679e-16,
+                3.4395449596479847e-32,
+                0.0,
+                -1.2246468525851679e-16,
+                -1.0,
+                -2.8086013756264657e-16,
+                0.0,
+                6.820119625868885e-42,
+                -2.8086013756264657e-16,
+                1.0,
+                0.0,
+                1.7468543944687553e-08,
+                -5.867621553079516e-07,
+                -0.64999920129776,
+                1.0
+            ],
+            "parentMarkerId": 4
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.995059609413147,
+                0.0029934856574982405,
+                -0.0992366224527359,
+                0.0,
+                -0.008815273642539978,
+                -0.998261570930481,
+                0.05827929079532623,
+                0.0,
+                -0.09888963401317596,
+                0.05886615067720413,
+                0.9933557510375977,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 6,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Spine_06_to_rMarker_BN_Spine_05",
+            "parentFrame": [
+                -1.0,
+                1.2246468525851679e-16,
+                -3.537023710310686e-32,
+                0.0,
+                -1.2246468525851679e-16,
+                -1.0,
+                2.8881989145645244e-16,
+                0.0,
+                3.162730633981112e-42,
+                2.8881989145645244e-16,
+                1.0,
+                0.0,
+                4.5698818951223075e-08,
+                -6.512046866191668e-07,
+                -0.7200003266334534,
+                1.0
+            ],
+            "parentMarkerId": 5
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9950344562530518,
+                0.0200875923037529,
+                -0.0974850207567215,
+                0.0,
+                -0.019169677048921585,
+                -0.999763011932373,
+                -0.010343531146645546,
+                0.0,
+                -0.09766966104507446,
+                -0.008423412218689919,
+                0.9951832294464111,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 7,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Spine_07_to_rMarker_BN_Spine_06",
+            "parentFrame": [
+                -1.0,
+                1.2246467202362698e-16,
+                -1.976495303255795e-32,
+                0.0,
+                -1.2246467202362698e-16,
+                -1.0,
+                1.6139308866957295e-16,
+                0.0,
+                -4.858301775814141e-42,
+                1.6139308866957295e-16,
+                1.0,
+                0.0,
+                2.7864206941785596e-08,
+                5.600972485808597e-07,
+                -0.6300004124641418,
+                1.0
+            ],
+            "parentMarkerId": 6
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9975837469100952,
+                0.006592706777155399,
+                -0.06916514039039612,
+                0.0,
+                -0.006135975942015648,
+                -0.9999581575393677,
+                -0.00681386748328805,
+                0.0,
+                -0.06920716166496277,
+                -0.006373005453497171,
+                0.997581958770752,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 8,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Tail_00_to_rMarker_BN_Spine_07",
+            "parentFrame": [
+                -1.0,
+                1.2246468525851679e-16,
+                -2.4778827290686655e-32,
+                0.0,
+                -1.2246468525851679e-16,
+                -1.0,
+                2.0233449234955856e-16,
+                0.0,
+                -8.92767251621341e-42,
+                2.0233449234955856e-16,
+                1.0,
+                0.0,
+                -3.093831324463281e-08,
+                1.5776903694586508e-07,
+                -0.4435395300388336,
+                1.0
+            ],
+            "parentMarkerId": 7
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9727010726928711,
+                0.21541178226470947,
+                -0.0863148421049118,
+                0.0,
+                -0.2121461033821106,
+                -0.9761788845062256,
+                -0.045481182634830475,
+                0.0,
+                -0.09405592083930969,
+                -0.02592824213206768,
+                0.9952292442321777,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 9,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Tail_01_to_rMarker_BN_Tail_00",
+            "parentFrame": [
+                -1.0,
+                6.88542097864486e-17,
+                1.0127533551978281e-16,
+                0.0,
+                -1.2246467202362698e-16,
+                -0.5622373223304749,
+                -0.82697594165802,
+                0.0,
+                0.0,
+                -0.82697594165802,
+                0.5622373223304749,
+                0.0,
+                -9.004237000453941e-08,
+                0.3037336468696594,
+                -0.4771597683429718,
+                1.0
+            ],
+            "parentMarkerId": 8
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.993301272392273,
+                0.05418705940246582,
+                -0.10205963253974915,
+                0.0,
+                -0.05365724861621857,
+                -0.9985278844833374,
+                -0.007931344211101532,
+                0.0,
+                -0.10233916342258453,
+                -0.002401976380497217,
+                0.9947466850280762,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 10,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Tail_02_to_rMarker_BN_Tail_01",
+            "parentFrame": [
+                -1.0,
+                1.207070654231845e-16,
+                -2.0673677073062293e-17,
+                0.0,
+                -1.2246468525851679e-16,
+                -0.9856480360031128,
+                0.16881337761878967,
+                0.0,
+                -3.0814879110195774e-33,
+                0.16881337761878967,
+                0.9856480360031128,
+                0.0,
+                1.8514543853598298e-06,
+                4.1963365219999105e-05,
+                -0.41372019052505493,
+                1.0
+            ],
+            "parentMarkerId": 9
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9939334392547607,
+                0.0432792492210865,
+                -0.1011107787489891,
+                0.0,
+                -0.0427766777575016,
+                -0.9990593194961548,
+                -0.00713442824780941,
+                0.0,
+                -0.10132443159818649,
+                -0.0027659630868583918,
+                0.9948495626449585,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 11,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Tail_03_to_rMarker_BN_Tail_02",
+            "parentFrame": [
+                -1.0,
+                1.2246468525851679e-16,
+                0.0,
+                0.0,
+                -1.2246468525851679e-16,
+                -1.0,
+                5.551115123125783e-17,
+                0.0,
+                6.798155663873916e-33,
+                5.551115123125783e-17,
+                1.0,
+                0.0,
+                2.7845733256981475e-06,
+                -1.0052869583887514e-05,
+                -0.48981666564941406,
+                1.0
+            ],
+            "parentMarkerId": 10
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9174633026123047,
+                -0.3519948124885559,
+                -0.18536581099033356,
+                0.0,
+                0.34185993671417236,
+                -0.9358856678009033,
+                0.08514480292797089,
+                0.0,
+                -0.2034517377614975,
+                0.014748096466064453,
+                0.9789738655090332,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 12,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Tail__01_to_rMarker_BN_Tail_00",
+            "parentFrame": [
+                -1.0,
+                7.190577832783023e-17,
+                -9.913201790842931e-17,
+                0.0,
+                -1.2246468525851679e-16,
+                -0.5871552228927612,
+                0.8094743490219116,
+                0.0,
+                -1.232595164407831e-32,
+                0.8094743490219116,
+                0.5871552228927612,
+                0.0,
+                2.5041469342568234e-08,
+                -0.28774771094322205,
+                -0.3461757004261017,
+                1.0
+            ],
+            "parentMarkerId": 8
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9927701950073242,
+                -0.052896466106176376,
+                -0.10774624347686768,
+                0.0,
+                0.052278537303209305,
+                -0.9985958337783813,
+                0.008553644642233849,
+                0.0,
+                -0.10804741084575653,
+                0.002858988009393215,
+                0.9941416382789612,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 13,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Tail__02_to_rMarker_BN_Tail__01",
+            "parentFrame": [
+                -1.0,
+                1.2234291103745918e-16,
+                5.4599809954461204e-18,
+                0.0,
+                -1.2246468525851679e-16,
+                -0.9990056157112122,
+                -0.04458412528038025,
+                0.0,
+                5.3926038442842604e-33,
+                -0.04458412528038025,
+                0.9990056157112122,
+                0.0,
+                2.1121688860148424e-06,
+                8.723537575860973e-06,
+                -0.3360859751701355,
+                1.0
+            ],
+            "parentMarkerId": 12
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9936805963516235,
+                -0.03627602010965347,
+                -0.10622125118970871,
+                0.0,
+                0.035645268857479095,
+                -0.9993338584899902,
+                0.007831231690943241,
+                0.0,
+                -0.10643457621335983,
+                0.0039954581297934055,
+                0.9943116903305054,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 14,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Tail__03_to_rMarker_BN_Tail__02",
+            "parentFrame": [
+                -1.0,
+                1.2246465878873718e-16,
+                4.562164683990036e-23,
+                0.0,
+                -1.2246465878873718e-16,
+                -1.0,
+                -3.7252908668961027e-07,
+                0.0,
+                -1.2957315537376714e-32,
+                -3.7252908668961027e-07,
+                1.0,
+                0.0,
+                2.0932391180394916e-06,
+                -3.196539546479471e-05,
+                -0.2632049322128296,
+                1.0
+            ],
+            "parentMarkerId": 13
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                0.9991258978843689,
+                -0.040981825441122055,
+                0.008239938877522945,
+                0.0,
+                0.041106823831796646,
+                0.9990326166152954,
+                -0.015620809979736805,
+                0.0,
+                -0.007591798435896635,
+                0.01594587415456772,
+                0.9998440146446228,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 15,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_DorsalFin_00_to_rMarker_BN_Spine_01",
+            "parentFrame": [
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                -7.98678954083698e-08,
+                0.0,
+                -0.0,
+                7.98678954083698e-08,
+                1.0,
+                0.0,
+                -9.998570931202266e-07,
+                1.0064606666564941,
+                -0.550951361656189,
+                1.0
+            ],
+            "parentMarkerId": 1
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                0.999670147895813,
+                -0.019762666895985603,
+                -0.01640273630619049,
+                0.0,
+                0.019868941977620125,
+                0.9997825026512146,
+                0.006341621745377779,
+                0.0,
+                0.01627384126186371,
+                -0.006665435153990984,
+                0.9998453259468079,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 16,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_DorsalFin_01_to_rMarker_BN_DorsalFin_00",
+            "parentFrame": [
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                4.493993515097827e-07,
+                0.0,
+                0.0,
+                -4.493993515097827e-07,
+                1.0,
+                0.0,
+                -1.1803349764250015e-07,
+                0.31478241086006165,
+                -0.07630258053541183,
+                1.0
+            ],
+            "parentMarkerId": 15
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                0.9999855756759644,
+                -0.0003743600973393768,
+                0.005359966773539782,
+                0.0,
+                0.0003941424947697669,
+                0.999993085861206,
+                -0.0036901903804391623,
+                0.0,
+                -0.005358548369258642,
+                0.003692249534651637,
+                0.9999788403511047,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 17,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_DorsalFin_02_to_rMarker_BN_DorsalFin_01",
+            "parentFrame": [
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                5.829118094879959e-07,
+                0.0,
+                0.0,
+                -5.829118094879959e-07,
+                1.0,
+                0.0,
+                3.943831039521228e-09,
+                0.293835312128067,
+                -0.11356735974550247,
+                1.0
+            ],
+            "parentMarkerId": 16
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9996999502182007,
+                0.021092265844345093,
+                -0.012481657788157463,
+                0.0,
+                -0.020863357931375504,
+                -0.9996170997619629,
+                -0.018194183707237244,
+                0.0,
+                -0.012860631570219994,
+                -0.017928309738636017,
+                0.9997565746307373,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 18,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_L_BigFin_00_to_rMarker_Spine_00",
+            "parentFrame": [
+                -0.15791180729866028,
+                0.04698378965258598,
+                -0.9863348007202148,
+                0.0,
+                -0.48981937766075134,
+                -0.871041476726532,
+                0.03692805767059326,
+                0.0,
+                -0.857403576374054,
+                0.4889572858810425,
+                0.16056130826473236,
+                0.0,
+                0.7400045394897461,
+                -0.6484137177467346,
+                0.13602480292320251,
+                1.0
+            ],
+            "parentMarkerId": 30
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9999892711639404,
+                0.004536706488579512,
+                -0.0010588746517896652,
+                0.0,
+                -0.004526228178292513,
+                -0.9999428987503052,
+                -0.009696826338768005,
+                0.0,
+                -0.0011028056032955647,
+                -0.009691927582025528,
+                0.9999524354934692,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 19,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_L_BigFin_01_to_rMarker_BN_L_BigFin_00",
+            "parentFrame": [
+                -0.8873370885848999,
+                0.07715583592653275,
+                0.4546205401420593,
+                0.0,
+                -0.04001002386212349,
+                -0.9950664639472961,
+                0.09078517556190491,
+                0.0,
+                0.4593822658061981,
+                0.06236768141388893,
+                0.8860464096069336,
+                0.0,
+                -0.15817245841026306,
+                -0.02295156754553318,
+                -0.403799444437027,
+                1.0
+            ],
+            "parentMarkerId": 18
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9999916553497314,
+                -0.004153959918767214,
+                0.0003738895757123828,
+                0.0,
+                0.004150415305048227,
+                -0.9999510049819946,
+                -0.009028960019350052,
+                0.0,
+                0.0004113770555704832,
+                -0.009027330204844475,
+                0.9999591708183289,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 20,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_L_BigFin_02_to_rMarker_BN_L_BigFin_01",
+            "parentFrame": [
+                -0.9732556343078613,
+                0.19771376252174377,
+                0.116973377764225,
+                0.0,
+                -0.1868385672569275,
+                -0.9775209426879883,
+                0.09769439697265625,
+                0.0,
+                0.1336594521999359,
+                0.07322648167610168,
+                0.9883182644844055,
+                0.0,
+                1.3327405667951098e-06,
+                -3.127510126432753e-06,
+                -0.47211918234825134,
+                1.0
+            ],
+            "parentMarkerId": 19
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9999963045120239,
+                -0.0024348730221390724,
+                0.0014303321950137615,
+                0.0,
+                0.0024151592515408993,
+                -0.9999045133590698,
+                -0.013626332394778728,
+                0.0,
+                0.0014633736573159695,
+                -0.013622823171317577,
+                0.9999061226844788,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 21,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_L_BigFin_03_to_rMarker_BN_L_BigFin_02",
+            "parentFrame": [
+                -1.0,
+                -2.2724269399532204e-07,
+                1.1175873737556685e-07,
+                0.0,
+                2.2724270820617676e-07,
+                -1.0,
+                2.0116567611694336e-07,
+                0.0,
+                1.1175868763757535e-07,
+                2.011657045386528e-07,
+                1.0,
+                0.0,
+                1.307789898419287e-05,
+                -2.681534851944889e-06,
+                -0.4618413746356964,
+                1.0
+            ],
+            "parentMarkerId": 20
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9998180866241455,
+                0.014508853666484356,
+                -0.012387990020215511,
+                0.0,
+                -0.014588243328034878,
+                -0.9998735189437866,
+                0.006342529319226742,
+                0.0,
+                -0.012294399552047253,
+                0.006522093899548054,
+                0.99990314245224,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 22,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_R_BigFin_00_to_rMarker_Spine_00",
+            "parentFrame": [
+                -0.15791180729866028,
+                -0.04698378965258598,
+                0.9863348007202148,
+                0.0,
+                0.48981937766075134,
+                -0.871041476726532,
+                0.03692805767059326,
+                0.0,
+                0.857403576374054,
+                0.4889572858810425,
+                0.16056130826473236,
+                0.0,
+                -0.740004301071167,
+                -0.6484134197235107,
+                0.13602514564990997,
+                1.0
+            ],
+            "parentMarkerId": 30
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9999998807907104,
+                -0.00036898194230161607,
+                0.00023876054910942912,
+                0.0,
+                0.0003701136738527566,
+                -0.9999885559082031,
+                0.004757422022521496,
+                0.0,
+                0.0002370024158153683,
+                0.00475750956684351,
+                0.9999886751174927,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 23,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_R_BigFin_01_to_rMarker_BN_R_BigFin_00",
+            "parentFrame": [
+                -0.8873370885848999,
+                -0.07715583592653275,
+                -0.4546205401420593,
+                0.0,
+                0.04001002386212349,
+                -0.9950664639472961,
+                0.09078517556190491,
+                0.0,
+                -0.4593822658061981,
+                0.06236768141388893,
+                0.8860464096069336,
+                0.0,
+                0.15817220509052277,
+                -0.022952504456043243,
+                -0.40379875898361206,
+                1.0
+            ],
+            "parentMarkerId": 22
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9999995231628418,
+                -0.00014534150250256062,
+                0.0012674365425482392,
+                0.0,
+                0.0001566126011312008,
+                -0.9999607801437378,
+                0.008897283114492893,
+                0.0,
+                0.0012660931097343564,
+                0.008897474966943264,
+                0.9999595880508423,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 24,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_R_BigFin_02_to_rMarker_BN_R_BigFin_01",
+            "parentFrame": [
+                -0.9732556343078613,
+                -0.19771376252174377,
+                -0.116973377764225,
+                0.0,
+                0.1868385672569275,
+                -0.9775209426879883,
+                0.09769439697265625,
+                0.0,
+                -0.1336594521999359,
+                0.07322648167610168,
+                0.9883182644844055,
+                0.0,
+                -1.0449277851876104e-06,
+                -2.7893893275177106e-06,
+                -0.4721188247203827,
+                1.0
+            ],
+            "parentMarkerId": 23
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                -0.9986311197280884,
+                -0.03630319610238075,
+                -0.037660956382751465,
+                0.0,
+                0.03607333078980446,
+                -0.9993264675140381,
+                0.006765525788068771,
+                0.0,
+                -0.03788119554519653,
+                0.005397707223892212,
+                0.9992676973342896,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 25,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_R_BigFin_03_to_rMarker_BN_R_BigFin_02",
+            "parentFrame": [
+                -1.0,
+                2.2724269399532204e-07,
+                -1.1175873737556685e-07,
+                0.0,
+                -2.2724270820617676e-07,
+                -1.0,
+                2.0116567611694336e-07,
+                0.0,
+                -1.1175868763757535e-07,
+                2.011657045386528e-07,
+                1.0,
+                0.0,
+                -1.2882807823189069e-05,
+                -2.2344684111885726e-06,
+                -0.461841344833374,
+                1.0
+            ],
+            "parentMarkerId": 24
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                0.9997133612632751,
+                0.018094008788466454,
+                -0.01567760296165943,
+                0.0,
+                -0.017552891746163368,
+                0.9992679953575134,
+                0.03399141505360603,
+                0.0,
+                0.016281167045235634,
+                -0.033706482499837875,
+                0.999299168586731,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 26,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Neck_00_to_rMarker_Spine_00",
+            "parentFrame": [
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                1.3315805347247078e-07,
+                0.0,
+                0.0,
+                -1.3315805347247078e-07,
+                1.0,
+                0.0,
+                8.270402140908573e-09,
+                -0.16863061487674713,
+                0.5263051986694336,
+                1.0
+            ],
+            "parentMarkerId": 30
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                0.9999837875366211,
+                0.0055946605280041695,
+                -0.0010593553306534886,
+                0.0,
+                -0.005606018006801605,
+                0.9999233484268188,
+                -0.011039849370718002,
+                0.0,
+                0.0009975099237635732,
+                0.011045608669519424,
+                0.9999384880065918,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 27,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Neck_01_to_rMarker_BN_Neck_00",
+            "parentFrame": [
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                1.728578666870817e-07,
+                0.0,
+                0.0,
+                -1.728578666870817e-07,
+                1.0,
+                0.0,
+                -1.266363369722967e-08,
+                3.597552620249189e-07,
+                0.5500003099441528,
+                1.0
+            ],
+            "parentMarkerId": 26
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                0.9996654987335205,
+                -0.0076277535408735275,
+                -0.024711336940526962,
+                0.0,
+                0.007920846343040466,
+                0.9998992085456848,
+                0.011784564703702927,
+                0.0,
+                0.024618957191705704,
+                -0.01197635754942894,
+                0.9996251463890076,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 28,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_Head_00_to_rMarker_BN_Neck_01",
+            "parentFrame": [
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                -2.2390361209545517e-07,
+                0.0,
+                -0.0,
+                2.2390361209545517e-07,
+                1.0,
+                0.0,
+                -1.403182778858536e-07,
+                0.34000271558761597,
+                0.599999725818634,
+                1.0
+            ],
+            "parentMarkerId": 27
+        },
+        {
+            "angularLimitDamping": 10000.0,
+            "angularLimitStiffness": 1000000.0,
+            "angularLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "FREE"
+                }
+            ],
+            "childFrame": [
+                1.0,
+                9.313156912327258e-10,
+                3.4924618752540937e-09,
+                0.0,
+                -9.313296800428361e-10,
+                1.0,
+                3.994268354290398e-06,
+                0.0,
+                -3.492458322540415e-09,
+                -3.994268354290398e-06,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "childMarkerId": 29,
+            "limitEnabled": true,
+            "linearLimitDamping": 10000.0,
+            "linearLimitStiffness": 1000000.0,
+            "linearLimits": [
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                },
+                {
+                    "limit": 0.0,
+                    "motion": "LOCKED"
+                }
+            ],
+            "name": "rMarker_BN_C_Lip_00_to_rMarker_BN_Head_00",
+            "parentFrame": [
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.5,
+                0.8660253882408142,
+                0.0,
+                0.0,
+                -0.8660253882408142,
+                0.5,
+                0.0,
+                1.4483237009699224e-07,
+                -0.5800006985664368,
+                0.8299980759620667,
+                1.0
+            ],
+            "parentMarkerId": 28
+        }
+    ],
+    "markers": [
+        {
+            "bodyTransform": [
+                0.9978193640708923,
+                -0.0629463642835617,
+                -0.019855910912156105,
+                0.0,
+                0.06227034702897072,
+                0.9975135326385498,
+                -0.0330023467540741,
+                0.0,
+                0.021883917972445488,
+                0.031693946570158005,
+                0.9992580413818359,
+                0.0,
+                -0.018420666456222534,
+                -0.030591845512390137,
+                -0.416130393743515,
+                1.0
+            ],
+            "boneName": "BN_Spine_01",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01",
+            "color": [
+                0.21000000834465027,
+                0.2344999760389328,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 1,
+            "inputTransform": [
+                0.9978193640708923,
+                -0.0629463642835617,
+                -0.019855910912156105,
+                0.0,
+                0.06227034702897072,
+                0.9975135326385498,
+                -0.0330023467540741,
+                0.0,
+                0.021883917972445488,
+                0.031693946570158005,
+                0.9992580413818359,
+                0.0,
+                -0.018420670181512833,
+                -0.03059179149568081,
+                -0.416130393743515,
+                1.0
+            ],
+            "name": "rMarker_BN_Spine_01",
+            "restTransform": [
+                0.9978193640708923,
+                -0.0629463642835617,
+                -0.019855910912156105,
+                0.0,
+                0.06227034702897072,
+                0.9975135326385498,
+                -0.0330023467540741,
+                0.0,
+                0.021883917972445488,
+                0.031693946570158005,
+                0.9992580413818359,
+                0.0,
+                -0.018420666456222534,
+                -0.030591845512390137,
+                -0.416130393743515,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 339.3564758300781,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    1.7999999523162842,
+                    1.7999999523162842,
+                    1.7999999523162842
+                ],
+                "length": 0.0,
+                "offset": [
+                    0.0,
+                    0.13697199523448944,
+                    -0.6080909967422485
+                ],
+                "radius": 0.8999999761581421,
+                "rotationRadians": [
+                    9.345689733208928e-08,
+                    1.570796251296997,
+                    -5.717432027552635e-17
+                ],
+                "type": "SPHERE"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9991455078125,
+                -0.03213497996330261,
+                -0.02599252574145794,
+                0.0,
+                0.03192233294248581,
+                0.9994537234306335,
+                -0.008555101230740547,
+                0.0,
+                0.026253245770931244,
+                0.007718049455434084,
+                0.999625563621521,
+                0.0,
+                -0.03352056071162224,
+                -0.05246102809906006,
+                -1.1056180000305176,
+                1.0
+            ],
+            "boneName": "BN_Spine_02",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01|BN_Spine_02",
+            "color": [
+                0.21000000834465027,
+                0.21816666424274445,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 2,
+            "inputTransform": [
+                0.9991455078125,
+                -0.03213497996330261,
+                -0.02599252574145794,
+                0.0,
+                0.03192233294248581,
+                0.9994537234306335,
+                -0.008555101230740547,
+                0.0,
+                0.026253245770931244,
+                0.007718049455434084,
+                0.999625563621521,
+                0.0,
+                -0.03352056443691254,
+                -0.05246097594499588,
+                -1.1056180000305176,
+                1.0
+            ],
+            "name": "rMarker_BN_Spine_02",
+            "restTransform": [
+                0.9991455078125,
+                -0.03213497996330261,
+                -0.02599252574145794,
+                0.0,
+                0.03192233294248581,
+                0.9994537234306335,
+                -0.008555101230740547,
+                0.0,
+                0.026253245770931244,
+                0.007718049455434084,
+                0.999625563621521,
+                0.0,
+                -0.03352056071162224,
+                -0.05246102809906006,
+                -1.1056180000305176,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 238.3409423828125,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    1.600000023841858,
+                    1.600000023841858,
+                    1.600000023841858
+                ],
+                "length": 0.0,
+                "offset": [
+                    0.0,
+                    0.1419679969549179,
+                    -0.6549400091171265
+                ],
+                "radius": 0.800000011920929,
+                "rotationRadians": [
+                    -7.350717368126425e-08,
+                    1.570796251296997,
+                    0.0
+                ],
+                "type": "SPHERE"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9982445240020752,
+                -0.03927911818027496,
+                -0.04432645067572594,
+                0.0,
+                0.038487862795591354,
+                0.9990865588188171,
+                -0.018565375357866287,
+                0.0,
+                0.04501520097255707,
+                0.016826758161187172,
+                0.9988446235656738,
+                0.0,
+                -0.05137278139591217,
+                -0.057709336280822754,
+                -1.7853635549545288,
+                1.0
+            ],
+            "boneName": "BN_Spine_03",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01|BN_Spine_02|BN_Spine_03",
+            "color": [
+                0.21000000834465027,
+                0.699999988079071,
+                0.39783337712287903,
+                1.0
+            ],
+            "id": 3,
+            "inputTransform": [
+                0.9982445240020752,
+                -0.03927911818027496,
+                -0.04432645067572594,
+                0.0,
+                0.038487862795591354,
+                0.9990865588188171,
+                -0.018565375357866287,
+                0.0,
+                0.04501520097255707,
+                0.016826758161187172,
+                0.9988446235656738,
+                0.0,
+                -0.05137278139591217,
+                -0.05770934745669365,
+                -1.7853635549545288,
+                1.0
+            ],
+            "name": "rMarker_BN_Spine_03",
+            "restTransform": [
+                0.9982445240020752,
+                -0.03927911818027496,
+                -0.04432645067572594,
+                0.0,
+                0.038487862795591354,
+                0.9990865588188171,
+                -0.018565375357866287,
+                0.0,
+                0.04501520097255707,
+                0.016826758161187172,
+                0.9988446235656738,
+                0.0,
+                -0.05137278139591217,
+                -0.057709336280822754,
+                -1.7853635549545288,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 127.84056854248047,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    1.2999999523162842,
+                    1.2999999523162842,
+                    1.2999999523162842
+                ],
+                "length": 0.0,
+                "offset": [
+                    0.0,
+                    0.12184900045394897,
+                    -0.6177870035171509
+                ],
+                "radius": 0.6499999761581421,
+                "rotationRadians": [
+                    -1.5707950592041016,
+                    1.4675140380859375,
+                    -1.5707950592041016
+                ],
+                "type": "SPHERE"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9978313446044922,
+                -0.042601995170116425,
+                -0.05017650127410889,
+                0.0,
+                0.039942484349012375,
+                0.9978026151657104,
+                -0.052863724529743195,
+                0.0,
+                0.05231834203004837,
+                0.050744909793138504,
+                0.9973403811454773,
+                0.0,
+                -0.07658133655786514,
+                -0.06713247299194336,
+                -2.3447177410125732,
+                1.0
+            ],
+            "boneName": "BN_Spine_04",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01|BN_Spine_02|BN_Spine_03|BN_Spine_04",
+            "color": [
+                0.21000000834465027,
+                0.699999988079071,
+                0.46316662430763245,
+                1.0
+            ],
+            "id": 4,
+            "inputTransform": [
+                0.9978313446044922,
+                -0.042601995170116425,
+                -0.05017650127410889,
+                0.0,
+                0.039942484349012375,
+                0.9978026151657104,
+                -0.052863724529743195,
+                0.0,
+                0.05231834203004837,
+                0.050744909793138504,
+                0.9973403811454773,
+                0.0,
+                -0.07658133655786514,
+                -0.06713251769542694,
+                -2.3447177410125732,
+                1.0
+            ],
+            "name": "rMarker_BN_Spine_04",
+            "restTransform": [
+                0.9978313446044922,
+                -0.042601995170116425,
+                -0.05017650127410889,
+                0.0,
+                0.039942484349012375,
+                0.9978026151657104,
+                -0.052863724529743195,
+                0.0,
+                0.05231834203004837,
+                0.050744909793138504,
+                0.9973403811454773,
+                0.0,
+                -0.07658133655786514,
+                -0.06713247299194336,
+                -2.3447177410125732,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 58.18870544433594,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "length": 0.0,
+                "offset": [
+                    0.0,
+                    0.11297000199556351,
+                    -0.693585991859436
+                ],
+                "radius": 0.5,
+                "rotationRadians": [
+                    -1.5707950592041016,
+                    1.399638056755066,
+                    -1.5707950592041016
+                ],
+                "type": "SPHERE"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9963923692703247,
+                -0.04565472528338432,
+                -0.07153961062431335,
+                0.0,
+                0.042060814797878265,
+                0.997814416885376,
+                -0.050962913781404495,
+                0.0,
+                0.07370995730161667,
+                0.047770049422979355,
+                0.9961349964141846,
+                0.0,
+                -0.11058822274208069,
+                -0.10011720657348633,
+                -2.992988109588623,
+                1.0
+            ],
+            "boneName": "BN_Spine_05",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01|BN_Spine_02|BN_Spine_03|BN_Spine_04|BN_Spine_05",
+            "color": [
+                0.699999988079071,
+                0.24266667664051056,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 5,
+            "inputTransform": [
+                0.9963923692703247,
+                -0.04565472528338432,
+                -0.07153961062431335,
+                0.0,
+                0.042060814797878265,
+                0.997814416885376,
+                -0.050962913781404495,
+                0.0,
+                0.07370995730161667,
+                0.047770049422979355,
+                0.9961349964141846,
+                0.0,
+                -0.11058822274208069,
+                -0.10011722147464752,
+                -2.992988109588623,
+                1.0
+            ],
+            "name": "rMarker_BN_Spine_05",
+            "restTransform": [
+                0.9963923692703247,
+                -0.04565472528338432,
+                -0.07153961062431335,
+                0.0,
+                0.042060814797878265,
+                0.997814416885376,
+                -0.050962913781404495,
+                0.0,
+                0.07370995730161667,
+                0.047770049422979355,
+                0.9961349964141846,
+                0.0,
+                -0.11058822274208069,
+                -0.10011720657348633,
+                -2.992988109588623,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 29.792617797851563,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.800000011920929,
+                    0.800000011920929,
+                    0.800000011920929
+                ],
+                "length": 0.0,
+                "offset": [
+                    0.0,
+                    0.06263300031423569,
+                    -0.5765699744224548
+                ],
+                "radius": 0.4000000059604645,
+                "rotationRadians": [
+                    -1.5707950592041016,
+                    1.3897839784622192,
+                    -1.5707950592041016
+                ],
+                "type": "SPHERE"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9845510721206665,
+                -0.04135711491107941,
+                -0.17014282941818237,
+                0.0,
+                0.043344028294086456,
+                0.9990283250808716,
+                0.007978469133377075,
+                0.0,
+                0.16964754462242126,
+                -0.015229887329041958,
+                0.9853870868682861,
+                0.0,
+                -0.16365939378738403,
+                -0.1345123052597046,
+                -3.710205554962158,
+                1.0
+            ],
+            "boneName": "BN_Spine_06",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01|BN_Spine_02|BN_Spine_03|BN_Spine_04|BN_Spine_05|BN_Spine_06",
+            "color": [
+                0.21000000834465027,
+                0.699999988079071,
+                0.6673333644866943,
+                1.0
+            ],
+            "id": 6,
+            "inputTransform": [
+                0.9845510721206665,
+                -0.04135711491107941,
+                -0.17014282941818237,
+                0.0,
+                0.043344028294086456,
+                0.9990283250808716,
+                0.007978469133377075,
+                0.0,
+                0.16964754462242126,
+                -0.015229887329041958,
+                0.9853870868682861,
+                0.0,
+                -0.16365939378738403,
+                -0.13451224565505981,
+                -3.710205554962158,
+                1.0
+            ],
+            "name": "rMarker_BN_Spine_06",
+            "restTransform": [
+                0.9845510721206665,
+                -0.04135711491107941,
+                -0.17014282941818237,
+                0.0,
+                0.043344028294086456,
+                0.9990283250808716,
+                0.007978469133377075,
+                0.0,
+                0.16964754462242126,
+                -0.015229887329041958,
+                0.9853870868682861,
+                0.0,
+                -0.16365939378738403,
+                -0.1345123052597046,
+                -3.710205554962158,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 7.273588180541992,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.5,
+                    0.5,
+                    0.5
+                ],
+                "length": 0.0,
+                "offset": [
+                    0.0,
+                    0.059195101261138916,
+                    -0.3055039942264557
+                ],
+                "radius": 0.25,
+                "rotationRadians": [
+                    0.0,
+                    1.5707963705062866,
+                    0.0
+                ],
+                "type": "SPHERE"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9639236330986023,
+                -0.020513197407126427,
+                -0.2653874158859253,
+                0.0,
+                0.022127468138933182,
+                0.9997503161430359,
+                0.003094015410169959,
+                0.0,
+                0.26525768637657166,
+                -0.00885474681854248,
+                0.9641368985176086,
+                0.0,
+                -0.2705373764038086,
+                -0.1249169111251831,
+                -4.330999851226807,
+                1.0
+            ],
+            "boneName": "BN_Spine_07",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01|BN_Spine_02|BN_Spine_03|BN_Spine_04|BN_Spine_05|BN_Spine_06|BN_Spine_07",
+            "color": [
+                0.21000000834465027,
+                0.5693333148956299,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 7,
+            "inputTransform": [
+                0.9639236330986023,
+                -0.020513197407126427,
+                -0.2653874158859253,
+                0.0,
+                0.02212747000157833,
+                0.9997503757476807,
+                0.0030940156430006027,
+                0.0,
+                0.26525768637657166,
+                -0.00885474681854248,
+                0.9641368985176086,
+                0.0,
+                -0.2705373466014862,
+                -0.12491697072982788,
+                -4.330999851226807,
+                1.0
+            ],
+            "name": "rMarker_BN_Spine_07",
+            "restTransform": [
+                0.9639236330986023,
+                -0.020513197407126427,
+                -0.2653874158859253,
+                0.0,
+                0.02212747000157833,
+                0.9997503757476807,
+                0.0030940156430006027,
+                0.0,
+                0.26525768637657166,
+                -0.00885474681854248,
+                0.9641368985176086,
+                0.0,
+                -0.2705373764038086,
+                -0.1249169111251831,
+                -4.330999851226807,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 3.7240772247314453,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.4000000059604645,
+                    0.4000000059604645,
+                    0.4000000059604645
+                ],
+                "length": 0.0,
+                "offset": [
+                    0.0,
+                    0.025550400838255882,
+                    -0.0831431970000267
+                ],
+                "radius": 0.20000000298023224,
+                "rotationRadians": [
+                    1.0863114852099898e-07,
+                    1.570796251296997,
+                    -6.091664418539385e-17
+                ],
+                "type": "SPHERE"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9433722496032715,
+                -0.013716372661292553,
+                -0.33145225048065186,
+                0.0,
+                0.014081187546253204,
+                0.9998999834060669,
+                -0.0013009425019845366,
+                0.0,
+                0.33143699169158936,
+                -0.0034399686846882105,
+                0.9434711337089539,
+                0.0,
+                -0.3881896734237671,
+                -0.12098932266235352,
+                -4.758632659912109,
+                1.0
+            ],
+            "boneName": "BN_Tail_00",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01|BN_Spine_02|BN_Spine_03|BN_Spine_04|BN_Spine_05|BN_Spine_06|BN_Spine_07|BN_Tail_00",
+            "color": [
+                0.6019999384880066,
+                0.699999988079071,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 8,
+            "inputTransform": [
+                0.9433722496032715,
+                -0.013716372661292553,
+                -0.33145225048065186,
+                0.0,
+                0.014081188477575779,
+                0.9999000430107117,
+                -0.0013009426183998585,
+                0.0,
+                0.33143699169158936,
+                -0.0034399686846882105,
+                0.9434711337089539,
+                0.0,
+                -0.3881897032260895,
+                -0.12098930776119232,
+                -4.758632659912109,
+                1.0
+            ],
+            "name": "rMarker_BN_Tail_00",
+            "restTransform": [
+                0.9433722496032715,
+                -0.013716372661292553,
+                -0.33145225048065186,
+                0.0,
+                0.014081188477575779,
+                0.9999000430107117,
+                -0.0013009426183998585,
+                0.0,
+                0.33143699169158936,
+                -0.0034399686846882105,
+                0.9434711337089539,
+                0.0,
+                -0.3881896734237671,
+                -0.12098932266235352,
+                -4.758632659912109,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 9.335108757019043,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.15000000596046448,
+                    0.699999988079071,
+                    0.800000011920929
+                ],
+                "length": 0.5914821624755859,
+                "offset": [
+                    0.0,
+                    0.04480670019984245,
+                    -0.22386200726032257
+                ],
+                "radius": 0.4000000059604645,
+                "rotationRadians": [
+                    0.0,
+                    -0.0,
+                    0.0
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9610143303871155,
+                0.18327520787715912,
+                -0.20703038573265076,
+                0.0,
+                0.06754642724990845,
+                0.5704570412635803,
+                0.8185451030731201,
+                0.0,
+                0.26812103390693665,
+                -0.8006178140640259,
+                0.5358379483222961,
+                0.0,
+                -0.5420612096786499,
+                0.18435537815093994,
+                -5.209214210510254,
+                1.0
+            ],
+            "boneName": "BN_Tail_01",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01|BN_Spine_02|BN_Spine_03|BN_Spine_04|BN_Spine_05|BN_Spine_06|BN_Spine_07|BN_Tail_00|BN_Tail_01",
+            "color": [
+                0.699999988079071,
+                0.2671666443347931,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 9,
+            "inputTransform": [
+                0.9610143303871155,
+                0.18327520787715912,
+                -0.20703038573265076,
+                0.0,
+                0.06754642724990845,
+                0.5704571008682251,
+                0.8185451626777649,
+                0.0,
+                0.26812103390693665,
+                -0.8006178140640259,
+                0.5358379483222961,
+                0.0,
+                -0.5420610904693604,
+                0.18435519933700562,
+                -5.209214210510254,
+                1.0
+            ],
+            "name": "rMarker_BN_Tail_01",
+            "restTransform": [
+                0.9610143303871155,
+                0.18327520787715912,
+                -0.20703038573265076,
+                0.0,
+                0.06754641234874725,
+                0.5704571008682251,
+                0.8185451626777649,
+                0.0,
+                0.26812106370925903,
+                -0.8006178736686707,
+                0.5358379483222961,
+                0.0,
+                -0.5420612096786499,
+                0.18435537815093994,
+                -5.209214210510254,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 1.9448142051696777,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.5,
+                    0.5,
+                    0.07000000029802322
+                ],
+                "length": 0.41371050477027893,
+                "offset": [
+                    -2.3592239273284576e-16,
+                    4.440892098500626e-16,
+                    -0.20685523748397827
+                ],
+                "radius": 0.041371047496795654,
+                "rotationRadians": [
+                    -4.3075557247532476e-23,
+                    1.570796251296997,
+                    0.0
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9275081157684326,
+                0.29037266969680786,
+                -0.23539823293685913,
+                0.0,
+                -0.03145350515842438,
+                0.6881312727928162,
+                0.7249040603637695,
+                0.0,
+                0.3724772334098816,
+                -0.6649503707885742,
+                0.6473805904388428,
+                0.0,
+                -0.6529836654663086,
+                0.5156114101409912,
+                -5.4308671951293945,
+                1.0
+            ],
+            "boneName": "BN_Tail_02",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01|BN_Spine_02|BN_Spine_03|BN_Spine_04|BN_Spine_05|BN_Spine_06|BN_Spine_07|BN_Tail_00|BN_Tail_01|BN_Tail_02",
+            "color": [
+                0.21000000834465027,
+                0.699999988079071,
+                0.6428333520889282,
+                1.0
+            ],
+            "id": 10,
+            "inputTransform": [
+                0.9275081157684326,
+                0.29037266969680786,
+                -0.23539823293685913,
+                0.0,
+                -0.031453508883714676,
+                0.6881313323974609,
+                0.7249041199684143,
+                0.0,
+                0.372477263212204,
+                -0.664950430393219,
+                0.6473806500434875,
+                0.0,
+                -0.6529836654663086,
+                0.5156113505363464,
+                -5.4308671951293945,
+                1.0
+            ],
+            "name": "rMarker_BN_Tail_02",
+            "restTransform": [
+                0.9275081157684326,
+                0.29037266969680786,
+                -0.23539823293685913,
+                0.0,
+                -0.03145350515842438,
+                0.6881313323974609,
+                0.7249041199684143,
+                0.0,
+                0.372477263212204,
+                -0.664950430393219,
+                0.6473806500434875,
+                0.0,
+                -0.6529836654663086,
+                0.5156114101409912,
+                -5.4308671951293945,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 1.7970083951950073,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.41999998688697815,
+                    0.550000011920929,
+                    0.07000000029802322
+                ],
+                "length": 0.4897986650466919,
+                "offset": [
+                    -3.122502256758253e-16,
+                    2.980232238769531e-07,
+                    -0.24489933252334595
+                ],
+                "radius": 0.04897986724972725,
+                "rotationRadians": [
+                    3.1415927410125732,
+                    1.5707950592041016,
+                    2.591591681026714e-24
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.8827947378158569,
+                0.38542285561561584,
+                -0.2685566246509552,
+                0.0,
+                -0.07259596884250641,
+                0.6767557859420776,
+                0.7326194047927856,
+                0.0,
+                0.4641155004501343,
+                -0.6272563338279724,
+                0.62541663646698,
+                0.0,
+                -0.8354263305664063,
+                0.8413090705871582,
+                -5.7479729652404785,
+                1.0
+            ],
+            "boneName": "BN_Tail_03",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01|BN_Spine_02|BN_Spine_03|BN_Spine_04|BN_Spine_05|BN_Spine_06|BN_Spine_07|BN_Tail_00|BN_Tail_01|BN_Tail_02|BN_Tail_03",
+            "color": [
+                0.4713332951068878,
+                0.699999988079071,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 11,
+            "inputTransform": [
+                0.8827947378158569,
+                0.38542285561561584,
+                -0.2685566246509552,
+                0.0,
+                -0.0725959986448288,
+                0.6767559051513672,
+                0.7326194643974304,
+                0.0,
+                0.46411556005477905,
+                -0.627256453037262,
+                0.6254166960716248,
+                0.0,
+                -0.8354265689849854,
+                0.8413091897964478,
+                -5.74797248840332,
+                1.0
+            ],
+            "name": "rMarker_BN_Tail_03",
+            "restTransform": [
+                0.8827947378158569,
+                0.38542285561561584,
+                -0.2685566246509552,
+                0.0,
+                -0.07259596884250641,
+                0.6767558455467224,
+                0.7326194643974304,
+                0.0,
+                0.46411553025245667,
+                -0.6272563934326172,
+                0.6254166960716248,
+                0.0,
+                -0.8354263305664063,
+                0.8413090705871582,
+                -5.7479729652404785,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.5348238945007324,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.550000011920929,
+                    0.3499999940395355,
+                    0.02500000037252903
+                ],
+                "length": 0.4897986650466919,
+                "offset": [
+                    -3.122502256758253e-16,
+                    2.980232238769531e-07,
+                    -0.24489933252334595
+                ],
+                "radius": 0.04897986724972725,
+                "rotationRadians": [
+                    3.1415927410125732,
+                    1.5707950592041016,
+                    2.591591681026714e-24
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9124889373779297,
+                -0.37850257754325867,
+                -0.15524105727672577,
+                0.0,
+                0.09174956381320953,
+                0.5591403841972351,
+                -0.8239806294441223,
+                0.0,
+                0.39868032932281494,
+                0.737629771232605,
+                0.5449368357658386,
+                0.0,
+                -0.5069769024848938,
+                -0.4075174331665039,
+                -5.084865093231201,
+                1.0
+            ],
+            "boneName": "BN_Tail__01",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01|BN_Spine_02|BN_Spine_03|BN_Spine_04|BN_Spine_05|BN_Spine_06|BN_Spine_07|BN_Tail_00|BN_Tail__01",
+            "color": [
+                0.6101667284965515,
+                0.699999988079071,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 12,
+            "inputTransform": [
+                0.9124889373779297,
+                -0.37850257754325867,
+                -0.15524105727672577,
+                0.0,
+                0.09174957126379013,
+                0.5591404438018799,
+                -0.8239806294441223,
+                0.0,
+                0.39868035912513733,
+                0.7376298904418945,
+                0.5449368953704834,
+                0.0,
+                -0.5069769024848938,
+                -0.4075171649456024,
+                -5.084865093231201,
+                1.0
+            ],
+            "name": "rMarker_BN_Tail__01",
+            "restTransform": [
+                0.9124889373779297,
+                -0.37850257754325867,
+                -0.15524105727672577,
+                0.0,
+                0.09174956381320953,
+                0.5591403841972351,
+                -0.8239806294441223,
+                0.0,
+                0.39868032932281494,
+                0.7376298308372498,
+                0.5449368357658386,
+                0.0,
+                -0.5069769024848938,
+                -0.4075174331665039,
+                -5.084865093231201,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 1.1113225221633911,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.4000000059604645,
+                    0.5,
+                    0.05000000074505806
+                ],
+                "length": 0.33608096837997437,
+                "offset": [
+                    2.671474153004283e-16,
+                    0.02500000037252903,
+                    -0.16804048418998718
+                ],
+                "radius": 0.033608097583055496,
+                "rotationRadians": [
+                    -3.1415927410125732,
+                    1.5707950592041016,
+                    0.0
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.8575791716575623,
+                -0.48361366987228394,
+                -0.17514491081237793,
+                0.0,
+                0.15867400169372559,
+                0.5726545453071594,
+                -0.8042944073677063,
+                0.0,
+                0.4892652630805969,
+                0.6619551181793213,
+                0.567833662033081,
+                0.0,
+                -0.6409650444984436,
+                -0.6554204225540161,
+                -5.2680182456970215,
+                1.0
+            ],
+            "boneName": "BN_Tail__02",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01|BN_Spine_02|BN_Spine_03|BN_Spine_04|BN_Spine_05|BN_Spine_06|BN_Spine_07|BN_Tail_00|BN_Tail__01|BN_Tail__02",
+            "color": [
+                0.699999988079071,
+                0.5203333497047424,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 13,
+            "inputTransform": [
+                0.8575791716575623,
+                -0.48361366987228394,
+                -0.17514491081237793,
+                0.0,
+                0.1586739867925644,
+                0.5726544857025146,
+                -0.8042943477630615,
+                0.0,
+                0.4892652630805969,
+                0.6619551181793213,
+                0.5678334832191467,
+                0.0,
+                -0.6409651041030884,
+                -0.6554206609725952,
+                -5.2680182456970215,
+                1.0
+            ],
+            "name": "rMarker_BN_Tail__02",
+            "restTransform": [
+                0.8575791716575623,
+                -0.48361366987228394,
+                -0.17514491081237793,
+                0.0,
+                0.15867400169372559,
+                0.5726545453071594,
+                -0.8042944073677063,
+                0.0,
+                0.4892652928829193,
+                0.6619552373886108,
+                0.5678335428237915,
+                0.0,
+                -0.6409650444984436,
+                -0.6554204225540161,
+                -5.2680182456970215,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.5850072503089905,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.2632032036781311,
+                    0.4000000059604645,
+                    0.05000000074505806
+                ],
+                "length": 0.2632032036781311,
+                "offset": [
+                    4.2327252813834093e-16,
+                    4.470348358154297e-08,
+                    -0.13160160183906555
+                ],
+                "radius": 0.02632031962275505,
+                "rotationRadians": [
+                    1.9729757175343705e-14,
+                    1.570796012878418,
+                    0.0
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.7944291234016418,
+                -0.5714247822761536,
+                -0.20580598711967468,
+                0.0,
+                0.19163286685943604,
+                0.5573745965957642,
+                -0.8078430891036987,
+                0.0,
+                0.5763325691223145,
+                0.6023349165916443,
+                0.5522984266281128,
+                0.0,
+                -0.7697453498840332,
+                -0.8296695947647095,
+                -5.417449474334717,
+                1.0
+            ],
+            "boneName": "BN_Tail__03",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01|BN_Spine_02|BN_Spine_03|BN_Spine_04|BN_Spine_05|BN_Spine_06|BN_Spine_07|BN_Tail_00|BN_Tail__01|BN_Tail__02|BN_Tail__03",
+            "color": [
+                0.21000000834465027,
+                0.291666716337204,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 14,
+            "inputTransform": [
+                0.7944291234016418,
+                -0.5714247822761536,
+                -0.20580598711967468,
+                0.0,
+                0.19163282215595245,
+                0.5573745369911194,
+                -0.8078430891036987,
+                0.0,
+                0.5763326287269592,
+                0.6023349165916443,
+                0.552298367023468,
+                0.0,
+                -0.7697454690933228,
+                -0.8296697735786438,
+                -5.417448997497559,
+                1.0
+            ],
+            "name": "rMarker_BN_Tail__03",
+            "restTransform": [
+                0.7944291234016418,
+                -0.5714247822761536,
+                -0.20580598711967468,
+                0.0,
+                0.19163288176059723,
+                0.5573745965957642,
+                -0.8078430891036987,
+                0.0,
+                0.576332688331604,
+                0.6023349761962891,
+                0.5522984266281128,
+                0.0,
+                -0.7697453498840332,
+                -0.8296695947647095,
+                -5.417449474334717,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.25004756450653076,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.30000001192092896,
+                    0.15000000596046448,
+                    0.05000000074505806
+                ],
+                "length": 0.2632032036781311,
+                "offset": [
+                    4.2327252813834093e-16,
+                    0.03500000014901161,
+                    -0.13160160183906555
+                ],
+                "radius": 0.02632031962275505,
+                "rotationRadians": [
+                    1.9729757175343705e-14,
+                    1.570796012878418,
+                    -4.578177534846846e-24
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.999340832233429,
+                -0.02212734892964363,
+                -0.0287813451141119,
+                0.0,
+                0.02166661247611046,
+                0.9996336102485657,
+                -0.016222722828388214,
+                0.0,
+                0.029129765927791595,
+                0.015588435344398022,
+                0.9994540810585022,
+                0.0,
+                0.03219401463866234,
+                0.955904483795166,
+                -0.9998884797096252,
+                1.0
+            ],
+            "boneName": "BN_DorsalFin_00",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01|BN_DorsalFin_00",
+            "color": [
+                0.6673333048820496,
+                0.699999988079071,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 15,
+            "inputTransform": [
+                0.999340832233429,
+                -0.02212734892964363,
+                -0.0287813451141119,
+                0.0,
+                0.02166661247611046,
+                0.9996336102485657,
+                -0.016222722828388214,
+                0.0,
+                0.029129765927791595,
+                0.015588435344398022,
+                0.9994540810585022,
+                0.0,
+                0.03219401463866234,
+                0.9559045433998108,
+                -0.9998883605003357,
+                1.0
+            ],
+            "name": "rMarker_BN_DorsalFin_00",
+            "restTransform": [
+                0.999340832233429,
+                -0.02212734892964363,
+                -0.0287813451141119,
+                0.0,
+                0.02166661247611046,
+                0.9996336102485657,
+                -0.016222722828388214,
+                0.0,
+                0.029129765927791595,
+                0.015588435344398022,
+                0.9994540810585022,
+                0.0,
+                0.03219401463866234,
+                0.955904483795166,
+                -0.9998884797096252,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 4.000760555267334,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.4000000059604645,
+                    0.8999999761581421,
+                    0.10000000149011612
+                ],
+                "length": 0.3239034414291382,
+                "offset": [
+                    -2.0816681711721685e-17,
+                    0.157393679022789,
+                    -0.03815220668911934
+                ],
+                "radius": 0.03239034488797188,
+                "rotationRadians": [
+                    1.5707963705062866,
+                    0.23781290650367737,
+                    1.5707963705062866
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9999157190322876,
+                -0.0020047100260853767,
+                -0.012829205952584743,
+                0.0,
+                0.0017181108705699444,
+                0.9997496008872986,
+                -0.022311745211482048,
+                0.0,
+                0.012870722450315952,
+                0.022287821397185326,
+                0.9996687769889832,
+                0.0,
+                0.03679148852825165,
+                1.269382119178772,
+                -1.0812560319900513,
+                1.0
+            ],
+            "boneName": "BN_DorsalFin_01",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01|BN_DorsalFin_00|BN_DorsalFin_01",
+            "color": [
+                0.21000000834465027,
+                0.37333330512046814,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 16,
+            "inputTransform": [
+                0.9999157190322876,
+                -0.0020047100260853767,
+                -0.012829205952584743,
+                0.0,
+                0.0017181108705699444,
+                0.9997496008872986,
+                -0.022311745211482048,
+                0.0,
+                0.012870722450315952,
+                0.022287821397185326,
+                0.9996687769889832,
+                0.0,
+                0.036791492253541946,
+                1.2693818807601929,
+                -1.0812560319900513,
+                1.0
+            ],
+            "name": "rMarker_BN_DorsalFin_01",
+            "restTransform": [
+                0.9999157190322876,
+                -0.0020047100260853767,
+                -0.012829205952584743,
+                0.0,
+                0.0017181108705699444,
+                0.9997496008872986,
+                -0.022311745211482048,
+                0.0,
+                0.012870722450315952,
+                0.022287821397185326,
+                0.9996687769889832,
+                0.0,
+                0.03679148852825165,
+                1.269382119178772,
+                -1.0812560319900513,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 1.4447191953659058,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.4000000059604645,
+                    0.6499999761581421,
+                    0.05000000074505806
+                ],
+                "length": 0.31500062346458435,
+                "offset": [
+                    -3.469446951953614e-17,
+                    0.1469079554080963,
+                    -0.05678382143378258
+                ],
+                "radius": 0.031500063836574554,
+                "rotationRadians": [
+                    -1.5707963705062866,
+                    0.3688376247882843,
+                    1.5707963705062866
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9998329281806946,
+                -0.0017300646286457777,
+                -0.018194587901234627,
+                0.0,
+                0.0013913000002503395,
+                0.9998257756233215,
+                -0.018615182489156723,
+                0.0,
+                0.018223624676465988,
+                0.018586760386824608,
+                0.9996611475944519,
+                0.0,
+                0.03583464026451111,
+                1.560612678527832,
+                -1.2013417482376099,
+                1.0
+            ],
+            "boneName": "BN_DorsalFin_02",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Spine_01|BN_DorsalFin_00|BN_DorsalFin_01|BN_DorsalFin_02",
+            "color": [
+                0.21000000834465027,
+                0.699999988079071,
+                0.36516663432121277,
+                1.0
+            ],
+            "id": 17,
+            "inputTransform": [
+                0.9998329281806946,
+                -0.0017300646286457777,
+                -0.018194587901234627,
+                0.0,
+                0.0013913000002503395,
+                0.9998257756233215,
+                -0.018615182489156723,
+                0.0,
+                0.018223624676465988,
+                0.018586760386824608,
+                0.9996611475944519,
+                0.0,
+                0.03583464026451111,
+                1.560612440109253,
+                -1.2013417482376099,
+                1.0
+            ],
+            "name": "rMarker_BN_DorsalFin_02",
+            "restTransform": [
+                0.9998329281806946,
+                -0.0017300646286457777,
+                -0.018194587901234627,
+                0.0,
+                0.0013913000002503395,
+                0.9998257756233215,
+                -0.018615182489156723,
+                0.0,
+                0.018223624676465988,
+                0.018586760386824608,
+                0.9996611475944519,
+                0.0,
+                0.03583464026451111,
+                1.560612678527832,
+                -1.2013417482376099,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.5556612610816956,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.5,
+                    0.4000000059604645,
+                    0.02500000037252903
+                ],
+                "length": 0.24285130202770233,
+                "offset": [
+                    8.673617379884035e-18,
+                    0.25,
+                    -0.10000000149011612
+                ],
+                "radius": 0.024285130202770233,
+                "rotationRadians": [
+                    -1.5707963705062866,
+                    0.5177817940711975,
+                    1.5707963705062866
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.1996801793575287,
+                -0.03815469890832901,
+                0.9791180491447449,
+                0.0,
+                0.5030730962753296,
+                0.861483097076416,
+                -0.06902548670768738,
+                0.0,
+                -0.8408599495887756,
+                0.5063509345054626,
+                0.19121570885181427,
+                0.0,
+                0.7314486503601074,
+                -0.514667272567749,
+                0.11667183041572571,
+                1.0
+            ],
+            "boneName": "BN_L_BigFin_00",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_L_BigFin_00",
+            "color": [
+                0.21000000834465027,
+                0.699999988079071,
+                0.4794999659061432,
+                1.0
+            ],
+            "id": 18,
+            "inputTransform": [
+                0.1996801793575287,
+                -0.03815469890832901,
+                0.9791180491447449,
+                0.0,
+                0.5030730366706848,
+                0.8614830374717712,
+                -0.06902547925710678,
+                0.0,
+                -0.8408599495887756,
+                0.5063509345054626,
+                0.19121569395065308,
+                0.0,
+                0.7314487099647522,
+                -0.5146670341491699,
+                0.11667182296514511,
+                1.0
+            ],
+            "name": "rMarker_BN_L_BigFin_00",
+            "restTransform": [
+                0.1996801793575287,
+                -0.03815469890832901,
+                0.9791180491447449,
+                0.0,
+                0.5030730366706848,
+                0.8614829778671265,
+                -0.06902547180652618,
+                0.0,
+                -0.8408598899841309,
+                0.5063508749008179,
+                0.19121569395065308,
+                0.0,
+                0.7314486503601074,
+                -0.514667272567749,
+                0.11667183041572571,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 4.6675543785095215,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.6000000238418579,
+                    0.699999988079071,
+                    0.10000000149011612
+                ],
+                "length": 0.43428099155426025,
+                "offset": [
+                    -0.20000000298023224,
+                    -0.011475209146738052,
+                    -0.20189979672431946
+                ],
+                "radius": 0.043428100645542145,
+                "rotationRadians": [
+                    1.7312371730804443,
+                    1.1939011812210083,
+                    -2.997502565383911
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.5239682793617249,
+                -0.3273880183696747,
+                0.7863039970397949,
+                0.0,
+                0.5885502696037292,
+                0.8064910769462585,
+                -0.05639827251434326,
+                0.0,
+                -0.6156832575798035,
+                0.49233055114746094,
+                0.6152601838111877,
+                0.0,
+                1.0278571844100952,
+                -0.7328688502311707,
+                -0.1138262152671814,
+                1.0
+            ],
+            "boneName": "BN_L_BigFin_01",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_L_BigFin_00|BN_L_BigFin_01",
+            "color": [
+                0.422333300113678,
+                0.699999988079071,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 19,
+            "inputTransform": [
+                0.5239683389663696,
+                -0.32738804817199707,
+                0.7863041162490845,
+                0.0,
+                0.5885502696037292,
+                0.8064910173416138,
+                -0.056398287415504456,
+                0.0,
+                -0.6156831383705139,
+                0.4923304319381714,
+                0.6152601838111877,
+                0.0,
+                1.0278573036193848,
+                -0.7328687906265259,
+                -0.11382628977298737,
+                1.0
+            ],
+            "name": "rMarker_BN_L_BigFin_01",
+            "restTransform": [
+                0.5239683389663696,
+                -0.32738804817199707,
+                0.7863041162490845,
+                0.0,
+                0.5885502099990845,
+                0.806490957736969,
+                -0.05639825388789177,
+                0.0,
+                -0.6156831383705139,
+                0.49233049154281616,
+                0.6152601838111877,
+                0.0,
+                1.0278571844100952,
+                -0.7328688502311707,
+                -0.1138262152671814,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 3.333967447280884,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.6000000238418579,
+                    0.5,
+                    0.10000000149011612
+                ],
+                "length": 0.47212299704551697,
+                "offset": [
+                    1.4150282368063927e-07,
+                    3.073364496231079e-08,
+                    -0.23606149852275848
+                ],
+                "radius": 0.04721229895949364,
+                "rotationRadians": [
+                    -1.735826849937439,
+                    1.5707956552505493,
+                    0.0
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.46235767006874084,
+                -0.53828364610672,
+                0.7046106457710266,
+                0.0,
+                0.7397362589836121,
+                0.6723060607910156,
+                0.02819787710905075,
+                0.0,
+                -0.4888925552368164,
+                0.5081886053085327,
+                0.7090336680412292,
+                0.0,
+                1.31853187084198,
+                -0.9653104543685913,
+                -0.40430110692977905,
+                1.0
+            ],
+            "boneName": "BN_L_BigFin_02",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_L_BigFin_00|BN_L_BigFin_01|BN_L_BigFin_02",
+            "color": [
+                0.699999988079071,
+                0.4386666715145111,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 20,
+            "inputTransform": [
+                0.46235764026641846,
+                -0.5382835865020752,
+                0.7046106457710266,
+                0.0,
+                0.7397361993789673,
+                0.6723059415817261,
+                0.02819790318608284,
+                0.0,
+                -0.48889240622520447,
+                0.5081884860992432,
+                0.7090336084365845,
+                0.0,
+                1.31853187084198,
+                -0.9653103351593018,
+                -0.40430116653442383,
+                1.0
+            ],
+            "name": "rMarker_BN_L_BigFin_02",
+            "restTransform": [
+                0.46235769987106323,
+                -0.5382837057113647,
+                0.7046107053756714,
+                0.0,
+                0.7397362589836121,
+                0.6723060011863708,
+                0.028197932988405228,
+                0.0,
+                -0.48889246582984924,
+                0.5081885457038879,
+                0.709033727645874,
+                0.0,
+                1.31853187084198,
+                -0.9653104543685913,
+                -0.40430110692977905,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 1.7781158685684204,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.4000000059604645,
+                    0.4000000059604645,
+                    0.10000000149011612
+                ],
+                "length": 0.46184417605400085,
+                "offset": [
+                    -1.043081283569336e-07,
+                    -1.341104507446289e-07,
+                    -0.23092210292816162
+                ],
+                "radius": 0.046184420585632324,
+                "rotationRadians": [
+                    -2.2666263580322266,
+                    1.5707954168319702,
+                    0.0
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.4598541259765625,
+                -0.5391613841056824,
+                0.7055771350860596,
+                0.0,
+                0.7474510669708252,
+                0.6640081405639648,
+                0.02025143802165985,
+                0.0,
+                -0.47942787408828735,
+                0.5180718302726746,
+                0.708343505859375,
+                0.0,
+                1.544326663017273,
+                -1.200021743774414,
+                -0.7317530512809753,
+                1.0
+            ],
+            "boneName": "BN_L_BigFin_03",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_L_BigFin_00|BN_L_BigFin_01|BN_L_BigFin_02|BN_L_BigFin_03",
+            "color": [
+                0.21000000834465027,
+                0.24266664683818817,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 21,
+            "inputTransform": [
+                0.4598541259765625,
+                -0.5391613841056824,
+                0.7055771946907043,
+                0.0,
+                0.74745112657547,
+                0.6640079617500305,
+                0.02025151625275612,
+                0.0,
+                -0.4794277548789978,
+                0.5180717706680298,
+                0.7083436250686646,
+                0.0,
+                1.5443267822265625,
+                -1.2000216245651245,
+                -0.7317530512809753,
+                1.0
+            ],
+            "name": "rMarker_BN_L_BigFin_03",
+            "restTransform": [
+                0.4598541557788849,
+                -0.5391614437103271,
+                0.7055771946907043,
+                0.0,
+                0.7474510669708252,
+                0.6640080213546753,
+                0.020251482725143433,
+                0.0,
+                -0.4794277846813202,
+                0.5180717706680298,
+                0.7083436250686646,
+                0.0,
+                1.544326663017273,
+                -1.200021743774414,
+                -0.7317530512809753,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.8890579342842102,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.4000000059604645,
+                    0.20000000298023224,
+                    0.10000000149011612
+                ],
+                "length": 0.46184417605400085,
+                "offset": [
+                    -1.043081283569336e-07,
+                    -1.341104507446289e-07,
+                    -0.23092210292816162
+                ],
+                "radius": 0.046184420585632324,
+                "rotationRadians": [
+                    -2.2666263580322266,
+                    1.5707954168319702,
+                    0.0
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.11949876695871353,
+                0.0557379424571991,
+                -0.9912685751914978,
+                0.0,
+                -0.48397478461265564,
+                0.8750343322753906,
+                -0.009141597896814346,
+                0.0,
+                0.8668844699859619,
+                0.4808414578437805,
+                0.13154126703739166,
+                0.0,
+                -0.7482236623764038,
+                -0.5099571943283081,
+                0.1478797048330307,
+                1.0
+            ],
+            "boneName": "BN_R_BigFin_00",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_R_BigFin_00",
+            "color": [
+                0.699999988079071,
+                0.3488333225250244,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 22,
+            "inputTransform": [
+                0.11949875950813293,
+                0.0557379424571991,
+                -0.991268515586853,
+                0.0,
+                -0.48397478461265564,
+                0.8750342130661011,
+                -0.009141597896814346,
+                0.0,
+                0.8668843507766724,
+                0.48084139823913574,
+                0.13154126703739166,
+                0.0,
+                -0.7482237219810486,
+                -0.5099573135375977,
+                0.1478797048330307,
+                1.0
+            ],
+            "name": "rMarker_BN_R_BigFin_00",
+            "restTransform": [
+                0.11949876695871353,
+                0.0557379424571991,
+                -0.9912685751914978,
+                0.0,
+                -0.48397472500801086,
+                0.8750342130661011,
+                -0.009141597896814346,
+                0.0,
+                0.8668844103813171,
+                0.48084139823913574,
+                0.13154125213623047,
+                0.0,
+                -0.7482236623764038,
+                -0.5099571943283081,
+                0.1478797048330307,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 4.6675543785095215,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.6000000238418579,
+                    0.699999988079071,
+                    0.10000000149011612
+                ],
+                "length": 0.43428099155426025,
+                "offset": [
+                    0.20000000298023224,
+                    -0.011475209146738052,
+                    -0.20189979672431946
+                ],
+                "radius": 0.043428100645542145,
+                "rotationRadians": [
+                    1.4103554487228394,
+                    1.1939011812210083,
+                    -0.14409007132053375
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.4631686806678772,
+                0.33537524938583374,
+                -0.8203645944595337,
+                0.0,
+                -0.5616418123245239,
+                0.8271130919456482,
+                0.021037455648183823,
+                0.0,
+                0.6855899095535278,
+                0.45100724697113037,
+                0.5714535713195801,
+                0.0,
+                -1.068260669708252,
+                -0.7153883576393127,
+                -0.06181779503822327,
+                1.0
+            ],
+            "boneName": "BN_R_BigFin_01",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_R_BigFin_00|BN_R_BigFin_01",
+            "color": [
+                0.218166783452034,
+                0.21000000834465027,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 23,
+            "inputTransform": [
+                0.4631687104701996,
+                0.33537521958351135,
+                -0.8203647136688232,
+                0.0,
+                -0.5616417527198792,
+                0.8271130919456482,
+                0.021037433296442032,
+                0.0,
+                0.6855897903442383,
+                0.4510071575641632,
+                0.5714535713195801,
+                0.0,
+                -1.0682607889175415,
+                -0.7153881788253784,
+                -0.06181785464286804,
+                1.0
+            ],
+            "name": "rMarker_BN_R_BigFin_01",
+            "restTransform": [
+                0.463168740272522,
+                0.33537527918815613,
+                -0.8203647136688232,
+                0.0,
+                -0.5616417527198792,
+                0.8271129727363586,
+                0.02103745937347412,
+                0.0,
+                0.6855897903442383,
+                0.4510071873664856,
+                0.5714535713195801,
+                0.0,
+                -1.068260669708252,
+                -0.7153883576393127,
+                -0.06181779503822327,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 3.333967447280884,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.6000000238418579,
+                    0.5,
+                    0.10000000149011612
+                ],
+                "length": 0.47212299704551697,
+                "offset": [
+                    -1.4150282368063927e-07,
+                    3.073364496231079e-08,
+                    -0.23606149852275848
+                ],
+                "radius": 0.04721229895949364,
+                "rotationRadians": [
+                    1.735826849937439,
+                    1.5707957744598389,
+                    -1.0752965184934737e-10
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.42076998949050903,
+                0.5431672930717468,
+                -0.7265823483467102,
+                0.0,
+                -0.6973319053649902,
+                0.7059556841850281,
+                0.12391641736030579,
+                0.0,
+                0.5802423357963562,
+                0.4545288681983948,
+                0.6758126020431519,
+                0.0,
+                -1.391939401626587,
+                -0.9283199906349182,
+                -0.3316110074520111,
+                1.0
+            ],
+            "boneName": "BN_R_BigFin_02",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_R_BigFin_00|BN_R_BigFin_01|BN_R_BigFin_02",
+            "color": [
+                0.4386666715145111,
+                0.699999988079071,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 24,
+            "inputTransform": [
+                0.42076995968818665,
+                0.5431671738624573,
+                -0.726582407951355,
+                0.0,
+                -0.6973318457603455,
+                0.7059555053710938,
+                0.12391643226146698,
+                0.0,
+                0.5802422165870667,
+                0.4545287489891052,
+                0.6758126020431519,
+                0.0,
+                -1.391939640045166,
+                -0.9283199906349182,
+                -0.3316110074520111,
+                1.0
+            ],
+            "name": "rMarker_BN_R_BigFin_02",
+            "restTransform": [
+                0.4207700192928314,
+                0.5431672930717468,
+                -0.726582407951355,
+                0.0,
+                -0.6973319053649902,
+                0.7059556245803833,
+                0.12391646206378937,
+                0.0,
+                0.5802422761917114,
+                0.45452880859375,
+                0.6758126616477966,
+                0.0,
+                -1.391939401626587,
+                -0.9283199906349182,
+                -0.3316110074520111,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 1.7781158685684204,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.4000000059604645,
+                    0.4000000059604645,
+                    0.10000000149011612
+                ],
+                "length": 0.46184417605400085,
+                "offset": [
+                    1.043081283569336e-07,
+                    -1.341104507446289e-07,
+                    -0.23092210292816162
+                ],
+                "radius": 0.046184420585632324,
+                "rotationRadians": [
+                    2.2666263580322266,
+                    1.5707957744598389,
+                    0.0
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.4233691096305847,
+                0.4997391998767853,
+                -0.7556581497192383,
+                0.0,
+                -0.6784546971321106,
+                0.7276520729064941,
+                0.1011032834649086,
+                0.0,
+                0.60038161277771,
+                0.4698757827281952,
+                0.6471157073974609,
+                0.0,
+                -1.6599230766296387,
+                -1.1382486820220947,
+                -0.6437201499938965,
+                1.0
+            ],
+            "boneName": "BN_R_BigFin_03",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_R_BigFin_00|BN_R_BigFin_01|BN_R_BigFin_02|BN_R_BigFin_03",
+            "color": [
+                0.699999988079071,
+                0.5203333497047424,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 25,
+            "inputTransform": [
+                0.42336907982826233,
+                0.49973928928375244,
+                -0.7556581497192383,
+                0.0,
+                -0.6784546375274658,
+                0.7276519536972046,
+                0.10110336542129517,
+                0.0,
+                0.6003814935684204,
+                0.4698757529258728,
+                0.6471158266067505,
+                0.0,
+                -1.6599230766296387,
+                -1.1382486820220947,
+                -0.6437201499938965,
+                1.0
+            ],
+            "name": "rMarker_BN_R_BigFin_03",
+            "restTransform": [
+                0.4233691394329071,
+                0.49973925948143005,
+                -0.7556582093238831,
+                0.0,
+                -0.6784546971321106,
+                0.7276519536972046,
+                0.10110332816839218,
+                0.0,
+                0.6003815531730652,
+                0.4698757529258728,
+                0.6471158266067505,
+                0.0,
+                -1.6599230766296387,
+                -1.1382486820220947,
+                -0.6437201499938965,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 0.8890579342842102,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.4000000059604645,
+                    0.20000000298023224,
+                    0.10000000149011612
+                ],
+                "length": 0.46184417605400085,
+                "offset": [
+                    1.043081283569336e-07,
+                    -1.341104507446289e-07,
+                    -0.23092210292816162
+                ],
+                "radius": 0.046184420585632324,
+                "rotationRadians": [
+                    2.2666263580322266,
+                    1.5707957744598389,
+                    0.0
+                ],
+                "type": "BOX"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9997724294662476,
+                -0.020775478333234787,
+                -0.004845952615141869,
+                0.0,
+                0.020612206310033798,
+                0.9992877840995789,
+                -0.03160713613033295,
+                0.0,
+                0.005499154794961214,
+                0.031500060111284256,
+                0.9994886517524719,
+                0.0,
+                0.001390872523188591,
+                -0.03352558612823486,
+                0.5236554741859436,
+                1.0
+            ],
+            "boneName": "BN_Neck_00",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Neck_00",
+            "color": [
+                0.699999988079071,
+                0.6591666340827942,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 26,
+            "inputTransform": [
+                0.9997724294662476,
+                -0.020775478333234787,
+                -0.004845952615141869,
+                0.0,
+                0.020612206310033798,
+                0.9992877840995789,
+                -0.03160713613033295,
+                0.0,
+                0.005499154794961214,
+                0.031500060111284256,
+                0.9994886517524719,
+                0.0,
+                0.001390868448652327,
+                -0.033525656908750534,
+                0.5236554741859436,
+                1.0
+            ],
+            "name": "rMarker_BN_Neck_00",
+            "restTransform": [
+                0.9997724294662476,
+                -0.020775478333234787,
+                -0.004845952615141869,
+                0.0,
+                0.020612206310033798,
+                0.9992877840995789,
+                -0.03160713613033295,
+                0.0,
+                0.005499154794961214,
+                0.031500060111284256,
+                0.9994886517524719,
+                0.0,
+                0.001390872523188591,
+                -0.03352558612823486,
+                0.5236554741859436,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 196.3868865966797,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    1.5,
+                    1.5,
+                    1.5
+                ],
+                "length": 0.0,
+                "offset": [
+                    0.0,
+                    0.11307399719953537,
+                    0.15279099345207214
+                ],
+                "radius": 0.75,
+                "rotationRadians": [
+                    -4.1492540958643076e-07,
+                    -1.5707958936691284,
+                    6.074276420319031e-17
+                ],
+                "type": "SPHERE"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9996461272239685,
+                -0.026345744729042053,
+                -0.0036716843023896217,
+                0.0,
+                0.026264751330018044,
+                0.9994428753852844,
+                -0.020591694861650467,
+                0.0,
+                0.004212142899632454,
+                0.02048797532916069,
+                0.9997812509536743,
+                0.0,
+                0.004415404051542282,
+                -0.01620018482208252,
+                1.0733745098114014,
+                1.0
+            ],
+            "boneName": "BN_Neck_01",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Neck_00|BN_Neck_01",
+            "color": [
+                0.21000000834465027,
+                0.2344999760389328,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 27,
+            "inputTransform": [
+                0.9996461272239685,
+                -0.026345744729042053,
+                -0.0036716843023896217,
+                0.0,
+                0.026264753192663193,
+                0.9994429349899292,
+                -0.020591696724295616,
+                0.0,
+                0.004212142899632454,
+                0.02048797532916069,
+                0.9997812509536743,
+                0.0,
+                0.004415405914187431,
+                -0.016200315207242966,
+                1.0733745098114014,
+                1.0
+            ],
+            "name": "rMarker_BN_Neck_01",
+            "restTransform": [
+                0.9996461272239685,
+                -0.026345744729042053,
+                -0.0036716843023896217,
+                0.0,
+                0.026264753192663193,
+                0.9994429349899292,
+                -0.020591696724295616,
+                0.0,
+                0.004212142899632454,
+                0.02048797532916069,
+                0.9997812509536743,
+                0.0,
+                0.004415404051542282,
+                -0.01620018482208252,
+                1.0733745098114014,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 127.84056854248047,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    1.2999999523162842,
+                    1.2999999523162842,
+                    1.2999999523162842
+                ],
+                "length": 0.0,
+                "offset": [
+                    -0.012310399673879147,
+                    0.05189390107989311,
+                    0.36264801025390625
+                ],
+                "radius": 0.6499999761581421,
+                "rotationRadians": [
+                    1.5467660427093506,
+                    -1.2307239770889282,
+                    -1.5365829467773438
+                ],
+                "type": "SPHERE"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9996234774589539,
+                -0.017916100099682808,
+                0.020780004560947418,
+                0.0,
+                0.018586603924632072,
+                0.9992976784706116,
+                -0.032535575330257416,
+                0.0,
+                -0.020182501524686813,
+                0.032909564673900604,
+                0.999254584312439,
+                0.0,
+                0.015872636809945107,
+                0.33590590953826904,
+                1.6662417650222778,
+                1.0
+            ],
+            "boneName": "BN_Head_00",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Neck_00|BN_Neck_01|BN_Head_00",
+            "color": [
+                0.699999988079071,
+                0.5448333024978638,
+                0.21000000834465027,
+                1.0
+            ],
+            "id": 28,
+            "inputTransform": [
+                0.9996234774589539,
+                -0.017916100099682808,
+                0.020780004560947418,
+                0.0,
+                0.01858660578727722,
+                0.9992977380752563,
+                -0.032535579055547714,
+                0.0,
+                -0.020182501524686813,
+                0.032909564673900604,
+                0.999254584312439,
+                0.0,
+                0.015872636809945107,
+                0.33590587973594666,
+                1.6662417650222778,
+                1.0
+            ],
+            "name": "rMarker_BN_Head_00",
+            "restTransform": [
+                0.9996234774589539,
+                -0.017916100099682808,
+                0.020780004560947418,
+                0.0,
+                0.01858660578727722,
+                0.9992977380752563,
+                -0.032535579055547714,
+                0.0,
+                -0.020182501524686813,
+                0.032909564673900604,
+                0.999254584312439,
+                0.0,
+                0.015872636809945107,
+                0.33590590953826904,
+                1.6662417650222778,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 77.44917297363281,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    1.100000023841858,
+                    1.100000023841858,
+                    1.100000023841858
+                ],
+                "length": 0.0,
+                "offset": [
+                    0.0,
+                    -0.36451300978660583,
+                    0.3568759858608246
+                ],
+                "radius": 0.550000011920929,
+                "rotationRadians": [
+                    -1.5707963705062866,
+                    -0.9608797430992126,
+                    -1.5707963705062866
+                ],
+                "type": "SPHERE"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9996234774589539,
+                -0.017916100099682808,
+                0.020780004560947418,
+                0.0,
+                -0.008185149170458317,
+                0.5281528830528259,
+                0.849109947681427,
+                0.0,
+                -0.026187755167484283,
+                -0.8489602208137512,
+                0.5278074741363525,
+                0.0,
+                -0.01165890134871006,
+                -0.21637260913848877,
+                2.5144917964935303,
+                1.0
+            ],
+            "boneName": "BN_C_Lip_00",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00|BN_Neck_00|BN_Neck_01|BN_Head_00|BN_C_Lip_00",
+            "color": [
+                0.21000000834465027,
+                0.3243333399295807,
+                0.699999988079071,
+                1.0
+            ],
+            "id": 29,
+            "inputTransform": [
+                0.9996234774589539,
+                -0.017916100099682808,
+                0.020780004560947418,
+                0.0,
+                -0.008185150101780891,
+                0.5281528830528259,
+                0.8491098880767822,
+                0.0,
+                -0.026187757030129433,
+                -0.848960280418396,
+                0.5278074145317078,
+                0.0,
+                -0.011658905074000359,
+                -0.21637259423732758,
+                2.5144917964935303,
+                1.0
+            ],
+            "name": "rMarker_BN_C_Lip_00",
+            "restTransform": [
+                0.9996234774589539,
+                -0.017916100099682808,
+                0.020780004560947418,
+                0.0,
+                -0.008185149170458317,
+                0.5281528830528259,
+                0.849109947681427,
+                0.0,
+                -0.026187755167484283,
+                -0.848960280418396,
+                0.5278074145317078,
+                0.0,
+                -0.01165890134871006,
+                -0.21637260913848877,
+                2.5144917964935303,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 12.568761825561523,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    0.6000000238418579,
+                    0.6000000238418579,
+                    0.6000000238418579
+                ],
+                "length": 0.0,
+                "offset": [
+                    0.0,
+                    0.23200799524784088,
+                    -0.2361290007829666
+                ],
+                "radius": 0.30000001192092896,
+                "rotationRadians": [
+                    -1.5707963705062866,
+                    -0.9608797430992126,
+                    -1.5707963705062866
+                ],
+                "type": "SPHERE"
+            }
+        },
+        {
+            "bodyTransform": [
+                0.9997725486755371,
+                -0.0031822440214455128,
+                -0.02108604833483696,
+                0.0,
+                0.0032351405825465918,
+                0.9999916553497314,
+                0.0024749625008553267,
+                0.0,
+                0.021077999845147133,
+                -0.0025426161009818316,
+                0.9997746348381042,
+                0.0,
+                -0.009157052263617516,
+                0.13644182682037354,
+                -0.002113744616508484,
+                1.0
+            ],
+            "boneName": "Spine_00",
+            "bonePath": "RootNode|Armature|BN_Root_1|Spine_00",
+            "color": [
+                0.21000000834465027,
+                0.699999988079071,
+                0.6428333520889282,
+                1.0
+            ],
+            "id": 30,
+            "inputTransform": [
+                0.9997725486755371,
+                -0.0031822440214455128,
+                -0.02108604833483696,
+                0.0,
+                0.0032351405825465918,
+                0.9999916553497314,
+                0.0024749625008553267,
+                0.0,
+                0.021077999845147133,
+                -0.0025426161009818316,
+                0.9997746348381042,
+                0.0,
+                -0.009157052263617516,
+                0.13644179701805115,
+                -0.0021137443836778402,
+                1.0
+            ],
+            "name": "rMarker_Spine_00",
+            "restTransform": [
+                0.9997725486755371,
+                -0.0031822440214455128,
+                -0.02108604833483696,
+                0.0,
+                0.0032351405825465918,
+                0.9999916553497314,
+                0.0024749625008553267,
+                0.0,
+                0.021077999845147133,
+                -0.0025426161009818316,
+                0.9997746348381042,
+                0.0,
+                -0.009157052263617516,
+                0.13644182682037354,
+                -0.002113744616508484,
+                1.0
+            ],
+            "rigidBody": {
+                "angularDamping": 1.0,
+                "restitutionCombineMode": "MULTIPLY",
+                "enableCCD": false,
+                "friction": 0.6000000238418579,
+                "frictionCombineMode": "MULTIPLY",
+                "isKinematic": false,
+                "linearDamping": 0.5,
+                "mass": 238.34097290039063,
+                "massMode": "AUTOMATIC",
+                "maxDepenetrationVelocity": 20.0,
+                "positionIterations": 8,
+                "restitution": 0.009999999776482582,
+                "thickness": 0.019999999552965164,
+                "velocityIterations": 8
+            },
+            "shape": {
+                "convexIndices": [],
+                "convexVertices": [],
+                "extents": [
+                    1.600000023841858,
+                    1.600000023841858,
+                    1.600000023841858
+                ],
+                "length": 0.0,
+                "offset": [
+                    0.0,
+                    0.13256500661373138,
+                    -0.3119660019874573
+                ],
+                "radius": 0.800000011920929,
+                "rotationRadians": [
+                    -3.1415927410125732,
+                    1.5707961320877075,
+                    0.0
+                ],
+                "type": "SPHERE"
+            }
+        }
+    ],
+    "name": "Shark",
+    "skeletonSignature": 0,
+    "skinnedModelPresetName": "SHARK",
+    "skinnedModelScale": 0.009999999776482582,
+    "solver": {
+        "angularLimitDamping": 10000.0,
+        "angularLimitStiffness": 1000000.0,
+        "linearLimitDamping": 10000.0,
+        "linearLimitStiffness": 1000000.0
+    },
+    "targetMass": 1500.0,
+    "testAnimationName": "",
+    "version": 4
+}

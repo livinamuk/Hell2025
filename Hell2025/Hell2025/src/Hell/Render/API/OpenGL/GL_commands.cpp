@@ -293,7 +293,7 @@ namespace OpenGL {
         glBlitFramebuffer(srcRect.x0, srcRect.y0, srcRect.x1, srcRect.y1, dstRect.x0, dstRect.y0, dstRect.x1, dstRect.y1, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     }
 
-    void BlitShadowCubeMapArray(OpenGLShadowCubeMapArray& src, OpenGLShadowCubeMapArray& dst, int srcLayerIndex, int dstLayerIndex) {
+    void BlitShadowCubeMapArray(OpenGLShadowCubeMapArray& src, OpenGLShadowCubeMapArray& dst, int srcLayerIndex, int dstLayerIndex, uint8_t faceMask) {
         if (srcLayerIndex < 0 || dstLayerIndex < 0) return;
         if (srcLayerIndex == dstLayerIndex && src.GetDepthTexture() == dst.GetDepthTexture()) return;
 
@@ -307,11 +307,34 @@ namespace OpenGL {
             return;
         }
 
-        const GLint srcLayer = srcLayerIndex * 6;
-        const GLint dstLayer = dstLayerIndex * 6;
         const GLsizei size = src.GetSize();
 
-        glCopyImageSubData(src.GetDepthTexture(), GL_TEXTURE_CUBE_MAP_ARRAY, 0, 0, 0, srcLayer, dst.GetDepthTexture(), GL_TEXTURE_CUBE_MAP_ARRAY, 0, 0, 0, dstLayer, size, size, 6);
+        faceMask &= uint8_t(0x3f);
+        uint32_t faceIndex = 0;
+        while (faceIndex < 6) {
+            while (faceIndex < 6 && (faceMask & uint8_t(1u << faceIndex)) == 0) faceIndex++;
+            if (faceIndex == 6) break;
+
+            const uint32_t firstFace = faceIndex;
+            while (faceIndex < 6 && (faceMask & uint8_t(1u << faceIndex)) != 0) faceIndex++;
+            const GLsizei faceCount = static_cast<GLsizei>(faceIndex - firstFace);
+            glCopyImageSubData(
+                src.GetDepthTexture(),
+                GL_TEXTURE_CUBE_MAP_ARRAY,
+                0,
+                0,
+                0,
+                srcLayerIndex * 6 + static_cast<GLint>(firstFace),
+                dst.GetDepthTexture(),
+                GL_TEXTURE_CUBE_MAP_ARRAY,
+                0,
+                0,
+                0,
+                dstLayerIndex * 6 + static_cast<GLint>(firstFace),
+                size,
+                size,
+                faceCount);
+        }
     }
 
     void BlitToDefaultFrameBuffer(OpenGLFrameBuffer* srcFrameBuffer, const char* srcName, GLbitfield mask, GLenum filter) {

@@ -339,7 +339,7 @@ void Inventory::BlitItemGrid(glm::ivec2 origin) {
             continue;
         }
 
-        ItemInfo* itemInfo = Bible::GetItemInfoByName(item.m_name);
+        Bible::ItemInfo* itemInfo = Bible::GetItemInfoByName(item.m_name);
         if (!itemInfo) continue;
 
         glm::ivec2 itemLocation;
@@ -520,7 +520,7 @@ void Inventory::BlitGenericText(const std::string& text, const glm::ivec2& origi
 }
 
 void Inventory::BlitItemButtons(glm::ivec2 origin) {
-    ItemInfo* itemInfo = GetSelectedItemInfo();
+    Bible::ItemInfo* itemInfo = GetSelectedItemInfo();
     if (!itemInfo) return;
 
 

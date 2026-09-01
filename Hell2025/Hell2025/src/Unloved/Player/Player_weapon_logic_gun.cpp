@@ -24,6 +24,9 @@ void Player::UpdateGunLogic(float deltaTime) {
         if (PressedReload() && CanReloadGun()) {
             ReloadGun();
         }
+        if (PressedMelee() && CanSecondaryMelee()) {
+            SecondaryMelee();
+        }
     }
     UpdateGunReloadLogic();
     UpdateSlideLogic();
@@ -31,17 +34,35 @@ void Player::UpdateGunLogic(float deltaTime) {
 }
 
 void Player::FireGun() {
-    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
     WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
-    WeaponState* weaponState = GetWeaponStateByName(weaponInfo->itemInfoName);
+    WeaponState* weaponState = GetCurrentWeaponState();
+
+    int randomAnimationIndex = std::rand() % 3;
+    Bible::AnimationSlot fireAnimationSlot = Bible::AnimationSlot::FIRE_1;
+    Bible::AnimationSlot adsFireAnimationSlot = Bible::AnimationSlot::ADS_FIRE_1;
+    if (randomAnimationIndex == 1) {
+        fireAnimationSlot = Bible::AnimationSlot::FIRE_2;
+        adsFireAnimationSlot = Bible::AnimationSlot::ADS_FIRE_2;
+    }
+    if (randomAnimationIndex == 2) {
+        fireAnimationSlot = Bible::AnimationSlot::FIRE_3;
+        adsFireAnimationSlot = Bible::AnimationSlot::ADS_FIRE_3;
+    }
 
     if (weaponInfo->hasADS && IsInADS()) {
-        viewWeapon->PlayAnimation("MainLayer", weaponInfo->animationNames.adsFire, weaponInfo->animationSpeeds.adsFire);
+        PlayViewWeaponAnimation(adsFireAnimationSlot, weaponInfo->animationSpeeds.adsFire);
         m_weaponAction = WeaponAction::ADS_FIRE;
     }
     else {
-        viewWeapon->PlayAnimation("MainLayer", weaponInfo->animationNames.fire, weaponInfo->animationSpeeds.fire);
+        PlayViewWeaponAnimation(fireAnimationSlot, weaponInfo->animationSpeeds.fire);
         m_weaponAction = WeaponAction::FIRE;
+    }
+
+    switch (Hell::Random::Int(0, 2)) {
+        case 0: PlayCharacterWeaponAnimation(Bible::AnimationSlot::FIRE_1); break;
+        case 1: PlayCharacterWeaponAnimation(Bible::AnimationSlot::FIRE_2); break;
+        case 2: PlayCharacterWeaponAnimation(Bible::AnimationSlot::FIRE_3); break;
+        default: break;
     }
 
     SpawnMuzzleFlash(55.0f, 0.2f);
@@ -60,25 +81,29 @@ void Player::FireGun() {
 }
 
 void Player::ReloadGun() {
-    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
     WeaponState* weaponState = GetCurrentWeaponState();
     WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
 
     if (GetCurrentWeaponMagAmmo() == 0) {
         Audio::PlayAudio(weaponInfo->audioFiles.reloadEmpty, 0.7f);
-        viewWeapon->PlayAnimation("MainLayer", weaponInfo->animationNames.reloadempty, weaponInfo->animationSpeeds.reloadempty);
+        PlayViewWeaponAnimation(Bible::AnimationSlot::RELOAD_EMPTY, weaponInfo->animationSpeeds.reloadempty);
         m_weaponAction = RELOAD_FROM_EMPTY;
+
+        // Third person
+        PlayCharacterWeaponAnimation(Bible::AnimationSlot::RELOAD_EMPTY);
     }
     else {
         Audio::PlayAudio(weaponInfo->audioFiles.reload, 0.8f);
-        viewWeapon->PlayAnimation("MainLayer", weaponInfo->animationNames.reload, weaponInfo->animationSpeeds.reload);
+        PlayViewWeaponAnimation(Bible::AnimationSlot::RELOAD, weaponInfo->animationSpeeds.reload);
         m_weaponAction = RELOAD;
+
+        // Third person
+        PlayCharacterWeaponAnimation(Bible::AnimationSlot::RELOAD);
     }
     weaponState->awaitingMagReload = true;
 }
 
 void Player::UpdateGunReloadLogic() {
-    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
     WeaponState* weaponState = GetCurrentWeaponState();
     WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
     AmmoState* ammoState = GetCurrentAmmoState();
@@ -94,7 +119,7 @@ void Player::UpdateGunReloadLogic() {
         default: return;
     }
 
-    if (weaponState->awaitingMagReload && viewWeapon->AnimationIsPastFrameNumber("MainLayer", frameNumber)) {
+    if (weaponState->awaitingMagReload && IsViewWeaponAnimationPastFrameNumber(frameNumber)) {
         int ammoToGive = std::min(weaponInfo->magSize - weaponState->ammoInMag, ammoState->ammoOnHand);
         weaponState->ammoInMag += ammoToGive;
         ammoState->ammoOnHand -= ammoToGive;
@@ -142,16 +167,14 @@ void Player::UpdateADSLogic(float deltaTime) {
 }
 
 void Player::EnterADS() {
-    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
     WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
-    viewWeapon->PlayAnimation("MainLayer", weaponInfo->animationNames.adsIn, weaponInfo->animationSpeeds.adsIn);
+    PlayViewWeaponAnimation(Bible::AnimationSlot::ADS_IN, weaponInfo->animationSpeeds.adsIn);
     m_weaponAction = ADS_IN;
 }
 
 void Player::LeaveADS() {
-    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
     WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
-    viewWeapon->PlayAnimation("MainLayer", weaponInfo->animationNames.adsOut, weaponInfo->animationSpeeds.adsOut);
+    PlayViewWeaponAnimation(Bible::AnimationSlot::ADS_OUT, weaponInfo->animationSpeeds.adsOut);
     m_weaponAction = ADS_OUT;
 }
 
@@ -168,7 +191,6 @@ bool Player::CanReloadGun() {
 }
 
 bool Player::CanFireGun() {
-    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
     WeaponState* weaponState = GetCurrentWeaponState();
     WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
 
@@ -182,11 +204,11 @@ bool Player::CanFireGun() {
         return (
             weaponAction == IDLE              ||
             weaponAction == ADS_IDLE          ||
-            weaponAction == ADS_FIRE          && viewWeapon->AnimationIsPastFrameNumber("MainLayer", weaponInfo->animationCancelFrames.adsFire) ||
-            weaponAction == DRAWING           && viewWeapon->AnimationIsPastFrameNumber("MainLayer", weaponInfo->animationCancelFrames.draw) ||
-            weaponAction == FIRE              && viewWeapon->AnimationIsPastFrameNumber("MainLayer", weaponInfo->animationCancelFrames.fire) ||
-            weaponAction == RELOAD            && viewWeapon->AnimationIsPastFrameNumber("MainLayer", weaponInfo->animationCancelFrames.reload) ||
-            weaponAction == RELOAD_FROM_EMPTY && viewWeapon->AnimationIsPastFrameNumber("MainLayer", weaponInfo->animationCancelFrames.reloadFromEmpty));
+            weaponAction == ADS_FIRE          && IsViewWeaponAnimationPastFrameNumber(weaponInfo->animationCancelFrames.adsFire) ||
+            weaponAction == DRAWING           && IsViewWeaponAnimationPastFrameNumber(weaponInfo->animationCancelFrames.draw) ||
+            weaponAction == FIRE              && IsViewWeaponAnimationPastFrameNumber(weaponInfo->animationCancelFrames.fire) ||
+            weaponAction == RELOAD            && IsViewWeaponAnimationPastFrameNumber(weaponInfo->animationCancelFrames.reload) ||
+            weaponAction == RELOAD_FROM_EMPTY && IsViewWeaponAnimationPastFrameNumber(weaponInfo->animationCancelFrames.reloadFromEmpty));
     }
     else {
         //std::cout << "Cannot fire gun\n";
@@ -195,7 +217,6 @@ bool Player::CanFireGun() {
 }
 
 bool Player::CanEnterADS() {
-    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
     WeaponState* weaponState = GetCurrentWeaponState();
     WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
 
@@ -204,9 +225,9 @@ bool Player::CanEnterADS() {
     return (
         (m_weaponAction != RELOAD && m_weaponAction != RELOAD_FROM_EMPTY && !IsInADS()) ||
 
-        (m_weaponAction == RELOAD && viewWeapon->AnimationIsPastFrameNumber("MainLayer", weaponInfo->animationCancelFrames.reload)) ||
+        (m_weaponAction == RELOAD && IsViewWeaponAnimationPastFrameNumber(weaponInfo->animationCancelFrames.reload)) ||
 
-        (m_weaponAction == RELOAD_FROM_EMPTY && viewWeapon->AnimationIsPastFrameNumber("MainLayer", weaponInfo->animationCancelFrames.reloadFromEmpty)));
+        (m_weaponAction == RELOAD_FROM_EMPTY && IsViewWeaponAnimationPastFrameNumber(weaponInfo->animationCancelFrames.reloadFromEmpty)));
 }
 
 bool Player::CanLeaveADS() {
@@ -221,12 +242,12 @@ bool Player::IsInADS() {
 }
 
 glm::mat4 Player::GetViewWeaponBoneWorldMatrix(const std::string& boneName) {
-    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
+    SkinnedGameObject* viewWeapon = GetViewWeaponSkinnedGameObject();
     if (!viewWeapon) {
         return glm::mat4(1.0f);
     }
 
-    glm::mat4 worldMatrix = viewWeapon->GetBoneWorldMatrix(boneName);
+    glm::mat4 worldMatrix = viewWeapon->GetNodeWorldMatrix(boneName);
 
     return worldMatrix;
 }

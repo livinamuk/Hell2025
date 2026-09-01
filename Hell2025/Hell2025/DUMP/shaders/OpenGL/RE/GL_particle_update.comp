@@ -1,0 +1,49 @@
+#version 460
+#include "../../common/OpenGL/GL_binding_indices.glsl"
+#include "../../common/types.glsl"
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+struct DrawArraysCommand {
+    uint count;
+    uint instanceCount;
+    uint firstVertex;
+    uint baseInstance;
+};
+
+restrict layout(std430, binding = SSBO_IDX_PARTICLE_UPDATE_POOL) buffer Buffer6 { Particle particlePool[]; };
+restrict layout(std430, binding = SSBO_IDX_PARTICLE_UPDATE_ACTIVE_INDICES) buffer Buffer7 { uint particleActiveIndices[]; };
+restrict layout(std430, binding = SSBO_IDX_PARTICLE_UPDATE_INDIRECT_COMMAND) buffer Buffer8 { DrawArraysCommand command; };
+
+const uint MAX_GPU_PARTICLES = 12000u;
+
+uniform float u_deltaTime;
+
+void main() {
+    uint particleIndex = gl_GlobalInvocationID.x;
+
+    if (particleIndex >= MAX_GPU_PARTICLES) {
+        return;
+    }
+    
+    if (particlePool[particleIndex].exists == 0u) {
+        return;
+    }
+    
+    // Remove if lifetime exceeds some value
+    if (particlePool[particleIndex].lifeTime > 0.5) {
+        particlePool[particleIndex].exists = 0u;
+        return;
+    }
+    
+    // Step physics
+    particlePool[particleIndex].lifeTime += u_deltaTime * 1.25;
+    particlePool[particleIndex].velocity *= 0.99;
+    particlePool[particleIndex].rotationalVelocity *= 0.999;
+    particlePool[particleIndex].position += particlePool[particleIndex].velocity * u_deltaTime;
+    particlePool[particleIndex].rotation += particlePool[particleIndex].rotationalVelocity * u_deltaTime;
+    
+    // Add this particles index to the active indices list
+    uint activeParticleIndex = atomicAdd(command.instanceCount, 1u);
+    particleActiveIndices[activeParticleIndex] = particleIndex;
+}

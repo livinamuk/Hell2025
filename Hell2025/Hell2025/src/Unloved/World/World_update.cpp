@@ -7,7 +7,7 @@
 #include "Unloved/Characters/Enemies/Kangaroo/Kangaroo.h"
 #include "Unloved/Characters/Enemies/Shark/Shark.h"
 #include "Unloved/Characters/Mermaids/Mermaid/Mermaid.h"
-#include "Unloved/Editor/Editor.h"
+#include "Unloved/EditorSession/EditorSession.h"
 #include "Unloved/Objects/Effects/Decal.h"
 #include "Unloved/Objects/Exterior/Fence.h"
 #include "Unloved/Objects/Exterior/Jetty.h"
@@ -24,55 +24,45 @@
 #include "Unloved/Objects/Props/Christmas/ChristmasLights.h"
 #include "Unloved/Objects/Props/Christmas/ChristmasTree.h"
 #include "Unloved/Objects/Props/GameObject.h"
+#include "Unloved/Objects/Props/GenericAnimatedObject.h"
 #include "Unloved/Objects/Props/GenericObject.h"
 #include "Unloved/Objects/Props/PickUp.h"
-#include "Unloved/Objects/Renderables/AnimatedGameObject.h"
+#include "Unloved/Objects/Renderables/SkinnedGameObject.h"
 #include "Unloved/Objects/Traversal/Ladder.h"
 #include "Unloved/Objects/Traversal/Staircase.h"
-#include "Unloved/UI/Imgui/ImguiBackEnd.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/DDGI/DDGIManager.h"
 #include "Unloved/Systems/P90Mag/P90MagManager.h"
 #include "Unloved/Systems/WorldBVH/WorldBVH.h"
+#include "Unloved/Systems/CoarseWorldBVH/CoarseWorldBVH.h"
 
 #include "Legacy/World/LegacyWorld.h"
 
-#include <algorithm>
-#include <execution>
-
 namespace Unloved::World {
     namespace {
-        void UpdateAnimatedObjects(float deltaTime) {
-            ProfilerCPUZone("Animated objects");
+        void UpdateSkinnedGameObjects() {
+            ProfilerCPUZone("Skinned game objects");
 
-            Hell::SlotMap<AnimatedGameObject>& animatedObjects = GetAnimatedGameObjects();
+            Hell::SlotMap<SkinnedGameObject>& skinnedGameObjects = GetSkinnedGameObjects();
 
-            std::for_each(
-                std::execution::par,
-                animatedObjects.begin(),
-                animatedObjects.end(),
-                [deltaTime](AnimatedGameObject& object) {
-                    object.EvaluateAnimation(deltaTime);
-                });
-
-            for (AnimatedGameObject& object : animatedObjects) {
+            for (SkinnedGameObject& object : skinnedGameObjects) {
                 object.FinalizeAnimation();
             }
         }
 
         void UpdatePropsAndTraversal(float deltaTime) {
-            for (GameObject& object : GetGameObjects())       object.Update(deltaTime);
-            for (GenericObject& object : GetGenericObjects()) object.Update(deltaTime);
-            for (Ladder& object : GetLadders())               object.Update(deltaTime);
-            for (Mermaid& object : GetMermaids())             object.Update(deltaTime);
-            for (Piano& object : GetPianos())                 object.Update(deltaTime);
-            for (PickUp& object : GetPickUps())               object.Update(deltaTime);
-            for (PictureFrame& object : GetPictureFrames())   object.Update();
-            for (PowerPoleSet& object : GetPowerPoleSets())   object.Update();
-            for (Road& object : LegacyWorld::GetRoads())      object.Update();
-            for (Staircase& object : GetStaircases())         object.Update(deltaTime);
-            for (TrimSet& object : GetTrimSets())             object.Update();
-            for (Window& object : GetWindows())               object.Update(deltaTime);
+            for (GameObject& object : GetGameObjects())                       object.Update(deltaTime);
+            for (GenericObject& object : GetGenericObjects())                 object.Update(deltaTime);
+            for (Ladder& object : GetLadders())                               object.Update(deltaTime);
+            for (Mermaid& object : GetMermaids())                             object.Update(deltaTime);
+            for (Piano& object : GetPianos())                                 object.Update(deltaTime);
+            for (PickUp& object : GetPickUps())                               object.Update(deltaTime);
+            for (PictureFrame& object : GetPictureFrames())                   object.Update();
+            for (PowerPoleSet& object : GetPowerPoleSets())                   object.Update();
+            for (Road& object : LegacyWorld::GetRoads())                      object.Update();
+            for (Staircase& object : GetStaircases())                         object.Update(deltaTime);
+            for (TrimSet& object : GetTrimSets())                             object.Update();
+            for (Window& object : GetWindows())                               object.Update(deltaTime);
         }
 
         void UpdateEnemyObjects(float deltaTime) {
@@ -93,6 +83,7 @@ namespace Unloved::World {
 
     void UpdateBvhs() {
         Unloved::WorldBVH::UpdateBvhs();
+        Unloved::CoarseWorldBVH::Update();
     }
 
     void UpdateEnemyMovement() {
@@ -108,7 +99,7 @@ namespace Unloved::World {
 
         const float deltaTime = Hell::Time::DeltaTime();
 
-        UpdateAnimatedObjects(deltaTime);
+        UpdateSkinnedGameObjects();
         for (BulletCasing& object : GetBulletCasings())           object.Update(deltaTime);
         for (ChristmasLightSet& object : GetChristmasLightSets()) object.Update(deltaTime);
         for (ChristmasTree& object : GetChristmasTrees())         object.Update(deltaTime);
@@ -125,7 +116,7 @@ namespace Unloved::World {
         ProfilerCPUZoneFunction();
 
         const float deltaTime = Hell::Time::DeltaTime();
-        const bool disableControl = Editor::IsOpen() || ImGuiBackEnd::OwnsMouse();
+        const bool disableControl = EditorSession::IsActive();
 
         for (uint64_t playerId : Session::GetLocalPlayerIds()) {
             Unloved::Player* player = Session::GetPlayerById(playerId);

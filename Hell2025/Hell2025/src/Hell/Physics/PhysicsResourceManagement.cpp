@@ -222,18 +222,33 @@ namespace Hell::Physics {
         return it != g_ragdolls.end() ? &it->second : nullptr;
     }
 
-    uint64_t SpawnRagdoll(const glm::vec3& position, const glm::vec3& eulerRotation, const std::string& ragdollName, uint64_t parentObjectId, PhysicsFilterData filterData) {
-        if (!Hell::ResourceManager::GetRagdollDataByName(ragdollName)) {
-            Logging::Error() << "Physics::SpawnRagdoll() failed to find ragdoll data named '" << ragdollName << "'";
+    uint64_t SpawnRagdoll(const glm::vec3& position, const glm::vec3& eulerRotation, const std::string& ragdollName, uint64_t parentObjectId) {
+        const RagdollAsset* asset = Hell::ResourceManager::GetRagdollAssetByName(ragdollName);
+        if (!asset) return 0;
+        return SpawnRagdoll(position, eulerRotation, *asset, parentObjectId);
+    }
+
+    uint64_t SpawnRagdoll(const glm::vec3& position, const glm::vec3& eulerRotation, const RagdollAsset& asset, uint64_t parentObjectId) {
+        if (asset.markers.empty()) {
+            Logging::Error() << "Physics::SpawnRagdoll() failed because ragdoll '" << asset.name << "' has no markers";
             return 0;
         }
 
-        uint64_t ragdollId = Hell::Physics::CreatePhysicsId(Hell::Physics::PhysicsObjectType::RAGDOLL);
-
+        const uint64_t ragdollId = Hell::Physics::CreatePhysicsId(Hell::Physics::PhysicsObjectType::RAGDOLL);
         Ragdoll& ragdoll = g_ragdolls[ragdollId] = Ragdoll();
-        ragdoll.Init(position, eulerRotation, ragdollName, ragdollId, parentObjectId, filterData);
-        Logging::Debug() << "Created ragdoll '" << ragdollName << "' at " << position << " with id '" << ragdollId << "'";
 
+        PhysicsFilterData filterData;
+        filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
+        filterData.collisionGroup = CollisionGroup::RAGDOLL_ENEMY;
+        filterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE | CHARACTER_CONTROLLER | RAGDOLL_ENEMY);
+
+        if (!ragdoll.Init(position, eulerRotation, asset, ragdollId, parentObjectId, filterData)) {
+            g_ragdolls.erase(ragdollId);
+            Logging::Error() << "Physics::SpawnRagdoll() failed to create native ragdoll '" << asset.name << "'";
+            return 0;
+        }
+
+        Logging::Debug() << "Created native ragdoll '" << asset.name << "' at " << position << " with id '" << ragdollId << "'";
         return ragdollId;
     }
 
@@ -344,35 +359,57 @@ namespace Hell::Physics {
     }
 
     PxShape* CreateConvexShapeFromVertexList(std::span<Vertex>& vertices) {
+        std::vector<glm::vec3> positions;
+        positions.reserve(vertices.size());
+        for (const Vertex& vertex : vertices) {
+            positions.push_back(vertex.position);
+        }
+        return CreateConvexShapeFromVertexList(positions);
+    }
+
+    PxShape* CreateConvexShapeFromVertexList(
+        std::span<const glm::vec3> vertices,
+        glm::vec3 scale,
+        PxMaterial* material
+    ) {
         PxPhysics* pxPhysics = GetPxPhysics();
-        PxMaterial* defaultMaterial = GetDefaultMaterial();
+        if (!pxPhysics || vertices.size() < 4) return nullptr;
+
+        if (!material) material = GetDefaultMaterial();
+        if (!material) return nullptr;
 
         std::vector<PxVec3> pxVertices;
-        for (Vertex& vertex : vertices) {
-            pxVertices.push_back(Hell::Physics::GlmVec3toPxVec3(vertex.position));
+        pxVertices.reserve(vertices.size());
+        for (const glm::vec3& vertex : vertices) {
+            pxVertices.emplace_back(vertex.x, vertex.y, vertex.z);
         }
 
-        PxConvexMeshDesc convexDesc;
-        convexDesc.points.count = pxVertices.size();
+        PxConvexMeshDesc convexDesc{};
+        convexDesc.points.count = static_cast<PxU32>(pxVertices.size());
         convexDesc.points.stride = sizeof(PxVec3);
         convexDesc.points.data = pxVertices.data();
-        convexDesc.flags = PxConvexFlag::eSHIFT_VERTICES | PxConvexFlag::eCOMPUTE_CONVEX;
-        //  s
-        PxTolerancesScale scale;
-        PxCookingParams params(scale);
+        convexDesc.vertexLimit = 255;
+        convexDesc.flags = PxConvexFlag::eCOMPUTE_CONVEX | PxConvexFlag::eSHIFT_VERTICES;
+        if (!convexDesc.isValid()) return nullptr;
 
-        PxDefaultMemoryOutputStream buf;
-        PxConvexMeshCookingResult::Enum result;
-        if (!PxCookConvexMesh(params, convexDesc, buf, &result)) {
-            std::cout << "some convex mesh shit failed\n";
-            return 0;
+        PxCookingParams cookingParams(pxPhysics->getTolerancesScale());
+        PxDefaultMemoryOutputStream cookedData;
+        PxConvexMeshCookingResult::Enum cookingResult;
+        if (!PxCookConvexMesh(cookingParams, convexDesc, cookedData, &cookingResult)) {
+            return nullptr;
         }
-        PxDefaultMemoryInputData input(buf.getData(), buf.getSize());
-        PxConvexMesh* convexMesh = pxPhysics->createConvexMesh(input);
-        PxConvexMeshGeometryFlags flags(~PxConvexMeshGeometryFlag::eTIGHT_BOUNDS);
-        PxConvexMeshGeometry geometry(convexMesh, PxMeshScale(PxVec3(1.0f)), flags);
 
-        PxShape* pxShape = pxPhysics->createShape(geometry, *defaultMaterial);
+        PxDefaultMemoryInputData cookedInput(cookedData.getData(), cookedData.getSize());
+        PxConvexMesh* convexMesh = pxPhysics->createConvexMesh(cookedInput);
+        if (!convexMesh) return nullptr;
+
+        const PxMeshScale meshScale(PxVec3(scale.x, scale.y, scale.z));
+        const PxConvexMeshGeometry geometry(convexMesh, meshScale);
+        PxShape* pxShape = geometry.isValid()
+            ? pxPhysics->createShape(geometry, *material, true)
+            : nullptr;
+
+        convexMesh->release();
         return pxShape;
     }
 
@@ -450,7 +487,7 @@ namespace Hell::Physics {
         desc->contactOffset = 0.001;
         desc->scaleCoeff = .99f;
         desc->reportCallback = &Hell::Physics::GetCharacterControllerHitCallback();
-        desc->slopeLimit = cosf(glm::radians(85.0f));
+        desc->slopeLimit = cosf(glm::radians(80.0f));
 
         PxController* pxController = Hell::Physics::GetCharacterControllerManager()->createController(*desc);
 

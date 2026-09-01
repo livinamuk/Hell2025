@@ -1,0 +1,24 @@
+#version 450
+#extension GL_ARB_bindless_texture : enable
+
+#include "../../common/types.glsl"
+
+layout(local_size_x = 128) in;
+
+layout(std430, binding = 0) readonly restrict buffer textureSamplersBuffer       { uvec2 textureSamplers[]; };
+layout(std430, binding = 1) readonly restrict buffer PointCloudTextureInfoBuffer { CloudPointTextureInfo textureInfo[]; };
+layout(std430, binding = 2) restrict buffer PointCloudBuffer                     { CloudPoint points[]; };
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx >= points.length() || idx >= textureInfo.length()) return;
+    
+    float targetRes = 16.0;
+    int baseColorIndex = textureInfo[idx].baseColorIndex;
+    vec2 uv = vec2(textureInfo[idx].u, textureInfo[idx].v);
+    vec2 texSize = vec2(textureSize(sampler2D(textureSamplers[baseColorIndex]), 0));
+    float mipLevel = log2(max(texSize.x, texSize.y) / targetRes);
+    vec4 baseColor = textureLod(sampler2D(textureSamplers[baseColorIndex]), uv, mipLevel);
+
+    points[idx].baseColor = baseColor;
+}

@@ -36,7 +36,7 @@ namespace Unloved::ShadowMapManager {
     bool HasHiResShadowMap(uint64_t lightId);
     bool HasLowResShadowMap(uint64_t lightId);
     void AddUniqueShadowMap(std::vector<ShadowMapInfo>& shadowMaps, const ShadowMapInfo& shadowMapInfo);
-    void InvalidateShadowMap(const ShadowMapInfo& shadowMapInfo, bool staticGeometryDirty, std::vector<ShadowMapInfo>& staticDirtyShadowMaps, std::vector<ShadowMapInfo>& compositeDirtyShadowMaps);
+    void InvalidateShadowMap(const ShadowMapInfo& shadowMapInfo, bool staticGeometryDirty, std::vector<ShadowMapInfo>& staticDirtyShadowMaps, std::vector<ShadowMapInfo>& compositeDirtyShadowMaps, uint8_t faceMask = 0x3f);
 
     void BeginFrame() {
         g_staticDirtyHiResShadowMaps.clear();
@@ -147,14 +147,14 @@ namespace Unloved::ShadowMapManager {
         for (uint64_t lightId : DirtyTracker::GetStaticDirtyLightIds()) {
             for (const ShadowMapInfo& shadowMapInfo : g_hiResShadowMaps) {
                 if (shadowMapInfo.lightId == lightId) {
-                    InvalidateShadowMap(shadowMapInfo, true, g_staticDirtyHiResShadowMaps, g_compositeDirtyHiResShadowMaps);
+                    InvalidateShadowMap(shadowMapInfo, true, g_staticDirtyHiResShadowMaps, g_compositeDirtyHiResShadowMaps, DirtyTracker::GetStaticDirtyLightFaceMask(lightId));
                     break;
                 }
             }
 
             for (const ShadowMapInfo& shadowMapInfo : g_lowResShadowMaps) {
                 if (shadowMapInfo.lightId == lightId) {
-                    InvalidateShadowMap(shadowMapInfo, true, g_staticDirtyLowResShadowMaps, g_compositeDirtyLowResShadowMaps);
+                    InvalidateShadowMap(shadowMapInfo, true, g_staticDirtyLowResShadowMaps, g_compositeDirtyLowResShadowMaps, DirtyTracker::GetStaticDirtyLightFaceMask(lightId));
                     break;
                 }
             }
@@ -163,14 +163,14 @@ namespace Unloved::ShadowMapManager {
         for (uint64_t lightId : DirtyTracker::GetCompositeDirtyLightIds()) {
             for (const ShadowMapInfo& shadowMapInfo : g_hiResShadowMaps) {
                 if (shadowMapInfo.lightId == lightId) {
-                    InvalidateShadowMap(shadowMapInfo, false, g_staticDirtyHiResShadowMaps, g_compositeDirtyHiResShadowMaps);
+                    InvalidateShadowMap(shadowMapInfo, false, g_staticDirtyHiResShadowMaps, g_compositeDirtyHiResShadowMaps, DirtyTracker::GetCompositeDirtyLightFaceMask(lightId));
                     break;
                 }
             }
 
             for (const ShadowMapInfo& shadowMapInfo : g_lowResShadowMaps) {
                 if (shadowMapInfo.lightId == lightId) {
-                    InvalidateShadowMap(shadowMapInfo, false, g_staticDirtyLowResShadowMaps, g_compositeDirtyLowResShadowMaps);
+                    InvalidateShadowMap(shadowMapInfo, false, g_staticDirtyLowResShadowMaps, g_compositeDirtyLowResShadowMaps, DirtyTracker::GetCompositeDirtyLightFaceMask(lightId));
                     break;
                 }
             }
@@ -178,8 +178,9 @@ namespace Unloved::ShadowMapManager {
     }
 
     void AddUniqueShadowMap(std::vector<ShadowMapInfo>& shadowMaps, const ShadowMapInfo& shadowMapInfo) {
-        for (const ShadowMapInfo& existing : shadowMaps) {
+        for (ShadowMapInfo& existing : shadowMaps) {
             if (existing.lightId == shadowMapInfo.lightId) {
+                existing.faceMask |= shadowMapInfo.faceMask;
                 return;
             }
         }
@@ -187,13 +188,17 @@ namespace Unloved::ShadowMapManager {
         shadowMaps.push_back(shadowMapInfo);
     }
 
-    void InvalidateShadowMap(const ShadowMapInfo& shadowMapInfo, bool staticGeometryDirty, std::vector<ShadowMapInfo>& staticDirtyShadowMaps, std::vector<ShadowMapInfo>& compositeDirtyShadowMaps) {
+    void InvalidateShadowMap(const ShadowMapInfo& shadowMapInfo, bool staticGeometryDirty, std::vector<ShadowMapInfo>& staticDirtyShadowMaps, std::vector<ShadowMapInfo>& compositeDirtyShadowMaps, uint8_t faceMask) {
+        ShadowMapInfo invalidatedShadowMap = shadowMapInfo;
+        invalidatedShadowMap.faceMask = faceMask & uint8_t(0x3f);
+        if (invalidatedShadowMap.faceMask == 0) return;
+
         // Static invalidation always requires a new composite. Uncached mode suppresses only the separate static work.
         if (g_staticCacheEnabled && staticGeometryDirty) {
-            AddUniqueShadowMap(staticDirtyShadowMaps, shadowMapInfo);
+            AddUniqueShadowMap(staticDirtyShadowMaps, invalidatedShadowMap);
         }
 
-        AddUniqueShadowMap(compositeDirtyShadowMaps, shadowMapInfo);
+        AddUniqueShadowMap(compositeDirtyShadowMaps, invalidatedShadowMap);
     }
 
     void InvalidateAllShadowMaps() {

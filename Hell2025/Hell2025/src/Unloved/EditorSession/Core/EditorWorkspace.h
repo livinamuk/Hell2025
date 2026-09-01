@@ -10,8 +10,16 @@ namespace Unloved::EditorSession::Workspace {
     bool Open(EditorSessionMode mode);
     bool OpenHouse(const std::string& name);
     bool OpenMap(const std::string& name);
+    bool OpenBoneMask(const std::string& path, std::string& error);
+    bool OpenRagdoll(const std::string& path, std::string& error);
+    bool ImportRagdoll(const std::string& path, std::string& error);
+    bool SaveBoneMask(std::string& error);
+    bool SaveRagdoll(std::string& error);
+    bool SaveRagdollAs(const std::string& name, std::string& error);
     bool NewHouse(const std::string& name);
     bool NewMap(const std::string& name);
+    bool NewBoneMask(const std::string& name, std::string& error);
+    bool NewRagdoll(const std::string& name, std::string& error);
     void Close();
     void Save();
     void Discard();
@@ -20,6 +28,7 @@ namespace Unloved::EditorSession::Workspace {
     bool ResetHeightMap();
 
     bool HasMode();
+    bool IsWorldBacked();
     EditorSessionMode GetMode();
     const std::string& GetName();
     bool NameExists(EditorSessionMode mode, const std::string& name);

@@ -1,0 +1,74 @@
+#version 460
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+layout(local_size_x = 16, local_size_y = 4, local_size_z = 1) in;
+
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
+
+layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
+layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2D storageImagesRGBA16F[];
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsEmissiveBloomComposite data;
+} pc;
+
+const float BLOOM_STRENGTH = 0.6;
+const float OUTER_WEIGHT = 0.095766798098283;
+const float OUTER_OFFSET = 3.29793480799148;
+const float INNER_WEIGHT = 0.303053194596644;
+const float INNER_OFFSET = 1.40919987708521;
+const float CENTER_WEIGHT = 0.202360014610147;
+
+vec3 SampleEmissive(vec2 pixel) {
+    vec2 firstPixelCenter = vec2(pc.data.viewportOffset) + vec2(0.5);
+    vec2 lastPixelCenter = vec2(pc.data.viewportOffset + pc.data.viewportExtent) - vec2(0.5);
+    vec2 clampedPixel = clamp(pixel, firstPixelCenter, lastPixelCenter);
+    vec2 emissiveTextureExtent = vec2(textureSize(sampler2D(textures[VULKAN_TEXTURE_IDX_EMISSIVE], samplers[VULKAN_SAMPLER_IDX_LINEAR]), 0));
+    return textureLod(sampler2D(textures[VULKAN_TEXTURE_IDX_EMISSIVE], samplers[VULKAN_SAMPLER_IDX_LINEAR]), clampedPixel / emissiveTextureExtent, 0.0).rgb;
+}
+
+vec3 SampleNarrowBloom(ivec2 localPixel) {
+    vec2 center = vec2(pc.data.viewportOffset + localPixel) + vec2(0.5);
+    vec2 sampleStep = vec2(0.0, 1.0);
+
+    vec3 result = SampleEmissive(center) * CENTER_WEIGHT;
+    result += SampleEmissive(center - sampleStep * INNER_OFFSET) * INNER_WEIGHT;
+    result += SampleEmissive(center + sampleStep * INNER_OFFSET) * INNER_WEIGHT;
+    result += SampleEmissive(center - sampleStep * OUTER_OFFSET) * OUTER_WEIGHT;
+    result += SampleEmissive(center + sampleStep * OUTER_OFFSET) * OUTER_WEIGHT;
+    return result;
+}
+
+vec3 SampleBloomMip(vec2 viewportUv, int mip) {
+    vec2 activeExtent = vec2(pc.data.bloomExtents[mip]);
+    vec2 allocatedExtent = vec2(textureSize(sampler2D(textures[VULKAN_TEXTURE_IDX_EMISSIVE_BLOOM_B], samplers[VULKAN_SAMPLER_IDX_LINEAR]), mip));
+    vec2 pixel = clamp(viewportUv * activeExtent, vec2(0.5), activeExtent - vec2(0.5));
+    return textureLod(sampler2D(textures[VULKAN_TEXTURE_IDX_EMISSIVE_BLOOM_B], samplers[VULKAN_SAMPLER_IDX_LINEAR]), pixel / allocatedExtent, float(mip)).rgb;
+}
+
+void main() {
+    ivec2 localPixel = ivec2(gl_GlobalInvocationID.xy);
+    if (any(greaterThanEqual(localPixel, pc.data.viewportExtent))) {
+        return;
+    }
+
+    vec2 viewportUv = (vec2(localPixel) + vec2(0.5)) / vec2(pc.data.viewportExtent);
+    vec3 bloom2 = SampleBloomMip(viewportUv, 2);
+    if (all(equal(bloom2, vec3(0.0)))) {
+        return;
+    }
+
+    vec3 bloom = SampleNarrowBloom(localPixel);
+    bloom += SampleBloomMip(viewportUv, 0);
+    bloom += SampleBloomMip(viewportUv, 1);
+    bloom += bloom2;
+
+    ivec2 outputPixel = pc.data.viewportOffset + localPixel;
+    vec4 outputColor = imageLoad(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], outputPixel);
+    outputColor.rgb += bloom * BLOOM_STRENGTH;
+    imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], outputPixel, outputColor);
+}

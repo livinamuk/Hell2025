@@ -1,0 +1,75 @@
+#version 460
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+#include "../common/ddgi.glsl"
+#include "../common/normal_encoding.glsl"
+#include "../common/reconstruction.glsl"
+#include "../common/util.glsl"
+#include "../common/viewport.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
+layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsDDGIProbeRelevance data;
+} pc;
+
+layout(buffer_reference, scalar) buffer ProbeStatesBuffer { ProbeState probeStates[]; };
+
+DDGIVolume GetVolume() {
+    DDGIVolume volume;
+    volume.origin = pc.data.volumeOrigin;
+    volume.probeSpacing = pc.data.probeSpacing;
+    volume.probeCounts = pc.data.probeCounts;
+    volume.totalProbes = int(pc.data.totalProbes);
+    volume.probeOffset = pc.data.probeOffset;
+    return volume;
+}
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy) * 4;
+    ivec2 gBufferSize = textureSize(sampler2D(textures[VULKAN_TEXTURE_IDX_NORMAL_XY_ROUGHNESS_MISC], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
+
+    if (pixelCoords.x >= gBufferSize.x || pixelCoords.y >= gBufferSize.y) return;
+
+    RendererData rendererData = pc.data.frame.rendererDataBuffer.rendererData;
+    ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
+    uint viewportIndex = ViewportIndexFromPixel(pixelCoords, gBufferSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataBuffer.viewportData[viewportIndex].xOffset, viewportDataBuffer.viewportData[viewportIndex].yOffset, viewportDataBuffer.viewportData[viewportIndex].width, viewportDataBuffer.viewportData[viewportIndex].height);
+    mat4 inverseProjectionView = viewportDataBuffer.viewportData[viewportIndex].inverseProjectionViewReverseZ;
+    vec3 viewPosition = viewportDataBuffer.viewportData[viewportIndex].viewPos.xyz;
+
+    vec4 normalXYRoughnessMisc = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_NORMAL_XY_ROUGHNESS_MISC], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixelCoords, 0);
+    vec3 fragNormal = DecodeOct(normalXYRoughnessMisc.rg);
+    if (dot(fragNormal, fragNormal) < 0.0001) return;
+
+    float depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixelCoords, 0).r;
+    vec2 viewportUV = ViewportUVFromPixel(pixelCoords, gBufferSize, viewportRect);
+    vec3 fragPosition = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
+    vec3 surfaceBias = DDGIGetSurfaceBias(fragPosition, fragNormal, viewPosition);
+    vec3 biasedWorldPosition = fragPosition + surfaceBias;
+
+    DDGIVolume volume = GetVolume();
+    ivec3 base = DDGIGetBaseProbeGridCoords(biasedWorldPosition, volume);
+    ivec3 maxCoords = volume.probeCounts - ivec3(2);
+    if (any(lessThan(base, ivec3(0))) || any(greaterThan(base, maxCoords))) return;
+
+    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pc.data.probeStatesDeviceAddress);
+
+    for (int dy = 0; dy <= 1; dy++) {
+        for (int dz = 0; dz <= 1; dz++) {
+            for (int dx = 0; dx <= 1; dx++) {
+                ivec3 probeCoords = base + ivec3(dx, dy, dz);
+                int probeIdx = DDGIGetProbeIndex(probeCoords, volume.probeCounts);
+                probeStates.probeStates[volume.probeOffset + uint(probeIdx)].isRelevant = true;
+            }
+        }
+    }
+}

@@ -1,0 +1,95 @@
+#version 460 core
+#include "../common/OpenGL/GL_binding_indices.glsl"
+#include "../common/types.glsl"
+
+layout(local_size_x = 16, local_size_y = 4, local_size_z = 1) in;
+
+layout(rgba16f, binding = 0) uniform image2D u_outputImage;
+layout(binding = 1) uniform sampler2D u_emissiveTexture;
+layout(binding = 2) uniform sampler2D u_bloomTexture;
+
+uniform ivec2 u_viewportOffset;
+uniform ivec2 u_viewportExtent;
+uniform ivec2 u_bloomExtents[3];
+
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer {
+    RendererData rendererData;
+};
+
+const float BLOOM_STRENGTH = 0.6;
+const float OUTER_WEIGHT = 0.095766798098283;
+const float OUTER_OFFSET = 3.29793480799148;
+const float INNER_WEIGHT = 0.303053194596644;
+const float INNER_OFFSET = 1.40919987708521;
+const float CENTER_WEIGHT = 0.202360014610147;
+
+vec3 SampleEmissive(vec2 pixel) {
+    // Never sample outside this viewport
+    vec2 firstPixelCenter = vec2(u_viewportOffset) + vec2(0.5);
+    vec2 lastPixelCenter = vec2(u_viewportOffset + u_viewportExtent) - vec2(0.5);
+    vec2 clampedPixel = clamp(pixel, firstPixelCenter, lastPixelCenter);
+    return textureLod(u_emissiveTexture, clampedPixel / vec2(textureSize(u_emissiveTexture, 0)), 0.0).rgb;
+}
+
+vec3 SampleNarrowBloom(ivec2 localPixel, vec3 centerEmissive) {
+    vec2 center = vec2(u_viewportOffset + localPixel) + vec2(0.5);
+    vec2 sampleStep = vec2(0.0, 1.0);
+
+    vec3 result = centerEmissive * CENTER_WEIGHT;
+    result += SampleEmissive(center - sampleStep * INNER_OFFSET) * INNER_WEIGHT;
+    result += SampleEmissive(center + sampleStep * INNER_OFFSET) * INNER_WEIGHT;
+    result += SampleEmissive(center - sampleStep * OUTER_OFFSET) * OUTER_WEIGHT;
+    result += SampleEmissive(center + sampleStep * OUTER_OFFSET) * OUTER_WEIGHT;
+    return result;
+}
+
+vec3 SampleBloomMip(vec2 viewportUv, int mip) {
+    // Clamp every mip to its live pixels
+    vec2 activeExtent = vec2(u_bloomExtents[mip]);
+    vec2 allocatedExtent = vec2(textureSize(u_bloomTexture, mip));
+    vec2 pixel = clamp(viewportUv * activeExtent, vec2(0.5), activeExtent - vec2(0.5));
+    return textureLod(u_bloomTexture, pixel / allocatedExtent, float(mip)).rgb;
+}
+
+void main() {
+    ivec2 localPixel = ivec2(gl_GlobalInvocationID.xy);
+    if (any(greaterThanEqual(localPixel, u_viewportExtent))) {
+        return;
+    }
+
+    float emissiveStrength = max(rendererData.emissiveStrength, 0.0);
+    if (emissiveStrength == 0.0) {
+        return;
+    }
+
+    vec2 viewportUv = (vec2(localPixel) + vec2(0.5)) / vec2(u_viewportExtent);
+    ivec2 outputPixel = u_viewportOffset + localPixel;
+    vec3 emissive = texelFetch(u_emissiveTexture, outputPixel, 0).rgb;
+    vec3 directEmissive = emissive * emissiveStrength;
+
+    // Keep the old wide band early out
+    vec3 bloom2 = SampleBloomMip(viewportUv, 2);
+    if (all(equal(directEmissive, vec3(0.0))) && all(equal(bloom2, vec3(0.0)))) {
+        return;
+    }
+
+    vec4 outputColor = imageLoad(u_outputImage, outputPixel);
+    outputColor.rgb += directEmissive;
+
+    if (all(equal(bloom2, vec3(0.0)))) {
+        imageStore(u_outputImage, outputPixel, outputColor);
+        return;
+    }
+
+    // Rebuild the narrow full res band
+    vec3 bloom = SampleNarrowBloom(localPixel, emissive);
+
+    // Add every bloom width
+    bloom += SampleBloomMip(viewportUv, 0);
+    bloom += SampleBloomMip(viewportUv, 1);
+    bloom += bloom2;
+
+    // Add bloom to the same lighting result
+    outputColor.rgb += bloom * BLOOM_STRENGTH * emissiveStrength;
+    imageStore(u_outputImage, outputPixel, outputColor);
+}

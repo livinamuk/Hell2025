@@ -1,0 +1,375 @@
+{
+  "CampaignSpawns": [
+    {
+      "EditorName": "Campaign Spawn",
+      "Position": [
+        1.9617902040481567,
+        1.6499998569488525,
+        0.34174251556396484
+      ],
+      "Rotation": [
+        -0.25200003385543823,
+        1.3919987678527832
+      ]
+    }
+  ],
+  "ChristmasLights": [],
+  "DDGIVolumes": [
+    {
+      "EditorName": "DDGI Volume",
+      "Extents": [
+        12.0,
+        4.0,
+        12.0
+      ],
+      "Origin": [
+        0.0,
+        1.2000000476837158,
+        0.0
+      ],
+      "PointCloudSpacing": 0.4000000059604645,
+      "ProbeSpacing": 0.75,
+      "Rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "SaveToFile": true
+    }
+  ],
+  "DeathmatchSpawns": [],
+  "Dobermanns": [],
+  "Doors": [],
+  "Drawers": [],
+  "Fences": [],
+  "Fireplaces": [],
+  "GenericAnimatedObjects": [],
+  "Jetties": [],
+  "LadderDismounts": [],
+  "Ladders": [],
+  "Lights": [
+    {
+      "Color": [
+        1.0,
+        0.7799999713897705,
+        0.5289999842643738
+      ],
+      "EditorName": "Light",
+      "Forward": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "IESExposure": 1.0,
+      "IESProfileType": "LAMP_0",
+      "Position": [
+        0.0,
+        1.899999976158142,
+        0.6000000238418579
+      ],
+      "Radius": 4.0,
+      "Rotation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "SaveToFile": true,
+      "Strength": 1.0,
+      "Twist": 0.0,
+      "Type": "HANGING_LIGHT"
+    }
+  ],
+  "Mermaids": [],
+  "Pianos": [],
+  "PickUps": [],
+  "PictureFrames": [],
+  "PlanarQuadObjects": [],
+  "Planes": [
+    {
+      "EditorName": "Floor",
+      "Material": "WeatherBoards_Bare",
+      "MetallicFactor": 1.0,
+      "P0": [
+        -5.100000381469727,
+        2.5999999046325684,
+        -5.099999904632568
+      ],
+      "P1": [
+        -5.100000381469727,
+        2.5999999046325684,
+        5.099999904632568
+      ],
+      "P2": [
+        5.100000381469727,
+        2.5999999046325684,
+        5.099999904632568
+      ],
+      "P3": [
+        5.100000381469727,
+        2.5999999046325684,
+        -5.099999904632568
+      ],
+      "RotateTexture90": false,
+      "RoughnessFactor": 1.0,
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": 0.0,
+      "TextureRotation": 0.0,
+      "TextureScale": 0.6000000238418579,
+      "Type": "FLOOR"
+    },
+    {
+      "EditorName": "Ceiling",
+      "Material": "Ceiling2",
+      "MetallicFactor": 1.0,
+      "P0": [
+        5.0,
+        2.4000022411346436,
+        -5.0
+      ],
+      "P1": [
+        5.0,
+        2.4000022411346436,
+        5.0
+      ],
+      "P2": [
+        -5.0,
+        2.400000810623169,
+        5.0
+      ],
+      "P3": [
+        -5.0,
+        2.400000810623169,
+        -5.0
+      ],
+      "RotateTexture90": false,
+      "RoughnessFactor": 1.0,
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": 0.0,
+      "TextureRotation": 0.0,
+      "TextureScale": 1.0,
+      "Type": "CEILING"
+    },
+    {
+      "EditorName": "Floor 2",
+      "Material": "WeatherBoards_Bare",
+      "MetallicFactor": 1.0,
+      "P0": [
+        -5.0,
+        0.0,
+        -5.0
+      ],
+      "P1": [
+        -5.0,
+        0.0,
+        5.0
+      ],
+      "P2": [
+        5.0,
+        0.0,
+        5.0
+      ],
+      "P3": [
+        5.0,
+        0.0,
+        -5.0
+      ],
+      "RotateTexture90": false,
+      "RoughnessFactor": 1.0,
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": 0.0,
+      "TextureRotation": 0.0,
+      "TextureScale": 0.6000000238418579,
+      "Type": "FLOOR"
+    }
+  ],
+  "PointPairObjects": [],
+  "PowerPoleSets": [],
+  "Sharks": [],
+  "Staircases": [],
+  "Trees": [],
+  "Walls": [
+    {
+      "EditorName": "Wall",
+      "Material": "Ceiling2",
+      "MetallicFactor": 1.0,
+      "MiddleTrimHeight": 2.4000000953674316,
+      "RoughnessFactor": 1.0,
+      "SequencePoints": [
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            5.0,
+            0.0,
+            -5.0
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            5.0,
+            0.0,
+            5.0
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            -5.0,
+            0.0,
+            5.0
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            -5.0,
+            0.0,
+            -5.0
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.4000000953674316,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            5.0,
+            0.0,
+            -5.0
+          ]
+        }
+      ],
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": -1.399999976158142,
+      "TextureRotation": 0.0,
+      "TextureScale": 0.4166666567325592,
+      "TrimTypeCeiling": "TIMBER",
+      "TrimTypeFloor": "TIMBER",
+      "UseReversePointOrder": false,
+      "WallType": "INTERIOR",
+      "WeatherBoardEndIndex": 15,
+      "WeatherBoardStartIndex": 0,
+      "WeatherBoardStopMaterial": "WeatherBoards0",
+      "WeatherBoardTextureBoardCount": 16
+    },
+    {
+      "EditorName": "Weather Boards",
+      "Material": "WeatherBoards0",
+      "MetallicFactor": 1.0,
+      "MiddleTrimHeight": 2.4000000953674316,
+      "RoughnessFactor": 1.0,
+      "SequencePoints": [
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.5999999046325684,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            5.099999904632568,
+            -0.10000000149011612,
+            -5.099999904632568
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.5999999046325684,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            -5.099999904632568,
+            -0.10000000149011612,
+            -5.099999904632568
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.5999999046325684,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            -5.099999904632568,
+            -0.10000000149011612,
+            5.099999904632568
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.5999999046325684,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            5.099999904632568,
+            -0.10000000149011612,
+            5.099999904632568
+          ]
+        },
+        {
+          "CustomBool": true,
+          "CustomFloat": 2.5999999046325684,
+          "Normal": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "Position": [
+            5.099999904632568,
+            -0.10000000149011612,
+            -5.099999904632568
+          ]
+        }
+      ],
+      "TextureOffsetU": 0.0,
+      "TextureOffsetV": 0.0,
+      "TextureRotation": 0.0,
+      "TextureScale": 1.0,
+      "TrimTypeCeiling": "TIMBER",
+      "TrimTypeFloor": "TIMBER",
+      "UseReversePointOrder": false,
+      "WallType": "WEATHER_BOARDS",
+      "WeatherBoardEndIndex": 15,
+      "WeatherBoardStartIndex": 0,
+      "WeatherBoardStopMaterial": "WeatherBoards0",
+      "WeatherBoardTextureBoardCount": 16
+    }
+  ],
+  "Windows": []
+}

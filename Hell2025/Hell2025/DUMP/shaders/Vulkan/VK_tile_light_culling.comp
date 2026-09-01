@@ -1,0 +1,82 @@
+#version 460
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+#include "../common/constants.glsl"
+#include "../common/intersect.glsl"
+#include "../common/types.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
+
+layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
+
+shared uint tilelightCount;
+
+shared vec3 worldSpaceMin;
+shared vec3 worldSpaceMax;
+shared float validDepthSampleCount;
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsTileLightCulling data;
+} pc;
+
+void main() {
+    RendererData rendererData = pc.data.frame.rendererDataBuffer.rendererData;
+    TileLightsBuffer tileLights = pc.data.frame.tileLightBuffer;
+    TileWorldBoundsBuffer tileWorldBounds = pc.data.frame.tileWorldBoundsBuffer;
+    LightBuffer lights = pc.data.frame.lightBuffer;
+
+    uint tileIndex = gl_WorkGroupID.y * uint(rendererData.tileCountX) + gl_WorkGroupID.x;
+
+    // Defaults
+	if (gl_LocalInvocationIndex == 0) {
+        // Output defaults
+		tileLights.tileLights[tileIndex].lightCount = 0;
+		tilelightCount = 0;
+
+        // Pull tile world bounds out of the SSBO
+        // And the valid sample count
+        worldSpaceMin = tileWorldBounds.tileWorldBounds[tileIndex].boundsMin.xyz;
+        worldSpaceMax = tileWorldBounds.tileWorldBounds[tileIndex].boundsMax.xyz;
+        validDepthSampleCount = tileWorldBounds.tileWorldBounds[tileIndex].boundsMin.w;
+	}
+	barrier();
+
+    // Light culling
+	if (validDepthSampleCount > 0) {
+		uint invocationCount = gl_WorkGroupSize.x * gl_WorkGroupSize.y;
+		uint loopCount = (rendererData.lightCount + invocationCount - 1u) / invocationCount;
+
+        for (uint i = 0u; i < loopCount; i++) {
+			uint lightIndex = gl_LocalInvocationIndex + i * invocationCount;
+
+            if (lightIndex < rendererData.lightCount) {
+				vec3 lightPos = vec3(lights.lights[lightIndex].posX, lights.lights[lightIndex].posY, lights.lights[lightIndex].posZ);
+				float lightRadius = lights.lights[lightIndex].radius;
+
+                vec3 lightAabbMin = lights.lights[lightIndex].worldBoundsMin.xyz;
+                vec3 lightAabbMax = lights.lights[lightIndex].worldBoundsMax.xyz;
+
+                // First broad reject using your tight light bounds
+                if (AABBsIntersect(worldSpaceMin, worldSpaceMax, lightAabbMin, lightAabbMax) &&
+
+                    // Then reject AABB corner false positives using the actual spherical light radius
+                    SphereVsAABB(worldSpaceMin, worldSpaceMax, lightPos, lightRadius)) {
+                    uint index = atomicAdd(tilelightCount, 1);
+
+                    const uint MAX_LIGHTS_PER_TILE = 127;
+                    if (index < MAX_LIGHTS_PER_TILE) {
+                        tileLights.tileLights[tileIndex].lightIndices[index] = lightIndex;
+                    }
+                }
+			}
+		}
+	}
+	barrier();
+
+	if (gl_LocalInvocationIndex == 0) {
+        tileLights.tileLights[tileIndex].lightCount = min(tilelightCount, 127u);
+	}
+}

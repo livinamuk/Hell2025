@@ -1,0 +1,29 @@
+#version 460 core
+layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+layout(r8, binding = 0) uniform image2D outlineMask;
+layout(r8, binding = 1) uniform image2D outlineResult;
+
+uniform int u_offsetCount;
+uniform ivec2 u_pixelOffset;
+uniform ivec2 u_invocationBounds;
+uniform ivec2 u_offsets[48];
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy) + u_pixelOffset;  
+
+    if(gl_GlobalInvocationID.x >= u_invocationBounds.x || gl_GlobalInvocationID.y >= u_invocationBounds.y) {
+        return;
+    }
+
+    float maskColor = imageLoad(outlineMask, pixelCoords).r;
+
+    if (maskColor == 1) { // Only add to outlineResult when maskColor is 1, preventing a race condition that could result in a 0 value.
+    
+        for (int i = 0; i < u_offsetCount; i++) {
+            ivec2 outputCoords = pixelCoords + u_offsets[i];        
+            float previousResult = imageLoad(outlineResult, outputCoords).r;
+            imageStore(outlineResult, outputCoords, vec4(previousResult + maskColor, 0, 0, 0));
+        }
+    }
+}
+

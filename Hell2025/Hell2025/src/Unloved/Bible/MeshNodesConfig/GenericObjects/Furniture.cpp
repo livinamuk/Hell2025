@@ -1,5 +1,5 @@
 #include "Unloved/Bible/Bible.h"
-namespace Bible {
+namespace Unloved::Bible {
     using namespace Unloved;
 
     void ConfigureMeshNodesCouch(uint64_t id, MeshNodes* meshNodes) {

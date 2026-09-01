@@ -1,0 +1,20 @@
+#version 460 core
+
+layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+layout(rgba16f, binding = 0) uniform image2D outputImage;
+layout(r8, binding = 1) uniform image2D outlineMask;
+layout(r8, binding = 2) uniform image2D outlineResult;
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+
+    vec4 inputColor = imageLoad(outputImage, pixelCoords);
+    float mask      = imageLoad(outlineMask, pixelCoords).r;
+    float outline    = imageLoad(outlineResult, pixelCoords).r;
+
+    if (outline == 1.0 && mask == 0.0) {
+        vec4 outlineColor = vec4(1.0, 0.5, 0.0, 0.0);
+        imageStore(outputImage, pixelCoords, outlineColor);
+    }
+}
+

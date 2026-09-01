@@ -5,16 +5,20 @@
 #include "Unloved/EditorSession/HeightMap/EditorHeightMap.h"
 #include "EditorHierarchy.h"
 #include "Unloved/EditorSession/UI/EditorInputElements.h"
-#include "EditorMapTools.h"
 #include "EditorObjectOptions.h"
 #include "Unloved/EditorSession/Interaction/EditorPointSequences.h"
 #include "Unloved/EditorSession/Interaction/EditorSelection.h"
+#include "Unloved/EditorSession/BoneMask/EditorBoneMask.h"
+#include "Unloved/EditorSession/Ragdoll/EditorRagdoll.h"
 #include "EditorSession.h"
 #include "Unloved/EditorSession/Core/EditorWorkspace.h"
 
 #include "Hell/Common/Enum.h"
+#include "Hell/ResourceManagement/ResourceManager.h"
 
-#include "Unloved/Editor/Gizmo.h"
+#include "Unloved/Bible/Bible.h"
+#include "Unloved/Characters/Mermaids/Mermaid/Mermaid.h"
+#include "Unloved/EditorSession/Gizmo/Gizmo.h"
 #include "Unloved/ObjectId.h"
 #include "Unloved/Objects/Exterior/Jetty.h"
 #include "Unloved/Objects/House/Door.h"
@@ -37,11 +41,20 @@
 #include "Unloved/World/World.h"
 
 #include <algorithm>
+#include <cstdio>
+#include <glm/gtc/quaternion.hpp>
 #include <string>
 #include <vector>
 
 namespace Unloved::EditorSession::Inspector {
     namespace {
+        constexpr const char* NO_SKINNED_MODEL = "None";
+        constexpr const char* NO_RAGDOLL_TEST_OPTION = "None";
+
+        bool AnimationMatchesSkinnedModel(const std::string& animationName, const std::string& skinnedModelName) {
+            return !skinnedModelName.empty() && animationName.starts_with(skinnedModelName);
+        }
+
         void SetEditorName(uint64_t objectId, const std::string& editorName) {
             if (!World::SetEditorNameById(objectId, editorName)) {
                 Dialog::Open("Name '" + editorName + "' Taken");
@@ -86,6 +99,14 @@ namespace Unloved::EditorSession::Inspector {
             player->SetFootPosition(spawnPoint->GetPosition() - glm::vec3(0.0f, 1.6f, 0.0f));
             player->GetCamera().SetEulerRotation(spawnPoint->GetCameraEuler());
             Unloved::EditorSession::Close();
+        }
+
+        void SetMermaidShopViewFromPlayerCamera(Mermaid* mermaid) {
+            Player* player = Session::GetLocalPlayerByViewportIndex(0);
+            if (!player || !mermaid) return;
+
+            mermaid->SetShopTeleportPosition(player->GetCameraPosition());
+            mermaid->SetShopTeleportEuler(player->GetCamera().GetEulerRotation());
         }
 
         void SetWallType(Wall* wall, const std::string& wallType, const std::string& materialName) {
@@ -141,7 +162,10 @@ namespace Unloved::EditorSession::Inspector {
 
         void SetSequencePointPosition(uint64_t objectId, int32_t pointIndex, PointSequences::PointHandleType handleType, const glm::vec3& position) {
             if (PointSequences::SetPointPosition(objectId, pointIndex, handleType, position)) {
-                Gizmo::SetPosition(position);
+                glm::vec3 actualPosition;
+                if (PointSequences::GetPointPosition(objectId, pointIndex, handleType, actualPosition)) {
+                    Gizmo::SetPosition(actualPosition);
+                }
             }
         }
 
@@ -167,7 +191,432 @@ namespace Unloved::EditorSession::Inspector {
             properties.Vec3(objectId, "Rotation", rotation, [objectId, rotation = &rotation] { SetEditorRotation(objectId, *rotation); });
         }
 
+        std::string FormatRagdollVec3(const glm::vec3& value) {
+            char text[96];
+            std::snprintf(text, sizeof(text), "%.3f, %.3f, %.3f", value.x, value.y, value.z);
+            return text;
+        }
+
+        std::string FormatRagdollFloat(float value) {
+            char text[48];
+            std::snprintf(text, sizeof(text), "%.4f", value);
+            return text;
+        }
+
+        void SetSelectedRagdollMassOverride(bool enabled) {
+            std::string error;
+            if (!RagdollEditor::SetSelectedMarkerMassOverrideEnabled(enabled, error) && !error.empty()) Dialog::Open(error);
+        }
+
+        void SetSelectedRagdollMass(float mass) {
+            std::string error;
+            if (!RagdollEditor::SetSelectedMarkerMass(mass, error) && !error.empty()) Dialog::Open(error);
+        }
+
+        void DistributeRagdollMass() {
+            std::string error;
+            if (!RagdollEditor::DistributeMassByVolume(error) && !error.empty()) Dialog::Open(error);
+        }
+
+        void RetargetRagdollMarkersToCurrentBindPose() {
+            std::string error;
+            if (!RagdollEditor::RetargetMarkersToCurrentBindPose(error) && !error.empty()) Dialog::Open(error);
+        }
+
+        void RetargetRagdollMarkersToCurrentBindPosePreserveLimitAxes() {
+            std::string error;
+            if (!RagdollEditor::RetargetMarkersToCurrentBindPosePreserveLimitAxes(error) && !error.empty()) Dialog::Open(error);
+        }
+
+        void RevertRagdollFromDisk() {
+            std::string error;
+            if (!RagdollEditor::RevertFromDisk(error) && !error.empty()) Dialog::Open(error);
+        }
+
+        const char* GetRagdollShapeName(RagdollShapeType type) {
+            switch (type) {
+                case RagdollShapeType::BOX:         return "Box";
+                case RagdollShapeType::SPHERE:      return "Sphere";
+                case RagdollShapeType::CAPSULE:     return "Capsule";
+                case RagdollShapeType::CONVEX_HULL: return "Convex Hull (Imported)";
+            }
+
+            return "Unknown";
+        }
+
+        std::vector<std::string> GetRagdollShapeNames(const RagdollMarkerAsset& marker) {
+            std::vector<std::string> names = {
+                "Box",
+                "Sphere",
+                "Capsule"
+            };
+
+            const bool hasImportedConvexHull = !marker.shape.convexVertices.empty() && !marker.shape.convexIndices.empty();
+            if (marker.shape.type == RagdollShapeType::CONVEX_HULL || hasImportedConvexHull) {
+                names.push_back("Convex Hull (Imported)");
+            }
+
+            return names;
+        }
+
+        void SetSelectedRagdollShape(const std::string& shapeName) {
+            if (shapeName == "Box") {
+                RagdollEditor::SetSelectedMarkerShapeType(RagdollShapeType::BOX);
+            }
+            else if (shapeName == "Sphere") {
+                RagdollEditor::SetSelectedMarkerShapeType(RagdollShapeType::SPHERE);
+            }
+            else if (shapeName == "Capsule") {
+                RagdollEditor::SetSelectedMarkerShapeType(RagdollShapeType::CAPSULE);
+            }
+            else if (shapeName == "Convex Hull (Imported)") {
+                RagdollEditor::SetSelectedMarkerShapeType(RagdollShapeType::CONVEX_HULL);
+            }
+        }
+
+        const RagdollMarkerAsset* GetRagdollMarkerById(RagdollMarkerId markerId) {
+            for (const RagdollMarkerAsset& marker : RagdollEditor::GetAsset().markers) {
+                if (marker.id == markerId) return &marker;
+            }
+
+            return nullptr;
+        }
+
+        std::string GetRagdollMarkerLabel(RagdollMarkerId markerId) {
+            const RagdollMarkerAsset* marker = GetRagdollMarkerById(markerId);
+            if (!marker) return "Marker " + std::to_string(markerId);
+            if (!marker->name.empty()) return marker->name;
+            if (!marker->boneName.empty()) return marker->boneName;
+            return "Marker " + std::to_string(markerId);
+        }
+
+        const RagdollJointAsset* GetRagdollIncomingJoint(RagdollMarkerId markerId) {
+            for (const RagdollJointAsset& joint : RagdollEditor::GetAsset().joints) {
+                if (joint.childMarkerId == markerId) return &joint;
+            }
+
+            return nullptr;
+        }
+
+        std::vector<std::string> GetRagdollParentLabels(const std::vector<RagdollEditor::RagdollParentOption>& options) {
+            std::vector<std::string> labels;
+            labels.reserve(options.size());
+            for (const RagdollEditor::RagdollParentOption& option : options) labels.push_back(option.label);
+            return labels;
+        }
+
+        std::string GetRagdollParentLabel(const std::vector<RagdollEditor::RagdollParentOption>& options, RagdollMarkerId markerId) {
+            for (const RagdollEditor::RagdollParentOption& option : options) {
+                if (option.markerId == markerId) return option.label;
+            }
+            return "None";
+        }
+
+        RagdollMarkerId GetRagdollParentId(const std::vector<RagdollEditor::RagdollParentOption>& options, const std::string& label) {
+            for (const RagdollEditor::RagdollParentOption& option : options) {
+                if (option.label == label) return option.markerId;
+            }
+            return INVALID_RAGDOLL_MARKER_ID;
+        }
+
+        InputElements::AxisLimitValue GetRagdollAxisLimitValue(const RagdollAxisLimit& limit) {
+            InputElements::AxisLimitValue value;
+            value.enabled = limit.motion != RagdollAxisMotion::FREE;
+            value.locked = limit.motion == RagdollAxisMotion::LOCKED;
+            const float halfRange = limit.motion == RagdollAxisMotion::LIMITED ? limit.limit : 0.0f;
+            value.minimumDegrees = glm::degrees(-halfRange);
+            value.maximumDegrees = glm::degrees(halfRange);
+            return value;
+        }
+
+        void SetSelectedRagdollAngularLimit(int32_t axisIndex, const InputElements::AxisLimitValue& value) {
+            if (value.locked) {
+                RagdollEditor::SetSelectedJointAngularLimit(axisIndex, RagdollAxisMotion::LOCKED, 0.0f);
+            }
+            else if (value.enabled) {
+                const float halfRange = glm::radians((value.maximumDegrees - value.minimumDegrees) * 0.5f);
+                RagdollEditor::SetSelectedJointAngularLimit(axisIndex, RagdollAxisMotion::LIMITED, halfRange);
+            }
+            else {
+                RagdollEditor::SetSelectedJointAngularLimit(axisIndex, RagdollAxisMotion::FREE, 0.0f);
+            }
+        }
+
+        std::vector<std::string> GetRagdollTestAnimationNames(const std::string& skinnedModelName) {
+            std::vector<std::string> names;
+            for (const auto& animation : Hell::ResourceManager::GetAnimations()) {
+                if (AnimationMatchesSkinnedModel(animation.first, skinnedModelName)) {
+                    names.push_back(animation.first);
+                }
+            }
+            std::sort(names.begin(), names.end());
+            names.insert(names.begin(), NO_RAGDOLL_TEST_OPTION);
+            return names;
+        }
+
+        std::vector<std::string> GetRagdollSkinnedModelPresetNames() {
+            std::vector<std::string> names = { NO_RAGDOLL_TEST_OPTION };
+            const std::vector<std::string> presetNames = Bible::GetSkinnedModelPresetNames();
+            names.insert(names.end(), presetNames.begin(), presetNames.end());
+            return names;
+        }
+
+        void SetRagdollTestAnimation(const std::string& selectedName) {
+            RagdollEditor::SetTestAnimationName(selectedName == NO_RAGDOLL_TEST_OPTION ? std::string{} : selectedName);
+        }
+
+        void SetRagdollSkinnedModelPreset(const std::string& selectedName) {
+            if (RagdollEditor::SetSkinnedModelPresetName(selectedName == NO_RAGDOLL_TEST_OPTION ? std::string{} : selectedName)) {
+                Hierarchy::Refresh();
+            }
+        }
+
+        void SetRagdollSkinnedModelVisible(bool visible) {
+            if (!RagdollEditor::SetSkinnedModelVisible(visible)) {
+                Dialog::Open("Select a skinned model before showing the model preview");
+            }
+        }
+
+        glm::vec3 GetRagdollMarkerRotation(const RagdollMarkerAsset& marker) {
+            glm::vec3 basisX = glm::normalize(glm::vec3(marker.bodyTransform[0]));
+            glm::vec3 basisY = glm::vec3(marker.bodyTransform[1]);
+            basisY = glm::normalize(basisY - basisX * glm::dot(basisX, basisY));
+
+            glm::mat3 rotation(1.0f);
+            rotation[0] = basisX;
+            rotation[1] = basisY;
+            rotation[2] = glm::cross(basisX, basisY);
+            return glm::degrees(glm::eulerAngles(glm::quat_cast(rotation)));
+        }
+
+        void RenderRagdollBoneProperties(const EditorRect& rect) {
+            InputElements::PropertyList properties;
+            if (!RagdollEditor::HasSelectedBone()) {
+                properties.Render(rect);
+                return;
+            }
+
+            const uint64_t propertyId = UINT64_MAX - 1 - static_cast<uint64_t>(RagdollEditor::GetSelectedBoneNodeIndex());
+            const std::vector<RagdollEditor::RagdollParentOption> parentOptions = RagdollEditor::GetValidParentOptions(INVALID_RAGDOLL_MARKER_ID);
+            const std::vector<std::string> parentLabels = GetRagdollParentLabels(parentOptions);
+            std::string parentLabel = GetRagdollParentLabel(parentOptions, RagdollEditor::GetSelectedBoneParentId());
+
+            properties.ReadOnly("Bone", RagdollEditor::GetSelectedBoneName());
+            properties.ReadOnly("Path", RagdollEditor::GetSelectedBonePath());
+            properties.DropDown(propertyId, "Parent Shape", parentLabels, parentLabel, [parentLabel = &parentLabel, parentOptions = &parentOptions] {
+                RagdollEditor::SetSelectedBoneParent(GetRagdollParentId(*parentOptions, *parentLabel));
+            });
+            properties.Button("Create Shape", [] {
+                std::string error;
+                if (!RagdollEditor::CreateMarkerForSelectedBone(error)) {
+                    Dialog::Open(error);
+                    return;
+                }
+                Hierarchy::RefreshRagdollMarkers();
+            });
+            properties.Render(rect);
+        }
+
+        void RenderBoneMaskBoneProperties(const EditorRect& rect) {
+            InputElements::PropertyList properties;
+            if (!BoneMaskEditor::HasSelectedBone()) {
+                properties.Render(rect);
+                return;
+            }
+
+            constexpr uint32_t QUICK_SET_BUTTON_COUNT = 6;
+            static const char* QUICK_SET_BUTTON_LABELS[QUICK_SET_BUTTON_COUNT] = { "Quick set 0.00", "Quick set 0.01", "Quick set 0.25", "Quick set 0.50", "Quick set 0.75", "Quick set 1.00" };
+            static const float QUICK_SET_BUTTON_VALUES[QUICK_SET_BUTTON_COUNT] = { 0.0f, 0.01f, 0.25f, 0.5f, 0.75f, 1.0f };
+            constexpr uint64_t PROPERTY_ID = UINT64_MAX - 1;
+            const float previousWeight = BoneMaskEditor::GetSelectedBoneWeight();
+            float weight = previousWeight;
+            bool quickSetButtons[QUICK_SET_BUTTON_COUNT] = {};
+            bool applyWeightToChildren = false;
+
+            properties.ReadOnly("Bone", BoneMaskEditor::GetSelectedBoneName());
+            properties.FloatSlider(PROPERTY_ID, "Weight", weight, 0.0f, 1.0f);
+            for (uint32_t i = 0; i < QUICK_SET_BUTTON_COUNT; i++) {
+                properties.Button(QUICK_SET_BUTTON_LABELS[i], quickSetButtons[i]);
+            }
+            properties.Button("Apply To Children", applyWeightToChildren);
+            properties.Render(rect);
+
+            for (uint32_t i = 0; i < QUICK_SET_BUTTON_COUNT; i++) {
+                if (quickSetButtons[i]) weight = QUICK_SET_BUTTON_VALUES[i];
+            }
+            if (weight != previousWeight) BoneMaskEditor::SetSelectedBoneWeight(weight);
+            if (applyWeightToChildren) BoneMaskEditor::ApplySelectedBoneWeightToChildren();
+        }
+
+        void RenderRagdollMarkerProperties(const EditorRect& rect) {
+            const RagdollMarkerAsset* marker = RagdollEditor::GetSelectedMarker();
+            InputElements::PropertyList properties;
+            if (!marker) {
+                properties.Render(rect);
+                return;
+            }
+
+            const RagdollJointAsset* joint = GetRagdollIncomingJoint(marker->id);
+            const std::string boneName = !marker->boneName.empty() ? marker->boneName : marker->bonePath;
+            const glm::vec3 position = glm::vec3(marker->bodyTransform[3]);
+            const glm::vec3 rotation = GetRagdollMarkerRotation(*marker);
+            const std::vector<RagdollEditor::RagdollParentOption> parentOptions = RagdollEditor::GetValidParentOptions(marker->id);
+            const std::vector<std::string> parentLabels = GetRagdollParentLabels(parentOptions);
+            std::string parentLabel = GetRagdollParentLabel(parentOptions, RagdollEditor::GetSelectedMarkerParentId());
+            const std::vector<std::string> shapeNames = GetRagdollShapeNames(*marker);
+            std::string shapeName = GetRagdollShapeName(marker->shape.type);
+            glm::vec3 shapeOffset = marker->shape.offset;
+            glm::vec3 shapeRotation = glm::degrees(marker->shape.rotationRadians);
+            glm::vec3 dimensions = marker->shape.extents;
+            float radius = marker->shape.radius;
+            float length = marker->shape.length;
+            float mass = marker->rigidBody.mass;
+            float linearDamping = marker->rigidBody.linearDamping;
+            float angularDamping = marker->rigidBody.angularDamping;
+            float friction = marker->rigidBody.friction;
+            bool massOverride = marker->rigidBody.massMode == RagdollMassMode::OVERRIDE;
+            bool limitsEnabled = joint && joint->limitEnabled;
+            glm::vec3 limitFrameRotation = RagdollEditor::GetSelectedJointLimitFrameRotation();
+            InputElements::AxisLimitValue twistLimit;
+            InputElements::AxisLimitValue swing1Limit;
+            InputElements::AxisLimitValue swing2Limit;
+            if (joint) {
+                twistLimit = GetRagdollAxisLimitValue(joint->angularLimits[0]);
+                swing1Limit = GetRagdollAxisLimitValue(joint->angularLimits[1]);
+                swing2Limit = GetRagdollAxisLimitValue(joint->angularLimits[2]);
+            }
+
+            properties.ReadOnly("Name", GetRagdollMarkerLabel(marker->id));
+            properties.ReadOnly("Bone", boneName);
+            properties.DropDown(marker->id, "Parent Shape", parentLabels, parentLabel, [parentLabel = &parentLabel, parentOptions = &parentOptions] {
+                std::string error;
+                if (!RagdollEditor::SetSelectedMarkerParent(GetRagdollParentId(*parentOptions, *parentLabel), error)) Dialog::Open(error);
+            });
+            properties.DropDown(marker->id, "Shape", shapeNames, shapeName, [shapeName = &shapeName] { SetSelectedRagdollShape(*shapeName); });
+            properties.Button("Randomize Color", [] { RagdollEditor::RandomizeSelectedMarkerColor(); });
+            properties.ReadOnly("Position", FormatRagdollVec3(position));
+            properties.ReadOnly("Rotation", FormatRagdollVec3(rotation));
+
+            if (marker->shape.type != RagdollShapeType::CONVEX_HULL) {
+                properties.Vec3(marker->id, "Shape Offset", shapeOffset, [shapeOffset = &shapeOffset] { RagdollEditor::SetSelectedMarkerShapeOffset(*shapeOffset); });
+                properties.Vec3(marker->id, "Shape Rotation", shapeRotation, [shapeRotation = &shapeRotation] { RagdollEditor::SetSelectedMarkerShapeRotation(*shapeRotation); });
+            }
+
+            switch (marker->shape.type) {
+                case RagdollShapeType::BOX:
+                    properties.Vec3(marker->id, "Dimensions", dimensions, [dimensions = &dimensions] { RagdollEditor::SetSelectedMarkerBoxDimensions(*dimensions); });
+                    break;
+                case RagdollShapeType::SPHERE:
+                    properties.Float(marker->id, "Radius", radius, [radius = &radius] { RagdollEditor::SetSelectedMarkerRadius(*radius); });
+                    break;
+                case RagdollShapeType::CAPSULE:
+                    properties.Float(marker->id, "Radius", radius, [radius = &radius] { RagdollEditor::SetSelectedMarkerRadius(*radius); });
+                    properties.Float(marker->id, "Length", length, [length = &length] { RagdollEditor::SetSelectedMarkerCapsuleLength(*length); });
+                    break;
+                case RagdollShapeType::CONVEX_HULL:
+                    properties.ReadOnly("Vertices", std::to_string(marker->shape.convexVertices.size()));
+                    properties.ReadOnly("Triangles", std::to_string(marker->shape.convexIndices.size() / 3));
+                    break;
+            }
+
+            properties.ReadOnly("Volume (m^3)", FormatRagdollFloat(RagdollEditor::GetSelectedMarkerVolume()));
+            properties.CheckBox("Override Mass", massOverride, [massOverride = &massOverride] { SetSelectedRagdollMassOverride(*massOverride); });
+            if (massOverride) {
+                properties.Float(marker->id, "Mass (kg)", mass, [mass = &mass] { SetSelectedRagdollMass(*mass); });
+            }
+            else {
+                properties.ReadOnly("Mass (kg)", FormatRagdollFloat(mass));
+            }
+            properties.Float(marker->id, "Linear Damping", linearDamping, [linearDamping = &linearDamping] { RagdollEditor::SetSelectedMarkerLinearDamping(*linearDamping); });
+            properties.Float(marker->id, "Angular Damping", angularDamping, [angularDamping = &angularDamping] { RagdollEditor::SetSelectedMarkerAngularDamping(*angularDamping); });
+            properties.Float(marker->id, "Friction", friction, [friction = &friction] { RagdollEditor::SetSelectedMarkerFriction(*friction); });
+
+            if (joint) {
+                properties.CheckBox("Limits Enabled", limitsEnabled, [limitsEnabled = &limitsEnabled] { RagdollEditor::SetSelectedJointLimitsEnabled(*limitsEnabled); });
+                properties.Button("Reset Constraint Frames", [] { RagdollEditor::ResetSelectedJointConstraintFrames(); });
+                properties.Vec3(marker->id, "Limit Frame Rotation", limitFrameRotation, [limitFrameRotation = &limitFrameRotation] { RagdollEditor::SetSelectedJointLimitFrameRotation(*limitFrameRotation); });
+                properties.AxisLimit(marker->id, "Twist (X)", twistLimit, [twistLimit = &twistLimit] { SetSelectedRagdollAngularLimit(0, *twistLimit); });
+                properties.AxisLimit(marker->id, "Swing 1 (Y)", swing1Limit, [swing1Limit = &swing1Limit] { SetSelectedRagdollAngularLimit(1, *swing1Limit); });
+                properties.AxisLimit(marker->id, "Swing 2 (Z)", swing2Limit, [swing2Limit = &swing2Limit] { SetSelectedRagdollAngularLimit(2, *swing2Limit); });
+            }
+
+            properties.Render(rect);
+        }
+
+        void RenderRagdollWorkspaceProperties(const EditorRect& rect) {
+            constexpr uint64_t WORKSPACE_PROPERTY_ID = UINT64_MAX;
+            InputElements::PropertyList properties;
+            if (!RagdollEditor::HasDocument()) {
+                properties.Render(rect);
+                return;
+            }
+
+            const SkinnedModel* skinnedModel = RagdollEditor::GetSkinnedModel();
+            const std::vector<std::string> testAnimationNames = GetRagdollTestAnimationNames(skinnedModel ? skinnedModel->GetName() : std::string{});
+            const std::vector<std::string> skinnedModelPresetNames = GetRagdollSkinnedModelPresetNames();
+            std::string skinnedModelPresetName = RagdollEditor::GetAsset().skinnedModelPresetName;
+            if (skinnedModelPresetName.empty()) skinnedModelPresetName = NO_RAGDOLL_TEST_OPTION;
+            std::string testAnimationName = RagdollEditor::GetAsset().testAnimationName;
+            if (testAnimationName.empty()) {
+                testAnimationName = NO_RAGDOLL_TEST_OPTION;
+            }
+            bool showSkinnedModel = RagdollEditor::IsSkinnedModelVisible();
+            bool showSkeleton = RagdollEditor::IsSkeletonVisible();
+            bool alwaysShowLimits = RagdollEditor::AreLimitsAlwaysVisible();
+            bool alwaysShowLimitFrames = RagdollEditor::AreLimitFramesAlwaysVisible();
+            float limitScale = RagdollEditor::GetLimitScale();
+            float limitHandleScale = RagdollEditor::GetLimitHandleScale();
+            float skinnedModelScale = RagdollEditor::GetAsset().skinnedModelScale;
+            float targetMass = RagdollEditor::GetTargetMass();
+            properties.DropDown(WORKSPACE_PROPERTY_ID, "Model", skinnedModelPresetNames, skinnedModelPresetName, [skinnedModelPresetName = &skinnedModelPresetName] { SetRagdollSkinnedModelPreset(*skinnedModelPresetName); });
+            if (skinnedModel) {
+                properties.Float(WORKSPACE_PROPERTY_ID, "Skinned Model Scale", skinnedModelScale, [skinnedModelScale = &skinnedModelScale] { RagdollEditor::SetSkinnedModelScale(*skinnedModelScale); });
+                properties.DropDown(WORKSPACE_PROPERTY_ID, "Test Animation", testAnimationNames, testAnimationName, [testAnimationName = &testAnimationName] { SetRagdollTestAnimation(*testAnimationName); });
+                properties.CheckBox("Show Skinned Model", showSkinnedModel, [showSkinnedModel = &showSkinnedModel] { SetRagdollSkinnedModelVisible(*showSkinnedModel); });
+            }
+            properties.Float(WORKSPACE_PROPERTY_ID, "Target Total Mass (kg)", targetMass, [targetMass = &targetMass] { RagdollEditor::SetTargetMass(*targetMass); });
+            properties.ReadOnly("Current Total Mass (kg)", FormatRagdollFloat(RagdollEditor::GetCurrentMass()));
+            properties.CheckBox("Show Skeleton", showSkeleton, [showSkeleton = &showSkeleton] { RagdollEditor::SetSkeletonVisible(*showSkeleton); });
+            properties.CheckBox("Always Show Limits", alwaysShowLimits, [alwaysShowLimits = &alwaysShowLimits] { RagdollEditor::SetLimitsAlwaysVisible(*alwaysShowLimits); });
+            properties.CheckBox("Always Show Limit Frames", alwaysShowLimitFrames, [alwaysShowLimitFrames = &alwaysShowLimitFrames] { RagdollEditor::SetLimitFramesAlwaysVisible(*alwaysShowLimitFrames); });
+            properties.Float(WORKSPACE_PROPERTY_ID, "Limit Scale", limitScale, [limitScale = &limitScale] { RagdollEditor::SetLimitScale(*limitScale); });
+            properties.Float(WORKSPACE_PROPERTY_ID, "Limit Handle Scale", limitHandleScale, [limitHandleScale = &limitHandleScale] { RagdollEditor::SetLimitHandleScale(*limitHandleScale); });
+            properties.Button("Expand Hierarchy", [] { Hierarchy::SetAllNodesExpanded(true); });
+            properties.Button("Collapse Hierarchy", [] { Hierarchy::SetAllNodesExpanded(false); });
+            properties.Button("Retarget Markers To Current Bind Pose", RetargetRagdollMarkersToCurrentBindPose);
+            properties.Button("Retarget Markers, Preserve Limit Axes", RetargetRagdollMarkersToCurrentBindPosePreserveLimitAxes);
+            properties.Button("Distribute Mass By Volume", DistributeRagdollMass);
+            properties.Button("Randomize Colors", [] { RagdollEditor::RandomizeMarkerColors(); });
+            properties.Button("Revert from disk", RevertRagdollFromDisk);
+            properties.Render(rect);
+        }
+
         void RenderWorkspaceProperties(const EditorRect& rect) {
+            if (Workspace::GetMode() == EditorSessionMode::BONE_MASK) {
+                constexpr uint64_t WORKSPACE_PROPERTY_ID = UINT64_MAX;
+                InputElements::PropertyList properties;
+                std::vector<std::string> skinnedModelNames = { NO_SKINNED_MODEL };
+                std::vector<std::string> availableSkinnedModelNames = BoneMaskEditor::GetAvailableSkinnedModelNames();
+                skinnedModelNames.insert(skinnedModelNames.end(), availableSkinnedModelNames.begin(), availableSkinnedModelNames.end());
+
+                std::string selectedName = BoneMaskEditor::GetSkinnedModelName();
+                if (selectedName.empty()) selectedName = NO_SKINNED_MODEL;
+
+                properties.DropDown(WORKSPACE_PROPERTY_ID, "Skinned Model", skinnedModelNames, selectedName);
+                properties.Render(rect);
+
+                if (selectedName == NO_SKINNED_MODEL) selectedName.clear();
+                if (selectedName != BoneMaskEditor::GetSkinnedModelName() && BoneMaskEditor::SetSkinnedModelName(selectedName)) {
+                    Hierarchy::Refresh();
+                }
+                return;
+            }
+
+            if (Workspace::GetMode() == EditorSessionMode::RAGDOLL) {
+                RenderRagdollWorkspaceProperties(rect);
+                return;
+            }
+
             constexpr uint64_t WORKSPACE_PROPERTY_ID = UINT64_MAX;
             InputElements::PropertyList properties;
             std::string name = Workspace::GetName();
@@ -475,16 +924,12 @@ namespace Unloved::EditorSession::Inspector {
             glm::vec3 rotation = World::GetRotationById(objectId);
             float scale = genericAnimatedObject->GetScale();
             std::string type = Hell::Enum::ToString(genericAnimatedObject->GetType());
-            std::string animationName = genericAnimatedObject->GetCreateInfo().animationName;
-            float animationSpeed = genericAnimatedObject->GetCreateInfo().animationSpeed;
 
             AddNameProperty(properties, objectId, editorName);
             AddPositionProperty(properties, objectId, position);
             AddEulerRotationProperty(properties, objectId, rotation);
             properties.Float(objectId, "Scale", scale, [&] { genericAnimatedObject->SetScale(scale); });
             properties.DropDown(objectId, "Type", genericAnimatedObjectTypes, type, [&] { genericAnimatedObject->SetType(Hell::Enum::FromString(type, GenericAnimatedObjectType::UNDEFINED)); });
-            properties.String(objectId, "Animation", animationName, [&] { genericAnimatedObject->SetAnimationName(animationName); });
-            properties.Float(objectId, "Animation Speed", animationSpeed, [&] { genericAnimatedObject->SetAnimationSpeed(animationSpeed); });
             properties.Render(rect);
         }
 
@@ -597,14 +1042,22 @@ namespace Unloved::EditorSession::Inspector {
         }
 
         void RenderMermaidProperties(const EditorRect& rect, uint64_t objectId) {
+            Mermaid* mermaid = World::GetMermaidByObjectId(objectId);
+            if (!mermaid) return;
+
             std::string editorName = World::GetEditorNameById(objectId);
             glm::vec3 position = World::GetPositionById(objectId);
             float rotation = World::GetRotationById(objectId).y;
+            glm::vec3 shopTeleportPosition = mermaid->GetShopTeleportPosition();
+            glm::vec3 shopTeleportEuler = mermaid->GetShopTeleportEuler();
             InputElements::PropertyList properties;
 
             AddNameProperty(properties, objectId, editorName);
             AddPositionProperty(properties, objectId, position);
             AddYawProperty(properties, objectId, rotation);
+            properties.Vec3(objectId, "Shop View Position", shopTeleportPosition, [&] { mermaid->SetShopTeleportPosition(shopTeleportPosition); });
+            properties.Vec3(objectId, "Shop View Euler", shopTeleportEuler, [&] { mermaid->SetShopTeleportEuler(shopTeleportEuler); });
+            properties.Button("Set shop view from player camera", [mermaid] { SetMermaidShopViewFromPlayerCamera(mermaid); });
             properties.Render(rect);
         }
 
@@ -858,6 +1311,17 @@ namespace Unloved::EditorSession::Inspector {
             return;
         }
 
+        if (Workspace::GetMode() == EditorSessionMode::RAGDOLL) {
+            if (RagdollEditor::HasSelectedBone()) RenderRagdollBoneProperties(rect);
+            else RenderRagdollMarkerProperties(rect);
+            return;
+        }
+
+        if (Workspace::GetMode() == EditorSessionMode::BONE_MASK) {
+            RenderBoneMaskBoneProperties(rect);
+            return;
+        }
+
         if (!Selection::HasSelection()) {
             InputElements::PropertyList properties;
             properties.Render(rect);
@@ -918,7 +1382,7 @@ namespace Unloved::EditorSession::Inspector {
             case ObjectType::WALL:                    RenderWallProperties(rect, objectId);                  break;
             case ObjectType::WINDOW:                  RenderWindowProperties(rect, objectId);                break;
             case ObjectType::WORLD_PLANE:             RenderWorldPlaneProperties(rect, objectId);            break;
-            case ObjectType::ANIMATED_GAME_OBJECT:    RenderPositionOnlyProperties(rect, objectId);          break;
+            case ObjectType::SKINNED_GAME_OBJECT:    RenderPositionOnlyProperties(rect, objectId);          break;
             case ObjectType::FENCE:                   RenderPositionOnlyProperties(rect, objectId);          break;
             case ObjectType::POWER_POLE_SET:          RenderPositionOnlyProperties(rect, objectId);          break;
             case ObjectType::SHARK:                   RenderPositionOnlyProperties(rect, objectId);          break;
@@ -928,7 +1392,7 @@ namespace Unloved::EditorSession::Inspector {
 
     bool HasTools() {
         if (!Workspace::HasMode()) return false;
-        return Workspace::GetMode() == EditorSessionMode::MAP && MapTools::GetMode() == MapTools::Mode::HEIGHT_MAP;
+        return Workspace::GetMode() == EditorSessionMode::MAP && HeightMapEditor::IsActive();
     }
 
     void RenderTools(const EditorRect& rect) {

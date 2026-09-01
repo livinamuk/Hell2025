@@ -1,15 +1,18 @@
 #include "Dobermann.h"
+
+#include "Hell/Audio.h"
 #include "Hell/Math/Rotation.h"
 #include "Hell/Logging.h"
 #include "Hell/Physics/Physics.h"
+
+#include "Unloved/Bible/Bible.h"
 #include "Unloved/Debug/DebugDraw.h"
+#include "Unloved/Systems/Animator/Animator.h"
 #include "Unloved/Systems/NavMesh/NavMesh.h"
 #include "Unloved/Render/Renderer.h"
 #include "World/LegacyWorld.h"
 #include "Unloved/ObjectId.h"
 #include "Unloved/World/World.h"
-#include "Hell/Audio.h"
-namespace Audio = Hell::Audio;
 
 #include <glm/gtc/quaternion.hpp>
 
@@ -36,37 +39,55 @@ namespace Unloved {
     }
 
     void Dobermann::Init(uint64_t id, DobermannCreateInfo createInfo, SpawnOffset spawnOffset) {
+        m_objectId = id;
+
         m_createInfo = createInfo;
         m_createInfo.position += spawnOffset.translation;
         m_createInfo.rotation.y += spawnOffset.yRotation;
         m_createInfo.rotation = YawOnlyRotation(m_createInfo.rotation);
         m_initalForward = ForwardFromRotation(m_createInfo.rotation);
+
         m_forward = m_initalForward;
 
-        PhysicsFilterData filterData;
-        filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
-        filterData.collisionGroup = CollisionGroup::RAGDOLL_ENEMY;
-        filterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE | CHARACTER_CONTROLLER | RAGDOLL_ENEMY);
+        // Create core objects
+        m_animatorInstanceId = Animator::CreateAnimatorInstance();
+        m_skinnedGameObjectId = World::CreateSkinnedGameObject();
 
-        m_objectId = id;
-        m_RagdollId = Hell::Physics::SpawnRagdoll(m_createInfo.position, m_createInfo.rotation, "dobermann_new", m_objectId, filterData);
+        SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject();
+        AnimatorInstance* animatorInstance = GetAnimatorInstance();
 
-        g_animatedGameObjectObjectId = LegacyWorld::CreateAnimatedGameObject();
+        if (!skinnedGameObject || !animatorInstance) {
+            Logging::Error() << "Shark::Init() some core shit fucked up\n";
+            __debugbreak();
+        }
+        else {
+            // Register skinned model with animator
+            animatorInstance->RegisterSkinnedModels({ "Dobermann" });
 
-        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-        animatedGameObject->SetOwnerObjectId(m_objectId);
-        animatedGameObject->SetSkinnedModel("Dobermann");
-        animatedGameObject->SetName("Dobermann " + std::to_string(m_objectId));
-        animatedGameObject->SetMeshMaterialByMeshName("Body", "DobermannMouthBlood");
-        animatedGameObject->SetMeshMaterialByMeshName("Jaw", "DobermannMouthBlood");
-        animatedGameObject->SetMeshMaterialByMeshName("Tongue", "DobermannMouthBlood");
-        animatedGameObject->SetMeshMaterialByMeshName("Iris", "DobermannIris");
-        animatedGameObject->SetRagdollId(m_RagdollId);
+            // Create animation layer index
+            m_animationLayerIndex = animatorInstance->CreateAnimationLayer();
+        }
+
+        skinnedGameObject->SetOwnerObjectId(m_objectId);
+        skinnedGameObject->SetAnimatorInstanceId(m_animatorInstanceId);
+        skinnedGameObject->SetSkinnedModel("Dobermann");
+        skinnedGameObject->SetPosition(m_createInfo.position);
+        skinnedGameObject->SetRotationX(m_createInfo.rotation.x);
+        skinnedGameObject->SetRotationY(m_createInfo.rotation.y);
+        skinnedGameObject->SetRotationZ(m_createInfo.rotation.z);
+        skinnedGameObject->SetName("Dobermann " + std::to_string(m_objectId));
+        skinnedGameObject->SetMeshMaterialByMeshName("Body", "DobermannMouthBlood");
+        skinnedGameObject->SetMeshMaterialByMeshName("Jaw", "DobermannMouthBlood");
+        skinnedGameObject->SetMeshMaterialByMeshName("Tongue", "DobermannMouthBlood");
+        skinnedGameObject->SetMeshMaterialByMeshName("Iris", "DobermannIris");
+        skinnedGameObject->CreateRagdoll("Dobermann");
 
         int32_t woundMaskIndex = Renderer::GetNextFreeWoundMaskIndexAndMarkItTaken();
-        animatedGameObject->SetMeshWoundMaskArrayIndex("Body", woundMaskIndex);
-        animatedGameObject->SetMeshWoundMaterialByMeshName("Body", "DobermannFullBlood");
-        Logging::Debug() << "Assigned a Dobermann a 'Body' mesh wound mask index of " << woundMaskIndex;
+        skinnedGameObject->SetMeshWoundMaskArrayIndex("Body", woundMaskIndex);
+        skinnedGameObject->SetMeshWoundMaterialByMeshName("Body", "DobermannFullBlood");
+
+
+        m_bloodPoolState.Configure(skinnedGameObject->GetRagdollId(), "rMarker_head");
 
         ResetToInitialState();
 
@@ -76,13 +97,12 @@ namespace Unloved {
     }
 
     void Dobermann::CleanUp() {
-        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-        if (animatedGameObject) {
-            animatedGameObject->CleanUp();
-            Unloved::World::GetAnimatedGameObjects().erase(g_animatedGameObjectObjectId);
-        }
-        g_animatedGameObjectObjectId = 0;
+        Animator::RemoveAnimatorInstance(m_animatorInstanceId);
+        World::RemoveObjectById(m_skinnedGameObjectId);
         Hell::Physics::MarkCharacterControllerForRemoval(m_characterControllerId);
+
+        m_animatorInstanceId = 0;
+        m_skinnedGameObjectId = 0;
         m_characterControllerId = 0;
     }
 
@@ -91,20 +111,21 @@ namespace Unloved {
         m_health -= damage;
 
         if (wasAlive && IsDead()) {
-            Audio::PlayAudio("Dobermann_Death.wav", 1.0f);
-            if (Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject()) {
-                animatedGameObject->SetAnimationModeToRagdoll();
+            if (SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject()) {
+                skinnedGameObject->SetAnimationModeToRagdoll();
             }
+
+            Hell::Audio::PlayAudio("Dobermann_Death.wav", 1.0f);
         }
     }
 
     void Dobermann::SetPosition(const glm::vec3& position) {
         m_createInfo.position = position;
 
-        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-        animatedGameObject->SetPosition(position);
+        Unloved::SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject();
+        skinnedGameObject->SetPosition(position);
 
-        if (Ragdoll* ragdoll = Hell::Physics::GetRagdollById(m_RagdollId)) {
+        if (Ragdoll* ragdoll = GetRagdoll()) {
             ragdoll->SetSpawnPosition(position);
         }
 
@@ -118,36 +139,46 @@ namespace Unloved {
         m_initalForward = ForwardFromRotation(m_createInfo.rotation);
         m_forward = m_initalForward;
 
-        if (Ragdoll* ragdoll = Hell::Physics::GetRagdollById(m_RagdollId)) {
+        if (Ragdoll* ragdoll = GetRagdoll()) {
             ragdoll->SetSpawnRotation(m_createInfo.rotation);
         }
 
-        UpdateAnimatedGameObjectRotation();
+        UpdateSkinnedGameObjectRotation();
     }
 
     void Dobermann::ResetToInitialState() {
         m_target = glm::vec3(0.0f);
+        m_path.clear();
         m_state = DobermannState::LAY;
         m_forward = m_initalForward;
         m_health = m_initalHealth;
 
-        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-        animatedGameObject->SetAnimationModeToBindPose();
-        animatedGameObject->SetPosition(m_createInfo.position);
-        animatedGameObject->PlayAndLoopAnimation("MainLayer", "Dobermann_Lay", 1.0f);
+        Unloved::SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject();
+        if (!skinnedGameObject) return;
+
+        if (Ragdoll* ragdoll = GetRagdoll()) {
+            ragdoll->SetToInitialPose();
+            ragdoll->DisableSimulation();
+        }
+
+        skinnedGameObject->SetAnimationModeToBindPose();
+        skinnedGameObject->SetPosition(m_createInfo.position);
 
         if (CharacterController* characterController = GetCharacterController()) {
             characterController->SetPosition(m_createInfo.position);
         }
 
-        UpdateAnimatedGameObjectRotation();
+        UpdateSkinnedGameObjectRotation();
+        PlayAndLoopAnimation(Bible::AnimationSlot::DOBERMANN_LAY, 1.0f);
+
+        m_bloodPoolState.Reset();
     }
 
 
-    void Dobermann::UpdateAnimatedGameObjectRotation() {
-        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
+    void Dobermann::UpdateSkinnedGameObjectRotation() {
+        Unloved::SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject();
         float rotY = Hell::Math::YawBetweenPoints(GetPosition(), GetPosition() + GetForward()) + (HELL_PI * 0.5f);
-        animatedGameObject->SetRotationY(rotY);
+        skinnedGameObject->SetRotationY(rotY);
     }
 
     void Dobermann::DebugDraw() {
@@ -163,17 +194,19 @@ namespace Unloved {
     }
 
     void Dobermann::UpdateMovement(float deltaTime) {
-        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-        Ragdoll* ragdoll = Hell::Physics::GetRagdollById(m_RagdollId);
+        Unloved::SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject();
+        Ragdoll* ragdoll = GetRagdoll();
 
         //DebugDraw();
 
         if (!ragdoll) return;
-        if (!animatedGameObject) return;
+        if (!skinnedGameObject) return;
 
         if (Input::KeyPressed(HELL_KEY_Y)) {
             ResetToInitialState();
         }
+
+        if (IsDead()) return;
 
         if (Input::KeyPressed(HELL_KEY_T)) {
             if (Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(0)) {
@@ -182,22 +215,18 @@ namespace Unloved {
 
                 if (m_state == DobermannState::LAY) {
                     m_state = DobermannState::GET_UP_FROM_LAY;
-                    animatedGameObject->PlayAnimation("MainLayer", "Dobermann_Lay_to_Walk", 1.0f);
+                    PlayAnimation(Bible::AnimationSlot::DOBERMANN_LAY_TO_WALK, 1.0f);
                 }
             }
         }
 
-        if (animatedGameObject->IsAllAnimationsComplete()) {
-
-            if (m_state == DobermannState::GET_UP_FROM_LAY) {
-                m_state = DobermannState::WALK_TO_TARGET;
-                animatedGameObject->PlayAndLoopAnimation("MainLayer", "Dobermann_Walk", 1.0f);
-            }
-
-            if (m_state == DobermannState::SIT_FROM_LAY) {
-                m_state = DobermannState::LAY;
-                animatedGameObject->PlayAnimation("MainLayer", "Dobermann_Lay", 1.0f);
-            }
+        if (m_state == DobermannState::GET_UP_FROM_LAY && IsAnimationComplete()) {
+            m_state = DobermannState::WALK_TO_TARGET;
+            PlayAndLoopAnimation(Bible::AnimationSlot::DOBERMANN_WALK, 1.0f);
+        }
+        else if (m_state == DobermannState::SIT_FROM_LAY && IsAnimationComplete()) {
+            m_state = DobermannState::LAY;
+            PlayAndLoopAnimation(Bible::AnimationSlot::DOBERMANN_LAY, 1.0f);
         }
 
         // WALK
@@ -206,7 +235,7 @@ namespace Unloved {
 
             m_path = Unloved::NavMeshManager::FindPath(GetPosition(), m_target);
 
-        
+
             if (m_path.size() >= 2) {
 
                 // Compute and calculate a new forward vector based on the next path point
@@ -223,84 +252,54 @@ namespace Unloved {
                 Hell::Physics::MoveCharacterController(m_characterControllerId, displacement);
 
                 if (CharacterController* characterController = GetCharacterController()) {
-                    animatedGameObject->SetPosition(characterController->GetFootPosition());
+                    skinnedGameObject->SetPosition(characterController->GetFootPosition());
                 }
 
                 // Did you reach the target
                 float distanceToTarget = glm::distance(normalizedPosition, normalizedTarget);
                 if (distanceToTarget < 0.2f) {
                     m_state = DobermannState::SIT_FROM_LAY;
-                    animatedGameObject->PlayAnimation("MainLayer", "Dobermann_Stretch_to_Lay", 1.0f);
+                    PlayAnimation(Bible::AnimationSlot::DOBERMANN_STRETCH_TO_LAY, 1.0f);
                 }
             }
-
         }
-
-        //
-        //
-        //
-        //if (Input::KeyPressed(HELL_KEY_Y)) {
-        //    ragdoll->SetToInitialPose();
-        //    animatedGameObject->SetAnimationModeToAnimated();
-        //    animatedGameObject->PlayAndLoopAnimation("MainLayer", "Dobermann_Lay", 1.0f);
-        //    m_health = 1.0f;
-        //}
-        //
-        //static bool gettingUp = false;
-        //
-        //if (Input::KeyPressed(HELL_KEY_LEFT)) {
-        //    animatedGameObject->PlayAndLoopAnimation("MainLayer", "Dobermann_Lay", 1.0f);
-        //    gettingUp = false;
-        //}
-        //if (Input::KeyPressed(HELL_KEY_RIGHT)) {
-        //    animatedGameObject->PlayAndLoopAnimation("MainLayer", "Dobermann_Walk", 1.0f);
-        //    gettingUp = false;
-        //}
-        //if (Input::KeyPressed(HELL_KEY_UP)) {
-        //    animatedGameObject->PlayAnimation("MainLayer", "Dobermann_Lay_to_Walk", 1.0f);
-        //    gettingUp = true;
-        //}
-        //if (Input::KeyPressed(HELL_KEY_DOWN)) {
-        //    gettingUp = false;
-        //    animatedGameObject->PlayAnimation("MainLayer", "Dobermann_Stretch_to_Lay", 1.0f);
-        //}
-        //
-        //if (animatedGameObject->IsAllAnimationsComplete() && gettingUp) {
-        //    animatedGameObject->PlayAndLoopAnimation("MainLayer", "Dobermann_Walk", 1.0f);
-        //}
-
-        //DebugDraw::DrawPoint(GetPosition(), PINK);
-
     }
 
     void Dobermann::Update(float deltaTime) {
         (void)deltaTime;
 
-        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-        Ragdoll* ragdoll = Hell::Physics::GetRagdollById(m_RagdollId);
+        Unloved::SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject();
+        Ragdoll* ragdoll = GetRagdoll();
 
         if (!ragdoll) return;
-        if (!animatedGameObject) return;
+        if (!skinnedGameObject) return;
 
-        UpdateAnimatedGameObjectRotation();
+        UpdateSkinnedGameObjectRotation();
 
         if (Renderer::GetCurrentRendererSettings().debugDrawRagdolls) {
-            animatedGameObject->DisableRendering();
+            skinnedGameObject->DisableRendering();
         }
         else {
-            animatedGameObject->EnableRendering();
+            skinnedGameObject->EnableRendering();
         }
+
+        m_bloodPoolState.Update();
     }
 
-    Unloved::AnimatedGameObject* Dobermann::GetAnimatedGameObject() {
-        return Unloved::World::GetAnimatedGameObjectByObjectId(g_animatedGameObjectObjectId);
+    Unloved::SkinnedGameObject* Dobermann::GetSkinnedGameObject() {
+        return Unloved::World::GetSkinnedGameObjectByObjectId(m_skinnedGameObjectId);
+    }
+
+    Ragdoll* Dobermann::GetRagdoll() {
+        SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject();
+        return skinnedGameObject ? skinnedGameObject->GetRagdoll() : nullptr;
     }
 
     glm::vec3 Dobermann::GetPosition() {
-        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-        if (!animatedGameObject) return glm::vec3(0.0f);
+        Unloved::SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject();
+        if (!skinnedGameObject) return glm::vec3(0.0f);
 
-        return animatedGameObject->GetModelMatrix()[3];
+        return skinnedGameObject->GetModelMatrix()[3];
 
     }
 
@@ -317,7 +316,36 @@ namespace Unloved {
         m_characterControllerId = Hell::Physics::CreateCharacterController(m_objectId, position, capsuleHeight, capsuleRadius, physicsFilterData);
     }
 
+    AnimatorInstance* Dobermann::GetAnimatorInstance() {
+        return Animator::GetAnimatorInstanceByObjectId(m_animatorInstanceId);
+    }
+
     CharacterController* Dobermann::GetCharacterController() {
         return Hell::Physics::GetCharacterControllerById(m_characterControllerId);
+    }
+
+    void Dobermann::PlayAnimation(Bible::AnimationSlot animationSlot, float speed) {
+        SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject();
+        AnimatorInstance* animatorInstance = Animator::GetAnimatorInstanceByObjectId(m_animatorInstanceId);
+        if (!skinnedGameObject) return;
+        if (!animatorInstance) return;
+
+        skinnedGameObject->SetAnimationModeToAnimated();
+        animatorInstance->PlayAnimation(m_animationLayerIndex, Bible::GetAnimation(Bible::AnimationProfile::DOBERMANN, animationSlot), speed);
+    }
+
+    void Dobermann::PlayAndLoopAnimation(Bible::AnimationSlot animationSlot, float speed) {
+        SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject();
+        AnimatorInstance* animatorInstance = Animator::GetAnimatorInstanceByObjectId(m_animatorInstanceId);
+        if (!skinnedGameObject) return;
+        if (!animatorInstance) return;
+
+        skinnedGameObject->SetAnimationModeToAnimated();
+        animatorInstance->PlayAndLoopAnimation(m_animationLayerIndex, Bible::GetAnimation(Bible::AnimationProfile::DOBERMANN, animationSlot), speed);
+    }
+
+    bool Dobermann::IsAnimationComplete() {
+        AnimatorInstance* animatorInstance = GetAnimatorInstance();
+        return animatorInstance && animatorInstance->IsAnimationComplete(m_animationLayerIndex);
     }
 }

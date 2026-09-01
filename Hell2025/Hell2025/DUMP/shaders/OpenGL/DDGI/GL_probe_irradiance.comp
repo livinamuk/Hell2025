@@ -1,0 +1,113 @@
+#version 450
+#extension GL_KHR_shader_subgroup_arithmetic : enable
+#include "../../common/raytracing.glsl"
+#include "../../common/ddgi.glsl"
+
+// 1 warp per workgroup
+layout(local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
+
+layout(rgba16f, binding = 0) uniform image2DArray u_irradianceAtlas;
+
+restrict layout(std430, binding = 4)  readonly buffer PointCloudBuffer         { CloudPoint points[]; };
+restrict layout(std430, binding = 6)  readonly buffer ProbeVisibilityCounter  { uint probeVisibilityCounter; };
+restrict layout(std430, binding = 7)  readonly buffer VisibleProbeList         { uint packedIndices[]; };
+restrict layout(std430, binding = 8)  readonly buffer DDGIVolumeBuffer         { DDGIVolume volume; };
+restrict layout(std430, binding = 9)  buffer ProbeStateBuffer                  { ProbeState probeStates[]; };
+restrict layout(std430, binding = 10) readonly buffer BakedIndicesBuffer       { uint bakedIndices[]; };
+restrict layout(std430, binding = 11) readonly buffer BakedOffsetsBuffer       { uint bakedOffsets[]; };
+restrict layout(std430, binding = 12) readonly buffer BakedCountsBuffer        { uint bakedCounts[]; };
+
+uniform float u_pointCloudSpacing;
+
+const float maxDist = 3.0;
+
+shared vec3 shared_texelDirs[36];
+
+void octal(uint pIdx, vec3 probePos, uint threadIdx) {
+    const float encodingGamma = 5.0;
+    const int INTERIOR = 6;
+
+    for (int i = int(threadIdx); i < 36; i += 32) {
+        vec2 uv = DDGIGetNormalizedOctahedralCoordinates(ivec2(i % 6, i / 6), INTERIOR);
+        shared_texelDirs[i] = DDGIGetOctahedralDirection(uv);
+    }
+    barrier();
+
+    vec3 localAccum[36];
+    for(int i = 0; i < 36; i++) localAccum[i] = vec3(0.0);
+
+    const float pointArea = u_pointCloudSpacing * u_pointCloudSpacing;
+    uint poolStart = bakedOffsets[pIdx];
+    uint poolCount = bakedCounts[pIdx];
+
+    for (uint i = threadIdx; i < poolCount; i += 32) {
+        uint ptIdx = bakedIndices[poolStart + i];
+
+        vec3 ptPos = points[ptIdx].position.xyz;
+        vec3 diff = ptPos - probePos;
+        float distSq = dot(diff, diff);
+
+        if (distSq > maxDist * maxDist) continue;
+
+        vec3 ptNormal = points[ptIdx].normal.xyz;
+        float dist = sqrt(distSq);
+        vec3 dirToPoint = diff / dist;
+
+        float ptCos = dot(ptNormal, -dirToPoint);
+        if (ptCos <= 0.0) continue;
+
+        if (!AnyHit(probePos, dirToPoint, 0.01, dist - 0.01)) {
+            float spatialWeight = (ptCos * pointArea) / max(distSq, 0.001);
+            vec3 radiance = points[ptIdx].directLightingRGB_dirty.xyz * spatialWeight;
+
+            for (int j = 0; j < 36; j++) {
+                // Bin radiance into octahedral directions
+                float dotWeight = max(0.0, dot(shared_texelDirs[j], dirToPoint));
+                localAccum[j] += radiance * dotWeight;
+            }
+        }
+    }
+
+    uvec3 probeTexelCoords = DDGIGetProbeTexelCoords(int(pIdx), volume);
+
+    for (int j = 0; j < 36; j++) {
+        vec3 sum = subgroupAdd(localAccum[j]);
+
+        if (subgroupElect()) {
+            int tx = j % INTERIOR;
+            int ty = j / INTERIOR;
+            ivec3 writeCoord = ivec3(int(probeTexelCoords.x) * 8 + tx + 1, int(probeTexelCoords.y) * 8 + ty + 1, int(probeTexelCoords.z));
+
+            // Integrated sum is the final linear color
+            vec3 finalLinear = sum;
+
+            vec3 encodedSample = pow(max(vec3(0.0), finalLinear), vec3(1.0 / encodingGamma));
+            vec3 oldEncoded = imageLoad(u_irradianceAtlas, writeCoord).rgb;
+
+            float hysteresis = (dot(oldEncoded, oldEncoded) == 0.0) ? 0.0 : 0.05;
+            vec3 blendedEncoded = mix(encodedSample, oldEncoded, hysteresis);
+
+            if (any(isnan(blendedEncoded))) blendedEncoded = vec3(0.0);
+            imageStore(u_irradianceAtlas, writeCoord, vec4(blendedEncoded, 1.0));
+        }
+    }
+}
+
+void main() {
+    uint listIdx = gl_WorkGroupID.x;
+    if (listIdx >= probeVisibilityCounter) return;
+
+    uint threadIdx = gl_LocalInvocationID.x;
+    uint pIdx = packedIndices[listIdx];
+    if (pIdx >= uint(volume.totalProbes)) return;
+
+    ivec3 probeCoords = DDGIGetProbeCoords(int(pIdx), volume);
+    vec3 probePos = DDGIGetProbeBaseWorldPosition(probeCoords, volume);
+
+    octal(pIdx, probePos, threadIdx);
+
+    uint globalProbeIdx = volume.probeOffset + pIdx;
+    if (threadIdx == 0u && probeStates[globalProbeIdx].irradianceCooldown > 0u) {
+        probeStates[globalProbeIdx].irradianceCooldown--;
+    }
+}

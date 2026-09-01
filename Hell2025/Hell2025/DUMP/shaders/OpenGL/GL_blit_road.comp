@@ -1,0 +1,81 @@
+#version 460 core
+#include "../common/OpenGL/GL_binding_indices.glsl"
+//layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(r16f, binding = 0) uniform image2D uRoadMask;
+
+layout(std430, binding = SSBO_IDX_ROAD_BLIT_POINTS) buffer RoadPointsWorldBuffer {
+    vec4 controlPointsWorld[];
+};
+
+uniform int   u_numberOfControlPoints;
+uniform ivec2 u_textureSizeInPixels;
+uniform vec2  u_worldSpanXZ;            // meters covered by full texture in X,Z
+
+uniform float u_roadWidthInMeters;       // full width
+uniform float u_roadEdgeFeatherInMeters; // fade distance
+uniform float u_falloffExponent;         // 1=linear, 2=quad...
+
+float DistancePointToSegment(vec2 p, vec2 a, vec2 b) {
+    vec2 ab = b - a;
+    float d2 = dot(ab, ab);
+    float t = (d2 > 0.0) ? clamp(dot(p - a, ab) / d2, 0.0, 1.0) : 0.0;
+    vec2 c = a + t * ab;
+    return length(p - c);
+}
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+
+    if (pixelCoords.x >= u_textureSizeInPixels.x || pixelCoords.y >= u_textureSizeInPixels.y) return;
+    if (u_numberOfControlPoints < 2) { imageStore(uRoadMask, pixelCoords, vec4(0,0,0,1)); return; }
+
+     vec2 uv = vec2(pixelCoords) / vec2(u_textureSizeInPixels);
+    vec2 worldPositionXZ = uv * u_worldSpanXZ;
+
+    float halfRoadWidth = 0.5 * max(u_roadWidthInMeters, 0.0);
+    float featherWidth  = max(u_roadEdgeFeatherInMeters, 0.0);
+
+    // 1) Continuous tube: union of capsules (min over segments)
+    float s = 1e30; // signed distance to road interior; <0 = inside
+    for (int i = 0; i < u_numberOfControlPoints - 1; ++i) {
+        vec2 A = controlPointsWorld[i    ].xz;
+        vec2 B = controlPointsWorld[i + 1].xz;
+        float d = DistancePointToSegment(worldPositionXZ, A, B);
+        float sdCapsule = d - halfRoadWidth;   // capsule SDF
+        s = min(s, sdCapsule);
+    }
+
+    // 2) Square ends: intersect with half-planes perpendicular to start/end segments
+    //    (SDF intersection = max)
+    {
+        vec2 A0 = controlPointsWorld[0].xz;
+        vec2 A1 = controlPointsWorld[1].xz;
+        vec2 dir0 = normalize(A1 - A0);                 // along first segment
+        float sdStartPlane = -dot(worldPositionXZ - A0, dir0); // keep dot>=0
+        s = max(s, sdStartPlane);
+    }
+    {
+        int last = u_numberOfControlPoints - 1;
+        vec2 Bm1 = controlPointsWorld[last - 1].xz;
+        vec2 Bn  = controlPointsWorld[last    ].xz;
+        vec2 dirN = normalize(Bn - Bm1);                // along last segment
+        float sdEndPlane =  dot(worldPositionXZ - Bn, dirN);   // keep dot<=0
+        s = max(s, sdEndPlane);
+    }
+
+    // 3) Map signed distance to mask with feather (respects your exponent)
+    float maskValue = 0.0;
+    if (s <= 0.0) {
+        maskValue = 1.0;
+    } else if (featherWidth > 0.0) {
+        float t = clamp(s / featherWidth, 0.0, 1.0);
+        maskValue = pow(1.0 - t, max(u_falloffExponent, 1.0));
+    }
+
+    // Preserve max
+    float current = imageLoad(uRoadMask, pixelCoords).r;
+    float outputR = max(current, maskValue);
+    imageStore(uRoadMask, pixelCoords, vec4(outputR, 0, 0, 1));
+}

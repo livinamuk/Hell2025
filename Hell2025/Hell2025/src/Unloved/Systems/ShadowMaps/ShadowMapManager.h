@@ -7,6 +7,7 @@
 struct ShadowMapInfo {
     uint64_t lightId = 0;
     int32_t shadowMapIndex = -1;
+    uint8_t faceMask = 0x3f;
 };
 
 constexpr size_t SHADOW_MAP_HI_RES_MAX_COUNT = 5;

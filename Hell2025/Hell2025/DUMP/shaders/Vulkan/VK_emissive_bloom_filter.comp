@@ -1,0 +1,51 @@
+#version 460
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+layout(local_size_x = 16, local_size_y = 8, local_size_z = 1) in;
+
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
+
+layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
+layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_R11G11B10F, r11f_g11f_b10f) writeonly uniform image2D storageImagesR11G11B10F[];
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsEmissiveBloomFilter data;
+} pc;
+
+const float OUTER_WEIGHT = 0.095766798098283;
+const float OUTER_OFFSET = 3.29793480799148;
+const float INNER_WEIGHT = 0.303053194596644;
+const float INNER_OFFSET = 1.40919987708521;
+const float CENTER_WEIGHT = 0.202360014610147;
+
+vec3 SampleSource(vec2 sourcePixel) {
+    vec2 firstPixelCenter = vec2(pc.data.sourceOffset) + vec2(0.5);
+    vec2 lastPixelCenter = vec2(pc.data.sourceOffset + pc.data.sourceExtent) - vec2(0.5);
+    vec2 clampedPixel = clamp(sourcePixel, firstPixelCenter, lastPixelCenter);
+    vec2 sourceTextureExtent = vec2(textureSize(sampler2D(textures[nonuniformEXT(pc.data.sourceTextureIndex)], samplers[VULKAN_SAMPLER_IDX_LINEAR]), pc.data.sourceMip));
+    return textureLod(sampler2D(textures[nonuniformEXT(pc.data.sourceTextureIndex)], samplers[VULKAN_SAMPLER_IDX_LINEAR]), clampedPixel / sourceTextureExtent, float(pc.data.sourceMip)).rgb;
+}
+
+void main() {
+    ivec2 outputPixel = ivec2(gl_GlobalInvocationID.xy);
+    if (any(greaterThanEqual(outputPixel, pc.data.outputExtent))) {
+        return;
+    }
+
+    vec2 sourceToOutputScale = vec2(pc.data.sourceExtent) / vec2(pc.data.outputExtent);
+    vec2 sourceCenter = vec2(pc.data.sourceOffset) + (vec2(outputPixel) + vec2(0.5)) * sourceToOutputScale;
+    vec2 sampleStep = vec2(pc.data.direction) * sourceToOutputScale * pc.data.filterScale;
+
+    vec3 result = SampleSource(sourceCenter) * CENTER_WEIGHT;
+    result += SampleSource(sourceCenter - sampleStep * INNER_OFFSET) * INNER_WEIGHT;
+    result += SampleSource(sourceCenter + sampleStep * INNER_OFFSET) * INNER_WEIGHT;
+    result += SampleSource(sourceCenter - sampleStep * OUTER_OFFSET) * OUTER_WEIGHT;
+    result += SampleSource(sourceCenter + sampleStep * OUTER_OFFSET) * OUTER_WEIGHT;
+
+    imageStore(storageImagesR11G11B10F[nonuniformEXT(pc.data.outputImageIndex)], outputPixel, vec4(result, 1.0));
+}

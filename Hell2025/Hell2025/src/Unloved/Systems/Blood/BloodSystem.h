@@ -9,6 +9,18 @@
 #include <cstdint>
 #include <vector>
 
+
+struct BloodPoolDecal {
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 normal = glm::vec3(0.0f, 0.0f, 1.0f);
+    float scale = 0.5f;
+    float lifeTime = 0.0f;
+
+    void Update();
+};
+
+
+
 struct TestBloodDecal {
    glm::mat4 modelMatrix;
    glm::mat4 inverseModelMatrix;
@@ -36,6 +48,15 @@ namespace Unloved::BloodSystem {
 
     void BeginFrame();
     void Update();
+
+    void SpawnBloodPoolDecal(const glm::vec3& postion, const glm::vec3& normal);
+    const std::vector<BloodPoolDecal>& GetBloodPoolDecals();
+
+
+
+
+
+    // OLD BROKEN WIP BULLSHIIT BELOW
 
     void SpawnVatBlood(const glm::vec3& position, const glm::vec3& forward, float scale, uint64_t parentHitObjectId);
 

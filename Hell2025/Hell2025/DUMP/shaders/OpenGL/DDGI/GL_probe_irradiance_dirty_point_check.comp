@@ -1,0 +1,62 @@
+#version 450
+#include "../../common/types.glsl"
+
+layout(local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 4)  buffer ProbeStates                         { ProbeState probeStates[]; };
+layout(std430, binding = 5)  readonly buffer ProbePointIndicesBuffer    { uint probePointIndices[]; };
+layout(std430, binding = 6)  readonly buffer ProbePointOffsetsBuffer    { uint probePointOffsets[]; };
+layout(std430, binding = 7)  readonly buffer ProbePointCountsBuffer     { uint probePointCounts[]; };
+layout(std430, binding = 8)  readonly buffer DDGIVolumeBuffer           { DDGIVolume volume; };
+layout(std430, binding = 9)  readonly buffer PointCloudBuffer           { CloudPoint points[]; };
+layout(std430, binding = 10) readonly buffer PointCloudDirtyFlagsBuffer { uint pointCloudDirtyFlags[]; };
+
+void main() {
+    uint probeIdx = gl_GlobalInvocationID.x;
+
+    if (probeIdx >= uint(volume.totalProbes)) return;
+
+    uint globalProbeIdx = volume.probeOffset + probeIdx;
+    uint currentCooldown = probeStates[globalProbeIdx].irradianceCooldown;
+
+    if (currentCooldown == PROBE_MAX_IRRADIANCE_COOLDOWN) {
+        return;
+    }
+
+    uint offset = probePointOffsets[probeIdx];
+    uint count = probePointCounts[probeIdx];
+
+    // scan for dirty points
+    uint i = 0u;
+    for (; i + 3u < count; i += 4u) {
+        uint p0 = probePointIndices[offset + i];
+        uint p1 = probePointIndices[offset + i + 1u];
+        uint p2 = probePointIndices[offset + i + 2u];
+        uint p3 = probePointIndices[offset + i + 3u];
+
+        // sum flags to skip branching
+        uint sum = pointCloudDirtyFlags[p0] +
+                   pointCloudDirtyFlags[p1] +
+                   pointCloudDirtyFlags[p2] +
+                   pointCloudDirtyFlags[p3];
+
+        if (sum > 0u) {
+            currentCooldown = PROBE_MAX_IRRADIANCE_COOLDOWN;
+            break;
+        }
+    }
+
+    // check remaining points
+    if (currentCooldown != PROBE_MAX_IRRADIANCE_COOLDOWN) {
+        for (; i < count; i++) {
+            uint p = probePointIndices[offset + i];
+            if (pointCloudDirtyFlags[p] == 1u) {
+                currentCooldown = PROBE_MAX_IRRADIANCE_COOLDOWN;
+                break;
+            }
+        }
+    }
+
+    // execute single global memory write
+    probeStates[globalProbeIdx].irradianceCooldown = currentCooldown;
+}

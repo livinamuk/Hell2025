@@ -1,5 +1,6 @@
 #include "Inventory.h"
 
+#include "Hell/Common/Enum.h"
 #include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 #include "Hell/UI/TextBlitter.h"
@@ -14,6 +15,10 @@ namespace Unloved {
 void Inventory::Init() {
     CloseInventory();
     ClearInventory();
+}
+
+void Inventory::CleanUp() {
+    m_examineItemMeshNodes.CleanUp();
 }
 
 void Inventory::OpenInventory() {
@@ -43,7 +48,7 @@ void Inventory::CloseInventory() {
 }
 
 void Inventory::AddInventoryItem(const std::string& name) {
-    ItemInfo* itemInfo = Bible::GetItemInfoByName(name);
+    Bible::ItemInfo* itemInfo = Bible::GetItemInfoByName(name);
     if (!itemInfo) return;
 
     // Find the next free location
@@ -104,9 +109,9 @@ void Inventory::ClearInventory() {
 
     // Reset ammo states
     m_ammoStates.clear();
-    for (const std::string& name : Bible::GetAmmoNameList()) {
+    for (int i = 1; i < Hell::Enum::GetCount<Bible::Ammo>(); ++i) {
         AmmoState& state = m_ammoStates.emplace_back();
-        state.name = name;
+        state.ammo = Hell::Enum::FromInt<Bible::Ammo>(i);
         state.ammoOnHand = 0;
     }
 
@@ -185,7 +190,7 @@ InventoryItem* Inventory::GetItemAtIndex(int index) {
     else return &m_items[index];
 }
 
-ItemInfo* Inventory::GetSelectedItemInfo() {
+Bible::ItemInfo* Inventory::GetSelectedItemInfo() {
     int selectedItemIndex = GetSelectedItemIndex();
     if (selectedItemIndex == -1) return nullptr; // nothing at this slot
 
@@ -215,7 +220,7 @@ const std::string& Inventory::GetItemNameAtLocation(int x, int y) {
 const std::string& Inventory::GetSelectedItemHeading() {
     static std::string noItem = "";
 
-    ItemInfo* itemInfo = GetSelectedItemInfo();
+    Bible::ItemInfo* itemInfo = GetSelectedItemInfo();
     if (!itemInfo) return noItem;
 
     return itemInfo->m_inventoryInfo.heading;
@@ -224,7 +229,7 @@ const std::string& Inventory::GetSelectedItemHeading() {
 const std::string& Inventory::GetSelectedItemDescription() {
     static std::string noItem = "";
 
-    ItemInfo* itemInfo = GetSelectedItemInfo();
+    Bible::ItemInfo* itemInfo = GetSelectedItemInfo();
     if (!itemInfo) return noItem;
 
     return itemInfo->m_inventoryInfo.description;
@@ -262,7 +267,7 @@ void Inventory::UpdateOccupiedSlotsArray() {
     // Mark occupied cells
     for (int i = 0; i < (int)m_items.size(); i++) {
         InventoryItem& item = m_items[i];
-        ItemInfo* itemInfo = Bible::GetItemInfoByName(item.m_name);
+        Bible::ItemInfo* itemInfo = Bible::GetItemInfoByName(item.m_name);
         if (!itemInfo) continue;
 
         int w = itemInfo->GetCellSize(); // horizontal width by default
@@ -340,22 +345,20 @@ bool Inventory::ItemSelected() {
     return GetItemAtIndex(GetSelectedItemIndex()) != nullptr;
 }
 
-void Inventory::GiveAmmo(const std::string& name, int amount) {
+void Inventory::GiveAmmo(Bible::Ammo ammo, int amount) {
     if (amount == 0) {
-        Logging::Warning() << "Inventory::GiveAmmo(..) tried to give 0 '" << name << "' ammo";
+        Logging::Warning() << "Inventory::GiveAmmo(..) tried to give 0 '" << Hell::Enum::ToString(ammo) << "' ammo";
         return;
     }
 
     for (AmmoState& ammoState : m_ammoStates) {
-        if (ammoState.name == name) {
+        if (ammoState.ammo == ammo) {
             ammoState.ammoOnHand += amount;
             return;
         }
     }
 
-    AddInventoryItem(name);
-
-    Logging::Warning() << "Inventory::GiveAmmo(..) failed: '" << name << "' not found in m_ammoStates";
+    Logging::Warning() << "Inventory::GiveAmmo(..) failed: '" << Hell::Enum::ToString(ammo) << "' not found in m_ammoStates";
 }
 
 
@@ -376,7 +379,7 @@ void Inventory::GiveWeapon(const std::string& name) {
             // If you do already have it
             else {
                 if (WeaponInfo* weaponInfo = Bible::GetWeaponInfoByName(name)) {
-                    GiveAmmo(weaponInfo->ammoInfoName, Bible::GetWeaponMagSize(name));
+                    GiveAmmo(weaponInfo->ammo, Bible::GetWeaponMagSize(name));
                 }
             }
             return;
@@ -395,9 +398,9 @@ WeaponState* Inventory::GetWeaponStateByName(const std::string& name) {
     return nullptr;
 }
 
-AmmoState* Inventory::GetAmmoStateByName(const std::string& name) {
+AmmoState* Inventory::GetAmmoState(Bible::Ammo ammo) {
     for (int i = 0; i < m_ammoStates.size(); i++) {
-        if (m_ammoStates[i].name == name) {
+        if (m_ammoStates[i].ammo == ammo) {
             return &m_ammoStates[i];
         }
     }

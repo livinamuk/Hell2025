@@ -1,0 +1,50 @@
+#version 450
+#include "../../common/OpenGL/GL_binding_indices.glsl"
+#include "../../common/ocean_fft.glsl"
+
+struct Complex {
+    float r;
+    float i;
+};
+
+layout (std430, binding = SSBO_IDX_OCEAN_UPDATE_H) readonly restrict buffer BufferH { Complex h[]; };
+layout (std430, binding = SSBO_IDX_OCEAN_UPDATE_DISPLACEMENT_X) readonly restrict buffer BufferDispX { Complex dispX[]; };
+layout (std430, binding = SSBO_IDX_OCEAN_UPDATE_DISPLACEMENT_Z) readonly restrict buffer BufferDispZ { Complex dispZ[]; };
+layout(std430, binding = SSBO_IDX_OCEAN_UPDATE_GRADIENT_X) readonly buffer BufferGradX { Complex gradX[]; };
+layout(std430, binding = SSBO_IDX_OCEAN_UPDATE_GRADIENT_Z) readonly buffer BufferGradZ { Complex gradZ[]; };
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(rgba32f, binding = 0) uniform image2D DisplacementImage;
+layout(rgba32f, binding = 1) uniform image2D SlopeImage;
+
+uniform float u_dispScale;
+uniform float u_heightScale;
+
+void main() {
+    ivec2 pixelcoords = ivec2(gl_GlobalInvocationID.xy);
+    const int fftResolution = int(OCEAN_FFT_RESOLUTION);
+
+    if (pixelcoords.x >= fftResolution || pixelcoords.y >= fftResolution) {
+        return;
+    }
+
+    uint fftIndex = uint(pixelcoords.y * fftResolution + pixelcoords.x);
+    float checkerSign = ((pixelcoords.x + pixelcoords.y) & 1) != 0 ? 1.0 : -1.0;
+
+    // Displacement
+    float dispX = -checkerSign * dispX[fftIndex].r * u_dispScale;
+    float dispZ = -checkerSign * dispZ[fftIndex].r * u_dispScale;
+
+    // Height
+    float height = checkerSign * h[fftIndex].r * u_heightScale;
+   
+    // Keep slopes linear so bands and mip levels can add properly
+    float gx = gradX[fftIndex].r;
+    float gz = gradZ[fftIndex].r;
+    float normalFlipSign = ((pixelcoords.x + pixelcoords.y) & 1) != 0 ? -1.0 : 1.0;
+    vec2 normalXZ = vec2(normalFlipSign * gx, normalFlipSign * gz) * u_heightScale;
+
+    imageStore(DisplacementImage, pixelcoords, vec4(dispX, height, dispZ, 0));
+    imageStore(SlopeImage, pixelcoords, vec4(normalXZ, 0, 0));
+}

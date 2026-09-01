@@ -1,0 +1,69 @@
+#version 460
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+#include "../common/ddgi.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsDDGIProbeStateUpdate data;
+} pc;
+
+layout(buffer_reference, scalar) buffer ProbeStatesBuffer { ProbeState probeStates[]; };
+layout(buffer_reference, scalar) readonly buffer DirtyDoorAABBBuffer { AABB dirtyDoorAABBs[]; };
+
+DDGIVolume GetVolume() {
+    DDGIVolume volume;
+    volume.origin = pc.data.volumeOrigin;
+    volume.probeSpacing = pc.data.probeSpacing;
+    volume.probeCounts = pc.data.probeCounts;
+    volume.totalProbes = int(pc.data.totalProbes);
+    volume.probeOffset = pc.data.probeOffset;
+    return volume;
+}
+
+void ApplyDirtyDoorDistanceUpdate(uint probeIdx, DDGIVolume volume, ProbeStatesBuffer probeStates, DirtyDoorAABBBuffer dirtyDoorAABBs) {
+    uint globalProbeIdx = volume.probeOffset + probeIdx;
+    ivec3 probeCoords = DDGIGetProbeCoords(int(probeIdx), volume);
+    vec3 probePos = DDGIGetProbeWorldPosition(probeCoords, volume, probeStates.probeStates[globalProbeIdx]);
+
+    float influenceRadius = volume.probeSpacing * PROBE_MAX_RAY_DISTANCE;
+    float influenceRadiusSq = influenceRadius * influenceRadius;
+
+    for (uint i = 0; i < pc.data.dirtyDoorAABBCount; i++) {
+        AABB door = dirtyDoorAABBs.dirtyDoorAABBs[i];
+        vec3 closestPoint = clamp(probePos, door.boundsMin.xyz, door.boundsMax.xyz);
+        vec3 diff = closestPoint - probePos;
+        float distSq = dot(diff, diff);
+
+        if (distSq <= influenceRadiusSq) {
+            probeStates.probeStates[globalProbeIdx].distanceCooldown = PROBE_MAX_DISTANCE_COOLDOWN;
+            break;
+        }
+    }
+}
+
+void main() {
+    uint probeIdx = gl_GlobalInvocationID.x;
+    if (probeIdx >= pc.data.totalProbes) return;
+
+    DDGIVolume volume = GetVolume();
+    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pc.data.probeStatesDeviceAddress);
+    DirtyDoorAABBBuffer dirtyDoorAABBs = DirtyDoorAABBBuffer(pc.data.dirtyDoorAABBsDeviceAddress);
+
+    uint globalProbeIdx = volume.probeOffset + probeIdx;
+    probeStates.probeStates[globalProbeIdx].isRelevant = false;
+
+    ApplyDirtyDoorDistanceUpdate(probeIdx, volume, probeStates, dirtyDoorAABBs);
+
+    if (pc.data.time < 2.5) {
+        probeStates.probeStates[globalProbeIdx].distanceCooldown = PROBE_MAX_DISTANCE_COOLDOWN;
+        probeStates.probeStates[globalProbeIdx].irradianceCooldown = PROBE_MAX_IRRADIANCE_COOLDOWN;
+        probeStates.probeStates[globalProbeIdx].relocationOffset = vec3(0.0);
+        probeStates.probeStates[globalProbeIdx].isActive = true;
+        probeStates.probeStates[globalProbeIdx].isRelevant = true;
+    }
+}

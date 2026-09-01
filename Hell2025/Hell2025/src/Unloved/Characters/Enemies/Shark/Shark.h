@@ -2,8 +2,11 @@
 
 #include "Hell/Physics/Ragdoll/Ragdoll.h"
 
+#include "Unloved/Characters/CharacterSpine.h"
 #include "Unloved/Common/CreateInfo.h"
-#include "Unloved/Objects/Renderables/AnimatedGameObject.h"
+#include "Unloved/Bible/Bible_enums.h"
+#include "Unloved/Systems/Animator/AnimatorInstance.h"
+#include "Unloved/Objects/Renderables/SkinnedGameObject.h"
 
 #include <cstdint>
 #include <string>
@@ -24,19 +27,10 @@ enum class SharkHuntingState {
     UNDEFINED
 };
 
-enum class SharkMovementDirection {
-    STRAIGHT,
-    LEFT,
-    RIGHT,
-    UNDEFINED
-};
-
 namespace Unloved {
 
-    #define SHARK_SPINE_SEGMENT_COUNT 11
-    #define COLLISION_SPHERE_RADIUS 1
-    #define COLLISION_TEST_STEP_COUNT 40
-    #define SHARK_HEALTH_MAX 1000
+    inline constexpr int kSharkCollisionSphereRadius = 1;
+    inline constexpr int kSharkHealthMax = 1000;
 
     struct Shark {
         Shark() = default;
@@ -59,32 +53,26 @@ namespace Unloved {
         void Kill();
         void Respawn();
         void SetPositionToBeginningOfPath();
-        void PlayAnimation(const std::string& animationName, float speed);
-        void PlayAndLoopAnimation(const std::string& animationName, float speed);
+        void PlayAnimation(Bible::AnimationSlot animationSlot, float speed);
+        void PlayAndLoopAnimation(Bible::AnimationSlot animationSlot, float speed);
         void SetMovementState(SharkMovementState state);
         void StraightenSpine(float deltaTime, float straightSpeed);
 
         std::string GetDebugInfoAsString();
         void DrawDebug();
 
-        Unloved::AnimatedGameObject* GetAnimatedGameObject();
+        AnimatorInstance* GetAnimatorInstance();
         Ragdoll* GetRagdoll();
+        SkinnedGameObject* GetSkinnedGameObject();
 
-        glm::vec3 m_spinePositions[SHARK_SPINE_SEGMENT_COUNT];
-        std::string m_spineBoneNames[SHARK_SPINE_SEGMENT_COUNT];
-        float m_spineSegmentLengths[SHARK_SPINE_SEGMENT_COUNT - 1];
-
-        const bool IsDead() const { return !m_alive; }
-        const bool IsAlive() const { return m_alive; }
-        const uint64_t& GetObjectId() const { return m_objectId; };
-        const uint64_t& GetRagdollId() const { return m_RagdollId; };
-        const glm::vec3& GetPosition() const { return m_spinePositions[0]; }
-
-        SharkHuntingState GetHuntingState() { return m_huntingState; }
-        SharkMovementState GetMovementState() { return m_movementState; }
-
+        SharkHuntingState GetHuntingState()          { return m_huntingState; }
+        SharkMovementState GetMovementState()        { return m_movementState; }
+        const bool IsDead() const                    { return !m_alive; }
+        const bool IsAlive() const                   { return m_alive; }
+        const uint64_t& GetObjectId() const          { return m_objectId; };
+        const glm::vec3& GetPosition() const         { return m_spine.GetLeadPosition(); }
         const SharkCreateInfo& GetCreateInfo() const { return m_createInfo; }
-        const std::string& GetEditorName() const { return m_createInfo.editorName; }
+        const std::string& GetEditorName() const     { return m_createInfo.editorName; }
 
     private:
         void CalculateTargetFromPath();
@@ -92,12 +80,15 @@ namespace Unloved {
         void CalculateForwardVectorFromArrowKeys(float deltaTime);
         void CalculateTargetFromPlayer();
         void MoveShark(float deltaTime);
-        void SetSpinePosition(const glm::vec3& position);
+        void ResetSpine(const glm::vec3& position);
 
         void UpdateHuntingLogic(float deltaTime);
 
-        // Util
+        // Animation
         int GetAnimationFrameNumber();
+        void UpdateSpinePose();
+
+        // Movement queries
         float GetDistanceMouthToTarget3D();
         float GetDistanceToTarget2D();
         float GetTurningRadius() const;
@@ -110,26 +101,24 @@ namespace Unloved {
         glm::vec3 GetMouthPosition2D();
         glm::vec3 GetCollisionLineEnd();
         glm::vec3 GetCollisionSphereFrontPosition();
-        glm::vec3 GetSpinePosition(int index);
         glm::vec3 GetEvadePoint3D();
         glm::vec3 GetEvadePoint2D();
 
-
         uint64_t m_objectId = 0;
-        uint64_t m_RagdollId = 0;
-        uint64_t g_animatedGameObjectObjectId = 0; 
+        uint64_t m_animatorInstanceId = 0;
+        uint64_t m_skinnedGameObjectId = 0;
         uint64_t m_huntedPlayerId = 0;
-        int m_health = SHARK_HEALTH_MAX;
+        uint32_t m_animationLayerIndex = 0;
+
+        int m_health = kSharkHealthMax;
         int m_logicSubStepCount = 8;
         float m_swimSpeed = 8.0f;
         float m_rotationSpeed = 2.5f;
         glm::vec3 m_forward = glm::vec3(0);
         glm::vec3 m_right = glm::vec3(0);
-        glm::vec3 m_lastKnownTargetPosition = glm::vec3(0);
-        glm::vec3 m_left = glm::vec3(0); 
+        glm::vec3 m_left = glm::vec3(0);
         bool m_hasBitPlayer = false;
-        bool m_alive = false; 
-        bool m_playerSafe = false;
+        bool m_alive = false;
         float m_yHeight = 0.0f;
 
         SharkHuntingState m_huntingState = SharkHuntingState::UNDEFINED;
@@ -138,6 +127,7 @@ namespace Unloved {
         int32_t m_nextPathPointIndex = 0;
         glm::vec3 m_targetPosition = glm::vec3(0);
         std::vector<glm::vec3> m_path;
+        CharacterSpine m_spine;
         SharkCreateInfo m_createInfo;
     };
 }

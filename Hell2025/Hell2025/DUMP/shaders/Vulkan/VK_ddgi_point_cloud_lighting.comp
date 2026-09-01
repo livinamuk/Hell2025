@@ -1,0 +1,99 @@
+#version 460
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_ray_query : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+#include "../common/constants.glsl"
+#include "../common/types.glsl"
+#include "../common/util.glsl"
+#include "../common/lighting.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
+#include "../common/Vulkan/VK_ray_query_triangle.glsl"
+
+layout(local_size_x = 128) in;
+
+layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
+layout(set = 0, binding = DESC_IDX_TEXTURE_SAMPLERS) uniform sampler textureSamplers[];
+layout(set = 1, binding = 0) uniform accelerationStructureEXT u_DDGIRayQueryAccelerationStructure;
+
+layout(buffer_reference, scalar) buffer PointCloudBuffer { CloudPoint points[]; };
+layout(buffer_reference, scalar) buffer PointCloudDirtyFlagsBuffer { uint pointCloudDirtyFlags[]; };
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsDDGIPointCloudLighting data;
+} pc;
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx >= pc.data.pointCount) return;
+
+    PointCloudBuffer pointCloud = PointCloudBuffer(pc.data.pointCloudDeviceAddress);
+    PointCloudDirtyFlagsBuffer dirtyFlags = PointCloudDirtyFlagsBuffer(pc.data.pointCloudDirtyFlagsDeviceAddress);
+    LightBuffer lightBuffer = pc.data.frame.lightBuffer;
+
+    vec3 pointPosition = pointCloud.points[idx].position.xyz;
+    vec3 pointNormal = pointCloud.points[idx].normal.xyz;
+
+    bool needsUpdate = pc.data.forceUpdate != 0u;
+    if (!needsUpdate) {
+        for (uint i = 0u; i < pc.data.lightCount; i++) {
+            Light light = lightBuffer.lights[i];
+            if (light.isDirtyForRaytracing == 0) continue;
+
+            vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
+            if (PointInSphere(pointPosition, lightPosition, light.radius)) {
+                needsUpdate = true;
+                break;
+            }
+        }
+    }
+
+    if (!needsUpdate) {
+        dirtyFlags.pointCloudDirtyFlags[idx] = 0u;
+        return;
+    }
+
+    vec3 directLight = vec3(0.0);
+
+    for (uint i = 0u; i < pc.data.lightCount; i++) {
+        Light light = lightBuffer.lights[i];
+        vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
+
+        vec3 diff = lightPosition - pointPosition;
+        float distSq = dot(diff, diff);
+        float radiusSq = light.radius * light.radius;
+        if (distSq >= radiusSq) continue;
+
+        float dist = sqrt(distSq);
+        vec3 lightDir = diff / max(dist, 0.0001);
+        float ndotl = dot(pointNormal, lightDir);
+        if (ndotl <= 0.0) continue;
+
+        float minDistance = 0.001;
+        float maxDistance = dist;
+        if (RayQueryAnyTriangleHit(u_DDGIRayQueryAccelerationStructure, 0u, 0xff, pointPosition, minDistance, lightDir, maxDistance)) {
+            continue;
+        }
+
+        float lightAttenuation = smoothstep(light.radius, 0.0, dist);
+        vec3 lightColor = vec3(light.colorR, light.colorG, light.colorB);
+        float candelas = 1.0;
+
+        if (light.iesTextureIndex != 0) {
+            uint iesTextureIndex = uint(light.iesTextureIndex);
+            candelas = ApplyIESProfile(pointPosition, light, textures[nonuniformEXT(iesTextureIndex)], textureSamplers[nonuniformEXT(iesTextureIndex)]);
+        }
+
+        directLight += vec3(lightAttenuation * ndotl) * lightColor * candelas;
+    }
+
+    vec3 baseColor = pointCloud.points[idx].baseColor.xyz;
+    float metallic = 0.0;
+    vec3 diffuseColor = baseColor * (1.0 - metallic);
+    vec3 outgoingRadiance = (directLight * diffuseColor) / PI;
+
+    pointCloud.points[idx].directLightingRGB_dirty = vec4(outgoingRadiance, 1.0);
+    dirtyFlags.pointCloudDirtyFlags[idx] = 1u;
+}

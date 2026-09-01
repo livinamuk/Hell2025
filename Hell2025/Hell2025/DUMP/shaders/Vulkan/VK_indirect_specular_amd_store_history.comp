@@ -1,0 +1,65 @@
+#version 460
+
+// FidelityFX Reflection DNSR implementation
+// FidelityFX SDK 1.1.4 c6efa6bf7f2027b3ec94f28578bb5965eabb9e55
+
+#include "../common/normal_encoding.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
+layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2D storageImagesRGBA16F[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_R32F, r32f) uniform image2D storageImagesR32F[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_R16F, r16f) uniform image2D storageImagesR16F[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_R11G11B10F, r11f_g11f_b10f) uniform image2D storageImagesR11G11B10F[];
+
+void main() {
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 renderSize = textureSize(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_INPUT], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
+    
+    if (any(greaterThanEqual(pixel, renderSize))) return;
+
+    float depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixel, 0).r;
+    vec2 packedNormal = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_NORMAL_XY_ROUGHNESS_MISC], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixel, 0).rg;
+    vec3 worldNormal = DecodeOct(packedNormal);
+
+    // AMD linearly samples history normals. 
+    // Never linearly filter your octahedral encoding: expand it once into [0, 1] world-space XYZ
+
+    imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_INDIRECT_SPECULAR_AMD_NORMAL_HISTORY], pixel, vec4(worldNormal * 0.5 + 0.5, 0.0));
+    imageStore(storageImagesR32F[VULKAN_STORAGE_IMAGE_R32F_IDX_INDIRECT_SPECULAR_AMD_DEPTH_HISTORY], pixel, vec4(depth, 0.0, 0.0, 0.0));
+
+    // Preserve AMD's two physical variance sides. 
+    // PrefilteredVariance is the previous/history side after Prefilter
+    // Variance is the final current side after Resolve Temporal
+    // Rotate them into next frame's fixed bindings
+
+    float temporalVariance = imageLoad(storageImagesR16F[VULKAN_STORAGE_IMAGE_R16F_IDX_INDIRECT_SPECULAR_AMD_VARIANCE], pixel).r;
+    float prefilteredVariance = imageLoad(storageImagesR16F[VULKAN_STORAGE_IMAGE_R16F_IDX_INDIRECT_SPECULAR_AMD_PREFILTERED_VARIANCE], pixel).r;
+    imageStore(storageImagesR16F[VULKAN_STORAGE_IMAGE_R16F_IDX_INDIRECT_SPECULAR_AMD_VARIANCE_HISTORY], pixel, vec4(temporalVariance, 0.0, 0.0, 0.0));
+    imageStore(storageImagesR16F[VULKAN_STORAGE_IMAGE_R16F_IDX_INDIRECT_SPECULAR_AMD_VARIANCE], pixel, vec4(prefilteredVariance, 0.0, 0.0, 0.0));
+
+    // AMD alternates the sample-count SRV/UAV resources using frame parity
+    // Exchange their contents so your bindings have identical read/write roles on the next frame without collapsing both sides
+
+    float currentSampleCount = imageLoad(storageImagesR16F[VULKAN_STORAGE_IMAGE_R16F_IDX_INDIRECT_SPECULAR_AMD_SAMPLE_COUNT], pixel).r;
+    float historySampleCount = imageLoad(storageImagesR16F[VULKAN_STORAGE_IMAGE_R16F_IDX_INDIRECT_SPECULAR_AMD_SAMPLE_COUNT_HISTORY], pixel).r;
+    
+    imageStore(storageImagesR16F[VULKAN_STORAGE_IMAGE_R16F_IDX_INDIRECT_SPECULAR_AMD_SAMPLE_COUNT], pixel, vec4(historySampleCount, 0.0, 0.0, 0.0));
+    imageStore(storageImagesR16F[VULKAN_STORAGE_IMAGE_R16F_IDX_INDIRECT_SPECULAR_AMD_SAMPLE_COUNT_HISTORY], pixel, vec4(currentSampleCount, 0.0, 0.0, 0.0));
+
+    // Average radiance has one texel per 8x8 render tile. 
+    // Swap only that reduced-resolution region while this full-resolution history pass runs
+
+    ivec2 averageSize = imageSize(storageImagesR11G11B10F[VULKAN_STORAGE_IMAGE_R11G11B10F_IDX_INDIRECT_SPECULAR_AMD_AVERAGE]);
+    
+    if (all(lessThan(pixel, averageSize))) {
+        vec3 currentAverage = imageLoad(storageImagesR11G11B10F[VULKAN_STORAGE_IMAGE_R11G11B10F_IDX_INDIRECT_SPECULAR_AMD_AVERAGE], pixel).rgb;
+        vec3 historyAverage = imageLoad(storageImagesR11G11B10F[VULKAN_STORAGE_IMAGE_R11G11B10F_IDX_INDIRECT_SPECULAR_AMD_AVERAGE_HISTORY],pixel).rgb;
+        
+        imageStore(storageImagesR11G11B10F[VULKAN_STORAGE_IMAGE_R11G11B10F_IDX_INDIRECT_SPECULAR_AMD_AVERAGE], pixel, vec4(historyAverage, 0.0));
+        imageStore(storageImagesR11G11B10F[VULKAN_STORAGE_IMAGE_R11G11B10F_IDX_INDIRECT_SPECULAR_AMD_AVERAGE_HISTORY], pixel, vec4(currentAverage, 0.0));
+    }
+}

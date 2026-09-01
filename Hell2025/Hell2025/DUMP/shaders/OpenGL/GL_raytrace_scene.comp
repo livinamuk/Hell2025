@@ -1,0 +1,78 @@
+#version 450
+#include "../common/OpenGL/GL_binding_indices.glsl"
+#include "../common/raytracing.glsl"
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(rgba8, binding = 0) uniform image2D OutputImage;
+
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS) buffer lightsBuffer { Light lights[]; };
+
+uniform mat4 u_projectionMatrix;
+uniform mat4 u_viewMatrix;
+
+void main() {
+	ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);   
+
+    vec3 finalColor = vec3(0, 0, 0);
+
+    mat4 projInverse = inverse(u_projectionMatrix);
+    mat4 viewInverse = inverse(u_viewMatrix);
+    
+    const vec2 pixelCenter = pixelCoords + vec2(0.5);
+	const vec2 inUV = pixelCenter / vec2(imageSize(OutputImage));
+	vec2 d = inUV * 2.0 - 1.0;	
+	vec4 origin = viewInverse * vec4(0,0,0,1);
+	vec4 target = projInverse * vec4(d.x, d.y, 1, 1);		
+	vec4 direction = viewInverse * vec4(normalize(target.xyz / target.w), 0);	
+
+    vec3 rayOrigin = origin.xyz;
+    vec3 rayDir = direction.xyz;
+            
+    float minDistance = 0.01;
+    float maxDistance = 100.0;
+
+    RayResult record;
+
+    if (ClosestHit(rayOrigin, rayDir, minDistance, maxDistance, record)) {
+        Light light = lights[0];
+        vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
+        vec3 lightColor = vec3(light.colorR, light.colorG, light.colorB);
+        float lightStrength = light.strength;
+        float lightRadius = light.radius;
+
+        vec3 hitPos = rayOrigin + rayDir * abs(record.t);
+        float dist = length(lightPosition - hitPos);
+
+        float attenuation = lightStrength / (dist * dist + 0.0001);
+
+        float radiusFalloff = clamp(1.0 - (dist / lightRadius), 0.0, 1.0);
+        attenuation *= radiusFalloff;
+
+        vec3 albedo = vec3(1.0, 1.0, 1.0);
+        finalColor += albedo * lightColor * attenuation;
+    }
+
+    
+    if (ClosestHit(rayOrigin, rayDir, minDistance, maxDistance, record)) {
+        Light light = lights[2];
+        vec3 lightPosition = vec3(light.posX, light.posY, light.posZ);
+        vec3 lightColor = vec3(light.colorR, light.colorG, light.colorB);
+        float lightStrength = light.strength;
+        float lightRadius = light.radius;
+
+        vec3 hitPos = rayOrigin + rayDir * abs(record.t);
+        float dist = length(lightPosition - hitPos);
+
+        float attenuation = lightStrength / (dist * dist + 0.0001);
+
+        float radiusFalloff = clamp(1.0 - (dist / lightRadius), 0.0, 1.0);
+        attenuation *= radiusFalloff;
+
+        vec3 albedo = vec3(1.0, 1.0, 1.0);
+        finalColor += albedo * lightColor * attenuation;
+    }
+
+	imageStore(OutputImage, pixelCoords, vec4(finalColor, 1));
+}
+

@@ -1,0 +1,28 @@
+#version 460
+
+// FidelityFX SDK 1.1.4 PrepareIndirectArgs
+// The first triplet is retained even though this engine replaces SSSR intersection with a ray-query render pass
+
+#include "../common/Vulkan/VK_binding_indices.glsl"
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = DESC_IDX_SSBOS, std430) buffer AMDStorageBuffer {
+    uint data[];
+} amdStorageBuffers[];
+
+void main() {
+    uint rayCount = amdStorageBuffers[VULKAN_SSBO_IDX_INDIRECT_SPECULAR_AMD_RAY_COUNTER].data[0];
+    amdStorageBuffers[VULKAN_SSBO_IDX_INDIRECT_SPECULAR_AMD_INDIRECT_ARGS].data[0] = (rayCount + 63u) / 64u;
+    amdStorageBuffers[VULKAN_SSBO_IDX_INDIRECT_SPECULAR_AMD_INDIRECT_ARGS].data[1] = 1u;
+    amdStorageBuffers[VULKAN_SSBO_IDX_INDIRECT_SPECULAR_AMD_INDIRECT_ARGS].data[2] = 1u;
+    amdStorageBuffers[VULKAN_SSBO_IDX_INDIRECT_SPECULAR_AMD_RAY_COUNTER].data[0] = 0u;
+    amdStorageBuffers[VULKAN_SSBO_IDX_INDIRECT_SPECULAR_AMD_RAY_COUNTER].data[1] = rayCount;
+
+    uint tileCount = amdStorageBuffers[VULKAN_SSBO_IDX_INDIRECT_SPECULAR_AMD_RAY_COUNTER].data[2];
+    amdStorageBuffers[VULKAN_SSBO_IDX_INDIRECT_SPECULAR_AMD_INDIRECT_ARGS].data[3] = tileCount;
+    amdStorageBuffers[VULKAN_SSBO_IDX_INDIRECT_SPECULAR_AMD_INDIRECT_ARGS].data[4] = 1u;
+    amdStorageBuffers[VULKAN_SSBO_IDX_INDIRECT_SPECULAR_AMD_INDIRECT_ARGS].data[5] = 1u;
+    amdStorageBuffers[VULKAN_SSBO_IDX_INDIRECT_SPECULAR_AMD_RAY_COUNTER].data[2] = 0u;
+    amdStorageBuffers[VULKAN_SSBO_IDX_INDIRECT_SPECULAR_AMD_RAY_COUNTER].data[3] = tileCount;
+}

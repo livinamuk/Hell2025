@@ -1,6 +1,8 @@
 #version 450
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
+#include "../../common/flags.glsl"
+
 layout(rgba8, binding = 0) uniform image2D GBufferBaseColorMetallicImage;
 layout(rgb10_a2, binding = 1) uniform image2D GBufferNormalXYRoughnessMiscImage;
 layout(rgba16f, binding = 2) uniform image2D GBufferVelocityXYOcclusionSubSurfaceImage;
@@ -29,6 +31,9 @@ void main() {
     vec4 baseColorMetallic = imageLoad(GBufferBaseColorMetallicImage, px);
     vec4 normalXYRoughnessMisc = imageLoad(GBufferNormalXYRoughnessMiscImage, px);
     vec4 velocityXYOcclusionSubSurface = imageLoad(GBufferVelocityXYOcclusionSubSurfaceImage, px);
+
+    uint miscFlags = DecodeMiscFlags(normalXYRoughnessMisc.a);
+    if ((miscFlags & MISC_FLAG_DYNAMIC_OBJECT) != 0u) return;
 
     vec3 bloodBaseColor = vec3(0.2, 0.00, 0);
     float bloodRoughness = 0.125;

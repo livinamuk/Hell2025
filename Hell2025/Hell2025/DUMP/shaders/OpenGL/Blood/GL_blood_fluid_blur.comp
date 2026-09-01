@@ -1,0 +1,55 @@
+#version 460
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(binding = 0, r32f) uniform readonly image2D u_inputTex;
+layout(binding = 1, r32f) uniform writeonly image2D u_outputTex;
+
+uniform ivec2 u_screenSize;
+uniform vec2 u_dir; 
+
+// Increase this for a wider "weld"
+const float RADIUS = 4.0; 
+// Sigma controls how "fat" the blur is. Higher = more melted.
+const float SIGMA = RADIUS * 0.5;
+
+void main() {
+    ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
+    if (coords.x >= u_screenSize.x || coords.y >= u_screenSize.y) return;
+
+    float centerDepth = imageLoad(u_inputTex, coords).r;
+
+    float sum = 0.0;
+    float totalWeight = 0.0;
+    bool foundAny = false;
+
+    for (float i = -RADIUS; i <= RADIUS; i += 1.0) {
+        ivec2 sCoords = coords + ivec2(u_dir * i);
+        sCoords = clamp(sCoords, ivec2(0), u_screenSize - 1);
+        
+        float sDepth = imageLoad(u_inputTex, sCoords).r;
+
+        // If we hit background, we ignore it, but we don't 'continue'
+        // so the weight doesn't get messed up.
+        if (sDepth > -900.0) {
+            // Gaussian Weight: e^(-x^2 / 2sigma^2)
+            float weight = exp(-(i * i) / (2.0 * SIGMA * SIGMA));
+            
+            sum += sDepth * weight;
+            totalWeight += weight;
+            foundAny = true;
+        }
+    }
+
+    if (!foundAny) {
+        imageStore(u_outputTex, coords, vec4(-1000.0, 0.0, 0.0, 1.0));
+        return;
+    }
+
+    float result = sum / totalWeight;
+
+    result = abs(result);
+
+    // In your C++ loop, for the final pass, we keep it as raw float.
+    // For your debug view pass, you can keep the abs() mapping.
+    imageStore(u_outputTex, coords, vec4(result, 0.0, 0.0, 1.0));
+}

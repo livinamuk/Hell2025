@@ -1,0 +1,59 @@
+#version 460
+
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "VK_indirect_specular_amd_config.glsl"
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
+layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2D storageImagesRGBA16F[];
+
+vec4 LoadSparseRayInput(ivec2 pixel) {
+    return texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_RAY_INPUT], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixel, 0);
+}
+
+float LoadRoughness(ivec2 pixel) {
+    return texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_EXTRACTED_ROUGHNESS], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixel, 0).r;
+}
+
+void main() {
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 outputSize = imageSize(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_INDIRECT_SPECULAR_AMD_INPUT]);
+
+    if (any(greaterThanEqual(pixel, outputSize))) {
+        return;
+    }
+
+    vec4 resolvedSample = LoadSparseRayInput(pixel);
+    ivec2 donorPixel = pixel;
+    bool needsCopy = true;
+
+    if (resolvedSample.a == VK_INDIRECT_SPECULAR_AMD_COPY_HORIZONTAL) {
+        donorPixel.x ^= 1;
+    } 
+    else if (resolvedSample.a == VK_INDIRECT_SPECULAR_AMD_COPY_VERTICAL) {
+        donorPixel.y ^= 1;
+    } 
+    else if (resolvedSample.a == VK_INDIRECT_SPECULAR_AMD_COPY_DIAGONAL) {
+        donorPixel ^= ivec2(1);
+    } 
+    else {
+        needsCopy = false;
+    }
+
+    if (needsCopy) {
+        bool donorInBounds =
+            all(greaterThanEqual(donorPixel, ivec2(0))) &&
+            all(lessThan(donorPixel, outputSize));
+
+        if (donorInBounds && LoadRoughness(donorPixel) < VK_INDIRECT_SPECULAR_AMD_ROUGHNESS_THRESHOLD) {
+            resolvedSample = LoadSparseRayInput(donorPixel);
+        } 
+        else {
+            resolvedSample = vec4(0.0);
+        }
+    }
+
+    imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_INDIRECT_SPECULAR_AMD_INPUT], pixel, resolvedSample);
+}

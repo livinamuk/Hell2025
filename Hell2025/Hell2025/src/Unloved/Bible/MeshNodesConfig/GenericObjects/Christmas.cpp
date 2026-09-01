@@ -3,7 +3,7 @@
 #include "Hell/Common/Random.h"
 #include "Hell/Logging.h"
 
-namespace Bible {
+namespace Unloved::Bible {
     using namespace Unloved;
 
   void ConfigureMeshNodesChristmasPresentSmall(uint64_t id, MeshNodes* meshNodes) {

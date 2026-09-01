@@ -64,7 +64,7 @@ void Inventory::UpdateItemViewScreen(float deltaTime) {
         }
     }
 	else {
-		ItemInfo* itemInfo = Bible::GetItemInfoByName(GetSelectedItemName());
+		Bible::ItemInfo* itemInfo = Bible::GetItemInfoByName(GetSelectedItemName());
         if (itemInfo) {
 
 			// Use item
@@ -109,14 +109,14 @@ void Inventory::UpdateItemViewScreen(float deltaTime) {
 }
 
 void Inventory::InitMeshNodesFromSelectedItem() {
-    ItemInfo* itemInfo = Bible::GetItemInfoByName(GetSelectedItemName());
+    Bible::ItemInfo* itemInfo = Bible::GetItemInfoByName(GetSelectedItemName());
     if (!itemInfo) return;
 
-    Bible::ConfigureMeshNodesByItemName(NO_ID, itemInfo->m_name, &m_examineItemMeshNodes, false);
+    Bible::ConfigureMeshNodesByItem(NO_ID, itemInfo->GetItem(), &m_examineItemMeshNodes, false);
 }
 
 void Inventory::UpdateExamineScreen(float deltaTime) {
-    ItemInfo* itemInfo = Bible::GetItemInfoByName(GetSelectedItemName());
+    Bible::ItemInfo* itemInfo = Bible::GetItemInfoByName(GetSelectedItemName());
     Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(m_localPlayerIndex);
 
     if (!itemInfo) return;
@@ -126,10 +126,6 @@ void Inventory::UpdateExamineScreen(float deltaTime) {
     if (!model) {
         m_examineItemMeshNodes.CleanUp();
         return;
-    }
-
-    if (Input::KeyPressed(HELL_KEY_ENTER)) {
-        Bible::Init();
     }
 
     float rotateSensitivity = 0.25f;

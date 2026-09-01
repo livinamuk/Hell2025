@@ -54,7 +54,8 @@ namespace Hell::Physics {
     int GetHeightFieldCount();
 
     Ragdoll* GetRagdollById(uint64_t ragdollId);
-    uint64_t SpawnRagdoll(const glm::vec3& position, const glm::vec3& eulerRotation, const std::string& ragdollName, uint64_t parentObjectId, PhysicsFilterData filterData);
+    uint64_t SpawnRagdoll(const glm::vec3& position, const glm::vec3& eulerRotation, const std::string& ragdollName, uint64_t parentObjectId);
+    uint64_t SpawnRagdoll(const glm::vec3& position, const glm::vec3& eulerRotation, const RagdollAsset& asset, uint64_t parentObjectId);
     void RemoveAnyRagdollMarkedForRemoval();
     void MarkRagdollForRemoval(uint64_t ragdollId);
 
@@ -97,6 +98,11 @@ namespace Hell::Physics {
     PxRigidDynamic* CreateRigidDynamic(Transform worldTransform, PhysicsFilterData filterData, PxShape* shape, Transform shapeOffset = Transform());
     PxRigidDynamic* CreateRigidDynamic(PxShape* shape, glm::mat4 worldMatrix, glm::mat4 shapeOffsetMatrix, PhysicsFilterData filterData);
     PxShape* CreateConvexShapeFromVertexList(std::span<Vertex>& vertices);
+    PxShape* CreateConvexShapeFromVertexList(
+        std::span<const glm::vec3> vertices,
+        glm::vec3 scale = glm::vec3(1.0f),
+        PxMaterial* material = nullptr
+    );
 
     void Destroy(PxRigidDynamic*& rigidDynamic);
     void Destroy(PxRigidStatic*& rigidStatic);

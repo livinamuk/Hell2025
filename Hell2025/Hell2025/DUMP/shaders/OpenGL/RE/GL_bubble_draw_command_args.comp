@@ -1,0 +1,23 @@
+#version 450
+#include "../../common/OpenGL/GL_binding_indices.glsl"
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+struct DrawArraysCommand {
+    uint count;
+    uint instanceCount;
+    uint firstVertex;
+    uint baseInstance;
+};
+
+layout(std430, binding = SSBO_IDX_BUBBLE_DRAW_POSITIONS) readonly buffer BubblePositionsBuffer { vec4 bubblePositions[]; }; // unused atm
+layout(std430, binding = SSBO_IDX_BUBBLE_DRAW_PARTICLE_COUNT) readonly buffer ParticleCountBuffer   { uint particleCount; };
+layout(std430, binding = SSBO_IDX_BUBBLE_DRAW_INDIRECT_COMMAND) buffer IndirectCommand                { DrawArraysCommand command; };
+
+void main() {
+    if (gl_GlobalInvocationID.x == 0) {
+        command.count = 6;
+        command.instanceCount = particleCount;
+        command.firstVertex = 0;
+        command.baseInstance = 0;
+    }
+}

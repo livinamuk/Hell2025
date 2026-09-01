@@ -1,0 +1,132 @@
+#version 460
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_ray_query : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+#extension GL_KHR_shader_subgroup_arithmetic : enable
+#extension GL_EXT_nonuniform_qualifier : require
+
+#include "../common/ddgi.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
+#include "../common/Vulkan/VK_ray_query_triangle.glsl"
+
+layout(local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2DArray storageImagesRGBA16F[];
+layout(set = 1, binding = 0) uniform accelerationStructureEXT u_DDGIRayQueryAccelerationStructure;
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsDDGIProbeIrradiance data;
+} pc;
+
+layout(buffer_reference, scalar) readonly buffer PointCloudBuffer { CloudPoint points[]; };
+layout(buffer_reference, scalar) buffer ProbeStatesBuffer { ProbeState probeStates[]; };
+layout(buffer_reference, scalar) readonly buffer ProbeIrradianceCounterBuffer { uint probeIrradianceCounter; };
+layout(buffer_reference, scalar) readonly buffer ProbeIrradianceIndicesBuffer { uint probeIrradianceIndices[]; };
+layout(buffer_reference, scalar) readonly buffer ProbePointIndicesBuffer { uint probePointIndices[]; };
+layout(buffer_reference, scalar) readonly buffer ProbePointOffsetsBuffer { uint probePointOffsets[]; };
+layout(buffer_reference, scalar) readonly buffer ProbePointCountsBuffer { uint probePointCounts[]; };
+
+const float MAX_DIST = 3.0;
+const float ENCODING_GAMMA = 5.0;
+const int IRRADIANCE_INTERIOR_SIZE = 6;
+
+shared vec3 shared_texelDirs[36];
+
+DDGIVolume GetVolume() {
+    DDGIVolume volume;
+    volume.origin = pc.data.volumeOrigin;
+    volume.probeSpacing = pc.data.probeSpacing;
+    volume.probeCounts = pc.data.probeCounts;
+    volume.totalProbes = int(pc.data.totalProbes);
+    volume.probeOffset = pc.data.probeOffset;
+    return volume;
+}
+
+void main() {
+    uint irradianceAtlasIndex = pc.data.irradianceAtlasStorageImageIndex;
+    uint listIdx = gl_WorkGroupID.x;
+    ProbeIrradianceCounterBuffer probeIrradianceCounter = ProbeIrradianceCounterBuffer(pc.data.probeIrradianceCounterDeviceAddress);
+    if (listIdx >= probeIrradianceCounter.probeIrradianceCounter) return;
+
+    ProbeIrradianceIndicesBuffer probeIrradianceIndices = ProbeIrradianceIndicesBuffer(pc.data.probeIrradianceIndicesDeviceAddress);
+    uint pIdx = probeIrradianceIndices.probeIrradianceIndices[listIdx];
+    DDGIVolume volume = GetVolume();
+    if (pIdx >= uint(volume.totalProbes)) return;
+
+    uint threadIdx = gl_LocalInvocationID.x;
+    PointCloudBuffer pointCloud = PointCloudBuffer(pc.data.pointCloudDeviceAddress);
+    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pc.data.probeStatesDeviceAddress);
+    ProbePointIndicesBuffer probePointIndices = ProbePointIndicesBuffer(pc.data.probePointIndicesDeviceAddress);
+    ProbePointOffsetsBuffer probePointOffsets = ProbePointOffsetsBuffer(pc.data.probePointOffsetsDeviceAddress);
+    ProbePointCountsBuffer probePointCounts = ProbePointCountsBuffer(pc.data.probePointCountsDeviceAddress);
+
+    for (int i = int(threadIdx); i < 36; i += 32) {
+        vec2 uv = DDGIGetNormalizedOctahedralCoordinates(ivec2(i % IRRADIANCE_INTERIOR_SIZE, i / IRRADIANCE_INTERIOR_SIZE), IRRADIANCE_INTERIOR_SIZE);
+        shared_texelDirs[i] = DDGIGetOctahedralDirection(uv);
+    }
+
+    barrier();
+
+    uint globalProbeIdx = volume.probeOffset + pIdx;
+    ivec3 probeCoords = DDGIGetProbeCoords(int(pIdx), volume);
+    vec3 probePos = DDGIGetProbeWorldPosition(probeCoords, volume, probeStates.probeStates[globalProbeIdx]);
+    vec3 localAccum[36];
+    for (int i = 0; i < 36; i++) localAccum[i] = vec3(0.0);
+
+    float pointArea = pc.data.pointCloudSpacing * pc.data.pointCloudSpacing;
+    uint poolStart = probePointOffsets.probePointOffsets[pIdx];
+    uint poolCount = probePointCounts.probePointCounts[pIdx];
+
+    for (uint i = threadIdx; i < poolCount; i += 32u) {
+        uint ptIdx = probePointIndices.probePointIndices[poolStart + i];
+
+        vec3 ptPos = pointCloud.points[ptIdx].position.xyz;
+        vec3 diff = ptPos - probePos;
+        float distSq = dot(diff, diff);
+        if (distSq > MAX_DIST * MAX_DIST) continue;
+
+        float dist = sqrt(distSq);
+        if (dist <= 0.02) continue;
+
+        vec3 ptNormal = pointCloud.points[ptIdx].normal.xyz;
+        vec3 dirToPoint = diff / dist;
+        float ptCos = dot(ptNormal, -dirToPoint);
+        if (ptCos <= 0.0) continue;
+
+        if (!RayQueryAnyTriangleHit(u_DDGIRayQueryAccelerationStructure, 0u, 0xff, probePos, 0.01, dirToPoint, dist - 0.01)) {
+            float spatialWeight = (ptCos * pointArea) / max(distSq, 0.001);
+            vec3 radiance = pointCloud.points[ptIdx].directLightingRGB_dirty.xyz * spatialWeight;
+
+            for (int j = 0; j < 36; j++) {
+                float dotWeight = max(0.0, dot(shared_texelDirs[j], dirToPoint));
+                localAccum[j] += radiance * dotWeight;
+            }
+        }
+    }
+
+    uvec3 probeTexelCoords = DDGIGetProbeTexelCoords(int(pIdx), volume);
+
+    for (int j = 0; j < 36; j++) {
+        vec3 sum = subgroupAdd(localAccum[j]);
+
+        if (subgroupElect()) {
+            int tx = j % IRRADIANCE_INTERIOR_SIZE;
+            int ty = j / IRRADIANCE_INTERIOR_SIZE;
+            ivec3 writeCoord = ivec3(int(probeTexelCoords.x) * 8 + tx + 1, int(probeTexelCoords.y) * 8 + ty + 1, int(probeTexelCoords.z));
+
+            vec3 encodedSample = pow(max(vec3(0.0), sum), vec3(1.0 / ENCODING_GAMMA));
+            vec3 oldEncoded = imageLoad(storageImagesRGBA16F[irradianceAtlasIndex], writeCoord).rgb;
+            float hysteresis = (dot(oldEncoded, oldEncoded) == 0.0) ? 0.0 : 0.05;
+            vec3 blendedEncoded = mix(encodedSample, oldEncoded, hysteresis);
+
+            if (any(isnan(blendedEncoded))) blendedEncoded = vec3(0.0);
+            imageStore(storageImagesRGBA16F[irradianceAtlasIndex], writeCoord, vec4(blendedEncoded, 1.0));
+        }
+    }
+
+    if (threadIdx == 0u && probeStates.probeStates[globalProbeIdx].irradianceCooldown > 0u) {
+        probeStates.probeStates[globalProbeIdx].irradianceCooldown--;
+    }
+}

@@ -5,6 +5,7 @@
 #include "Hell/Physics/Physics.h"
 
 #include "Unloved/Session/Session.h"
+#include "Unloved/Systems/Animator/Animator.h"
 #include "Unloved/Systems/Pathfinding/AStarMap.h"
 
 // get me out of here
@@ -15,7 +16,19 @@
 #include "Timer.hpp"
 //
 
+#include <glm/gtc/quaternion.hpp>
+
 namespace Audio = Hell::Audio;
+
+namespace {
+    glm::vec3 YawOnlyRotation(const glm::vec3& rotation) {
+        return glm::vec3(0.0f, rotation.y, 0.0f);
+    }
+
+    glm::vec3 ForwardFromRotation(const glm::vec3& rotation) {
+        return glm::normalize(glm::quat(rotation) * glm::vec3(0.0f, 0.0f, 1.0f));
+    }
+}
 
 namespace Unloved {
 
@@ -27,42 +40,52 @@ namespace Unloved {
         m_createInfo = createInfo;
         m_createInfo.position += spawnOffset.translation;
         m_createInfo.rotation.y += spawnOffset.yRotation;
+        m_createInfo.rotation = YawOnlyRotation(m_createInfo.rotation);
         m_objectId = id;
 
         Respawn();
         m_aStar.InitGrid();
-    
-        if (m_animatedGameObjectId == 0) {
-            m_animatedGameObjectId = LegacyWorld::CreateAnimatedGameObject();
 
-            PhysicsFilterData filterData;
-            filterData.raycastGroup = RaycastGroup::RAYCAST_ENABLED;
-            filterData.collisionGroup = CollisionGroup::RAGDOLL_ENEMY;
-            filterData.collidesWith = CollisionGroup(ENVIROMENT_OBSTACLE | CHARACTER_CONTROLLER | RAGDOLL_ENEMY);
+        if (m_skinnedGameObjectId == 0) {
+            m_animatorInstanceId = Animator::CreateAnimatorInstance();
+            m_skinnedGameObjectId = World::CreateSkinnedGameObject();
 
-            Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-            animatedGameObject->SetOwnerObjectId(m_objectId);
-            animatedGameObject->SetSkinnedModel("Kangaroo");
-            animatedGameObject->SetRotationY(HELL_PI);
-            animatedGameObject->SetAnimationModeToBindPose();
-            animatedGameObject->SetName("Roo");
+            AnimatorInstance* animatorInstance = Animator::GetAnimatorInstanceByObjectId(m_animatorInstanceId);
+            Unloved::SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject();
 
-            m_RagdollId = Hell::Physics::SpawnRagdoll(m_position, m_rotation, "Kangaroo", m_objectId, filterData);
+            if (!animatorInstance || !skinnedGameObject) {
+                Logging::Error() << "Kangaroo::Init() failed to create core objects\n";
+                __debugbreak();
+                return;
+            }
 
-            animatedGameObject->SetRagdollId(m_RagdollId);
-            animatedGameObject->SetAllMeshMaterials("Kangaroo");
-            animatedGameObject->SetMeshMaterialByMeshName("LeftEye_Iris", "KangarooIris");
-            animatedGameObject->SetMeshMaterialByMeshName("RightEye_Iris", "KangarooIris");
+            animatorInstance->RegisterSkinnedModels({ "Kangaroo" });
+            m_animationLayerIndex = animatorInstance->CreateAnimationLayer();
+            skinnedGameObject->SetAnimatorInstanceId(m_animatorInstanceId);
 
-            animatedGameObject->SetBlendingModeByMeshName("LeftEye_Sclera", BlendingMode::DO_NOT_RENDER);
-            animatedGameObject->SetBlendingModeByMeshName("RightEye_Sclera", BlendingMode::DO_NOT_RENDER);
+            skinnedGameObject->SetOwnerObjectId(m_objectId);
+            skinnedGameObject->SetSkinnedModel("Kangaroo");
+            skinnedGameObject->SetPosition(m_position);
+            skinnedGameObject->SetRotationX(m_rotation.x);
+            skinnedGameObject->SetRotationY(m_rotation.y);
+            skinnedGameObject->SetRotationZ(m_rotation.z);
+            skinnedGameObject->SetAnimationModeToBindPose();
+            skinnedGameObject->SetName("Roo");
 
-            animatedGameObject->PlayAndLoopAnimation("MainLayer", "Kangaroo_Idle", 1.0f);
+            skinnedGameObject->CreateRagdoll("Kangaroo");
+            skinnedGameObject->SetAllMeshMaterials("Kangaroo");
+            skinnedGameObject->SetMeshMaterialByMeshName("LeftEye_Iris", "KangarooIris");
+            skinnedGameObject->SetMeshMaterialByMeshName("RightEye_Iris", "KangarooIris");
+
+            skinnedGameObject->SetBlendingModeByMeshName("LeftEye_Sclera", BlendingMode::DO_NOT_RENDER);
+            skinnedGameObject->SetBlendingModeByMeshName("RightEye_Sclera", BlendingMode::DO_NOT_RENDER);
+
+            PlayAndLoopAnimation("Kangaroo_Idle", 1.0f);
 
             int32_t woundMaskIndex = Renderer::GetNextFreeWoundMaskIndexAndMarkItTaken();
 
-            animatedGameObject->SetMeshWoundMaskArrayIndex("Body", woundMaskIndex);
-            animatedGameObject->SetMeshWoundMaterialByMeshName("Body", "KangarooBlood");
+            skinnedGameObject->SetMeshWoundMaskArrayIndex("Body", woundMaskIndex);
+            skinnedGameObject->SetMeshWoundMaterialByMeshName("Body", "KangarooBlood");
            
             //Logging::Debug() << "Assigned a Kangaroo a 'Body' mesh wound mask index of " << woundMaskIndex;
 
@@ -73,7 +96,7 @@ namespace Unloved {
     void Kangaroo::Respawn() {
         m_position = m_createInfo.position;
         m_rotation = m_createInfo.rotation;
-        m_forward = glm::vec3(-1.0f, 0.0f, 0.0f);
+        m_forward = ForwardFromRotation(m_rotation);
         m_alive = true;
         m_health = m_maxHealth;
         m_yVelocity = 0;
@@ -83,19 +106,19 @@ namespace Unloved {
         m_animationState = KanagarooAnimationState::IDLE;
         m_woundTextureNeedsClearing = true;
 
-        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-        if (animatedGameObject) {
-            animatedGameObject->SetPosition(m_position);
-            animatedGameObject->SetRotationX(m_rotation.x);
-            animatedGameObject->SetRotationY(m_rotation.y);
-            animatedGameObject->SetRotationZ(m_rotation.z);
+        Unloved::SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject();
+        if (skinnedGameObject) {
+            skinnedGameObject->SetPosition(m_position);
+            skinnedGameObject->SetRotationX(m_rotation.x);
+            skinnedGameObject->SetRotationY(m_rotation.y);
+            skinnedGameObject->SetRotationZ(m_rotation.z);
 
             if (Ragdoll* ragdoll = GetRagdoll()) {
                 ragdoll->SetToInitialPose();
                 ragdoll->DisableSimulation();
             }
-            animatedGameObject->SetAnimationModeToAnimated();
-            animatedGameObject->PlayAndLoopAnimation("MainLayer", "Kangaroo_Idle", 1.0f);
+            skinnedGameObject->SetAnimationModeToAnimated();
+            PlayAndLoopAnimation("Kangaroo_Idle", 1.0f);
         }
 
         CharacterController* characterController = GetCharacterController();
@@ -104,24 +127,52 @@ namespace Unloved {
         }
     }
 
-    Unloved::AnimatedGameObject* Kangaroo::GetAnimatedGameObject(){
-        return Unloved::World::GetAnimatedGameObjectByObjectId(m_animatedGameObjectId);
+    void Kangaroo::SetPosition(const glm::vec3& position) {
+        m_createInfo.position = position;
+        m_position = position;
+
+        if (SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject()) {
+            skinnedGameObject->SetPosition(position);
+        }
+        if (Ragdoll* ragdoll = GetRagdoll()) {
+            ragdoll->SetSpawnPosition(position);
+        }
+        if (CharacterController* characterController = GetCharacterController()) {
+            characterController->SetPosition(position);
+        }
+    }
+
+    void Kangaroo::SetRotation(const glm::vec3& rotation) {
+        m_createInfo.rotation = YawOnlyRotation(rotation);
+        m_rotation = m_createInfo.rotation;
+        m_forward = ForwardFromRotation(m_rotation);
+
+        if (Ragdoll* ragdoll = GetRagdoll()) {
+            ragdoll->SetSpawnRotation(m_rotation);
+        }
+        if (SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject()) {
+            skinnedGameObject->SetRotationX(m_rotation.x);
+            skinnedGameObject->SetRotationY(m_rotation.y);
+            skinnedGameObject->SetRotationZ(m_rotation.z);
+        }
+    }
+
+    Unloved::SkinnedGameObject* Kangaroo::GetSkinnedGameObject(){
+        return Unloved::World::GetSkinnedGameObjectByObjectId(m_skinnedGameObjectId);
     }
 
     Ragdoll* Kangaroo::GetRagdoll() {
-        if (m_RagdollId == 0) {
-            return nullptr;
-        }
-        return Hell::Physics::GetRagdollById(m_RagdollId);
+        SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject();
+        return skinnedGameObject ? skinnedGameObject->GetRagdoll() : nullptr;
     }
 
     void Kangaroo::Kill() {
         if (m_alive) {
             Audio::PlayAudio("Kangaroo_Death.wav", 1.0f);
 
-            Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-            if (animatedGameObject) {
-                animatedGameObject->SetAnimationModeToRagdoll();
+            Unloved::SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject();
+            if (skinnedGameObject) {
+                skinnedGameObject->SetAnimationModeToRagdoll();
             }
             m_health = 0;
             m_alive = false;
@@ -148,13 +199,12 @@ namespace Unloved {
     }
 
     void Kangaroo::CleanUp() {
-        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-        if (animatedGameObject) {
-            animatedGameObject->CleanUp();
-            Unloved::World::GetAnimatedGameObjects().erase(m_animatedGameObjectId);
-        }
-        m_animatedGameObjectId = 0;
+        Animator::RemoveAnimatorInstance(m_animatorInstanceId);
+        World::RemoveObjectById(m_skinnedGameObjectId);
         Hell::Physics::MarkCharacterControllerForRemoval(m_characterControllerId);
+
+        m_animatorInstanceId = 0;
+        m_skinnedGameObjectId = 0;
         m_characterControllerId = 0;
     }
 
@@ -167,23 +217,35 @@ namespace Unloved {
     }
 
     void Kangaroo::PlayAnimation(const std::string& animationName, float speed) {
-        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-        if (animatedGameObject) {
-            animatedGameObject->PlayAnimation("MainLayer", animationName, speed);
-        }
+        SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject();
+        AnimatorInstance* animatorInstance = Animator::GetAnimatorInstanceByObjectId(m_animatorInstanceId);
+        if (!skinnedGameObject) return;
+        if (!animatorInstance) return;
+
+        skinnedGameObject->SetAnimationModeToAnimated();
+        animatorInstance->PlayAnimation(m_animationLayerIndex, animationName, speed);
     }
 
     void Kangaroo::PlayAndLoopAnimation(const std::string& animationName, float speed) {
-        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-        if (animatedGameObject) {
-            animatedGameObject->PlayAndLoopAnimation("MainLayer", animationName, speed);
-        }
+        SkinnedGameObject* skinnedGameObject = GetSkinnedGameObject();
+        AnimatorInstance* animatorInstance = Animator::GetAnimatorInstanceByObjectId(m_animatorInstanceId);
+        if (!skinnedGameObject) return;
+        if (!animatorInstance) return;
+
+        skinnedGameObject->SetAnimationModeToAnimated();
+        animatorInstance->PlayAndLoopAnimation(m_animationLayerIndex, animationName, speed);
     }
 
     bool Kangaroo::AnimationIsComplete() {
-        Unloved::AnimatedGameObject* animatedGameObject = GetAnimatedGameObject();
-        if (!animatedGameObject) return false;
-        return animatedGameObject->IsAllAnimationsComplete();
+        AnimatorInstance* animatorInstance = Animator::GetAnimatorInstanceByObjectId(m_animatorInstanceId);
+        return animatorInstance && animatorInstance->IsAnimationComplete(m_animationLayerIndex);
+    }
+
+    uint32_t Kangaroo::GetAnimationFrameNumber() {
+        AnimatorInstance* animatorInstance = Animator::GetAnimatorInstanceByObjectId(m_animatorInstanceId);
+        if (!animatorInstance) return 0;
+
+        return animatorInstance->GetAnimationFrameNumber(m_animationLayerIndex);
     }
 
     CharacterController* Kangaroo::GetCharacterController() {

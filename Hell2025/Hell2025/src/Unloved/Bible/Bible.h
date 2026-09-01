@@ -1,8 +1,8 @@
 #pragma once
 
+#include "Unloved/Bible/Bible_enums.h"
 #include "Unloved/Bible/Info/ItemInfo.h"
-#include "Unloved/Inventory/Inventory.h"
-#include "Unloved/Objects/Renderables/AnimatedMeshNodes.h"
+#include "Unloved/Objects/ObjectEnums.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 #include "Unloved/Weapons/WeaponCommon.h"
 
@@ -10,24 +10,36 @@
 #include <vector>
 
 namespace Unloved {
-    struct AnimatedGameObject;
+    struct SkinnedGameObject;
 }
 
-namespace Bible {
-    using namespace Unloved;
+namespace Unloved::Bible {
+
+    struct HumanoidInfo {
+        std::vector<std::string> lowerBodyBoneMasks;
+        std::vector<std::string> chestBoneMasks;
+        std::vector<std::string> upperBodyBoneMasks;
+    };
 
     void Init();
     void ConfigureMeshNodes(uint64_t id, GenericObjectType type, MeshNodes* meshNodes);
 
-    AmmoInfo& CreateAmmoInfo(const std::string& name);
-    ItemInfo& CreateInventoryItemInfo(const std::string& name);
+    ItemInfo& CreateInventoryItemInfo(Item item, const std::string& name);
     WeaponAttachmentInfo& CreateWeaponAttachmentInfo(const std::string& name);
     WeaponInfo& CreateWeaponInfo(const std::string& name);
 
-    bool AmmoInfoExists(const std::string& name);
+    bool ItemInfoExists(Item item);
     bool ItemInfoExists(const std::string& name);
     bool WeaponAttachmentInfoExists(const std::string& name);
     bool WeaponInfoExists(const std::string& name);
+
+    // Animation
+    const std::string& GetAnimation(AnimationProfile animationProfile, AnimationSlot animationSlot);
+    bool HasAnimation(AnimationProfile animationProfile, AnimationSlot animationSlot);
+
+    // Characters
+    const HumanoidInfo* GetHumanoidInfo(SkinnedModelPreset bodyPreset);
+    AnimationProfile GetHumanoidAnimationProfile(SkinnedModelPreset bodyPreset, Weapon weapon);
 
     // Text
     const std::string& MermaidShopGreeting();
@@ -37,7 +49,7 @@ namespace Bible {
     // Misc
     void PrintDebugInfo();
 
-    void ConfigureMeshNodesByItemName(uint64_t id, const std::string& itemName, MeshNodes* meshNodes, bool createPhysicsObjects);
+    void ConfigureMeshNodesByItem(uint64_t id, Item item, MeshNodes* meshNodes, bool createPhysicsObjects);
     void ConfigureDoorMeshNodes(uint64_t id, DoorCreateInfo& createInfo, MeshNodes* meshNodes);
 
     void ConfigureTestModel(uint64_t id, MeshNodes* meshNodes);
@@ -45,8 +57,8 @@ namespace Bible {
     void ConfigureTestModel3(uint64_t id, MeshNodes* meshNodes);
     void ConfigureTestModel4(uint64_t id, MeshNodes* meshNodes);
 
-    void ConfigureAnimatedMeshNodes(uint64_t id, AnimatedMeshNodes* meshNodes, const std::string& presetName);
-    void ConfigureGenericAnimatedObject(GenericAnimatedObjectType type, AnimatedGameObject* animatedGameObject);
+    void ConfigureSkinnedModel(SkinnedGameObject& object, SkinnedModelPreset preset);
+    const std::vector<std::string>& GetSkinnedModelPresetNames();
 
     // Generic Objects
     void ConfigureMeshNodesChristmasPresentSmall(uint64_t id, MeshNodes* meshNodes);
@@ -68,18 +80,18 @@ namespace Bible {
     // Weapons
 	void ConfigureP90MagazineMeshNodes(uint64_t id, MeshNodes* meshNodes);
 
-    const std::vector<std::string>& GetAmmoNameList();
     const std::vector<std::string>& GetWeaponNameList();
 
-    AmmoInfo* GetAmmoInfoByName(const std::string& name);
+    const AmmoInfo* GetAmmoInfo(Ammo ammo);
+    ItemInfo* GetItemInfo(Item item);
     ItemInfo* GetItemInfoByName(const std::string& name);
+    WeaponInfo* GetWeaponInfo(Weapon weapon);
     WeaponInfo* GetWeaponInfoByName(const std::string& name);
     WeaponAttachmentInfo* GetWeaponAttachmentInfoByName(const std::string& name);
 
     int GetInventoryItemSizeByName(const std::string& name);
     int32_t GetWeaponIndexFromWeaponName(const std::string& weaponName);
     int32_t GetWeaponMagSize(const std::string& name);
-    int32_t GetAmmoPickUpAmount(const std::string& name);
     float GetItemMass(const std::string& name);
     ItemType GetItemType(const std::string& name);
 
@@ -87,4 +99,6 @@ namespace Bible {
     int GetPlayerHeadShotCashReward();
 
     int GetItemCost(const std::string& name);
+    Item GetItemByName(const std::string& name);
+    const std::string& GetItemName(Item item);
 }

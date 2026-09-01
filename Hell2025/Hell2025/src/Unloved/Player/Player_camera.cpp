@@ -5,7 +5,7 @@
 
 #include "Unloved/Debug/Debug.h"
 #include "Unloved/Session/Session.h"
-#include "Unloved/Editor/Editor.h"
+#include "Unloved/EditorSession/EditorSession.h"
 
 #include <glm/gtc/noise.hpp>
 
@@ -74,7 +74,7 @@ void Player::UpdateBreatheBob(float deltaTime) {
 
 void Player::UpdateCamera(float deltaTime) {
     // Mouselook
-    if (!Editor::IsOpen() && m_controlEnabled) {
+    if (EditorSession::IsInactive() && m_controlEnabled) {
         float xOffset = (float)InputMulti::GetMouseXOffset(m_mouseIndex);
         float yOffset = (float)InputMulti::GetMouseYOffset(m_mouseIndex);
         m_camera.AddPitch(-yOffset * m_mouseSensitivity);
@@ -98,17 +98,17 @@ void Player::UpdateCamera(float deltaTime) {
         }
     }
 
-    // Set cosition position
+    // Set camera position
     m_camera.SetPosition(GetFootPosition() + glm::vec3(0, m_currentViewHeight + m_cameraHeightModifier, 0) + m_headBob + m_breatheBob);
 
     // Calculate view weapon camera matrix
-    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
-    const glm::mat4& cameraAnimatedTransform = viewWeapon->GetAnimatedTransformByBoneName("camera");
-    const glm::mat4& cameraInverseBindTransform = viewWeapon->GetInverseBindTransformByBoneName("camera");
-    m_animatedCameraMatrix = cameraAnimatedTransform * glm::inverse(cameraInverseBindTransform);
+    SkinnedGameObject* viewWeapon = GetViewWeaponSkinnedGameObject();
+    const glm::mat4 cameraAnimatedTransform = viewWeapon->GetNodeModelSpaceMatrix("camera");
+    const glm::mat4& cameraLocalBindTransform = viewWeapon->GetLocalBindTransformByNodeName("camera");
+    m_animatedCameraMatrix = cameraAnimatedTransform * glm::inverse(cameraLocalBindTransform);
 
     // HACK because the non-knife weapons are using the old rig which has fucked camera inverse transform
-    //if (viewWeapon && GetCurrentWeaponInfo()->itemInfoName != "Knife") {
+    //if (viewWeapon && GetCurrentWeaponInfo()->weapon != Bible::Weapon::KNIFE) {
         m_animatedCameraMatrix[3][0] = 0.0f;
         m_animatedCameraMatrix[3][1] = 0.0f;
         m_animatedCameraMatrix[3][2] = 0.0f;
@@ -118,7 +118,7 @@ void Player::UpdateCamera(float deltaTime) {
     //    viewWeapon->PrintNodeNames();
     //}
 
-    //if (GetCurrentWeaponInfo()->itemInfoName == "AKS74U") {
+    //if (GetCurrentWeaponInfo()->weapon == Bible::Weapon::AKS74U) {
     //    m_animatedCameraMatrix = viewWeapon->GetAnimatedTransformByBoneName("camera");
     //    m_animatedCameraMatrix[3][0] = 0.0f;
     //    m_animatedCameraMatrix[3][1] = 0.0f;
@@ -156,16 +156,11 @@ void Player::UpdateCamera(float deltaTime) {
     //m_animatedCameraMatrix = tilt.to_mat4() * m_animatedCameraMatrix;
 
 
+    // Death cam
     if (!IsAlive()) {
-        AnimatedGameObject* characterModel = GetCharacterModelAnimatedGameObject();
-        Ragdoll* Ragdoll = GetRagdoll();
-
-        if (characterModel && Ragdoll) {
-            characterModel->SetAnimationModeToRagdoll();
-        }
-
-        if (Ragdoll) {
-            glm::mat4 headMatrix = Ragdoll->GetRigidWorldTransform("CC_Base_Head");
+        Ragdoll* ragdoll = GetRagdoll();
+        if (ragdoll) {
+            glm::mat4 headMatrix = ragdoll->GetRigidWorldTransform("head");
             m_deathCamViewMatrix = glm::inverse(headMatrix);
         }
     }

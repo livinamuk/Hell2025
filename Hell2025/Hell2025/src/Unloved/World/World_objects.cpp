@@ -7,8 +7,9 @@
 #include "Unloved/Characters/Enemies/Dobermann/Dobermann.h"
 #include "Unloved/Characters/Enemies/Kangaroo/Kangaroo.h"
 #include "Unloved/Characters/Enemies/Shark/Shark.h"
+#include "Unloved/Characters/Enemies/Snake/Snake.h"
 #include "Unloved/Characters/Mermaids/Mermaid/Mermaid.h"
-#include "Unloved/Editor/ObjectNames.h"
+#include "Unloved/EditorSession/ObjectNames.h"
 #include "Unloved/ObjectId.h"
 #include "Unloved/Objects/Exterior/Fence.h"
 #include "Unloved/Objects/Exterior/Jetty.h"
@@ -34,19 +35,21 @@
 #include "Unloved/Objects/Props/GenericAnimatedObject.h"
 #include "Unloved/Objects/Props/GenericObject.h"
 #include "Unloved/Objects/Props/PickUp.h"
-#include "Unloved/Objects/Renderables/AnimatedGameObject.h"
+#include "Unloved/Objects/Renderables/SkinnedGameObject.h"
 #include "Unloved/Objects/Spawns/HouseLocation.h"
 #include "Unloved/Objects/Spawns/SpawnPoint.h"
 #include "Unloved/Objects/Traversal/Ladder.h"
+#include "Unloved/Objects/Traversal/LadderDismount.h"
 #include "Unloved/Objects/Traversal/Staircase.h"
 #include "Unloved/Systems/DDGI/DDGIManager.h"
 #include "Unloved/Systems/DDGI/DDGIVolume.h"
 #include "Unloved/Systems/House/HouseBuilder.h"
 #include "Unloved/Systems/NavMesh/NavMesh.h"
+#include "Unloved/Systems/CoarseWorldBVH/CoarseWorldBVH.h"
 
 namespace Unloved::World {
 
-    Hell::SlotMap<AnimatedGameObject> g_animatedGameObjects;
+    Hell::SlotMap<SkinnedGameObject> g_skinnedGameObjects;
     Hell::SlotMap<BulletCasing> g_bulletCasings;
     Hell::SlotMap<ChristmasLightSet> g_christmasLightSets;
     Hell::SlotMap<ChristmasTree> g_christmasTrees;
@@ -63,6 +66,7 @@ namespace Unloved::World {
     Hell::SlotMap<Kangaroo> g_kangaroos;
     Hell::SlotMap<Jetty> g_jetties;
     Hell::SlotMap<Ladder> g_ladders;
+    Hell::SlotMap<LadderDismount> g_ladderDismounts;
     Hell::SlotMap<Light> g_lights;
     Hell::SlotMap<SpotLight> g_spotLights;
     Hell::SlotMap<Mermaid> g_mermaids;
@@ -73,6 +77,7 @@ namespace Unloved::World {
     Hell::SlotMap<PlanarQuadObject> g_planarQuadObjects;
     Hell::SlotMap<PointPairObject> g_pointPairObjects;
     Hell::SlotMap<Shark> g_sharks;
+    Hell::SlotMap<Snake> g_snakes;
     Hell::SlotMap<SpawnPoint> g_spawnPointsCampaign;
     Hell::SlotMap<SpawnPoint> g_spawnPointsDeathMatch;
     Hell::SlotMap<Staircase> g_staircases;
@@ -81,7 +86,7 @@ namespace Unloved::World {
     Hell::SlotMap<Wire> g_wires;
     Hell::SlotMap<Window> g_windows;
 
-    Hell::SlotMap<AnimatedGameObject>& GetAnimatedGameObjects() { return g_animatedGameObjects; }
+    Hell::SlotMap<SkinnedGameObject>& GetSkinnedGameObjects() { return g_skinnedGameObjects; }
     Hell::SlotMap<BulletCasing>& GetBulletCasings()             { return g_bulletCasings; }
     Hell::SlotMap<ChristmasLightSet>& GetChristmasLightSets()   { return g_christmasLightSets; }
     Hell::SlotMap<ChristmasTree>& GetChristmasTrees()           { return g_christmasTrees; }
@@ -99,6 +104,7 @@ namespace Unloved::World {
     Hell::SlotMap<Kangaroo>& GetKangaroos()                     { return g_kangaroos; }
     Hell::SlotMap<Jetty>& GetJetties()                          { return g_jetties; }
     Hell::SlotMap<Ladder>& GetLadders()                         { return g_ladders; }
+    Hell::SlotMap<LadderDismount>& GetLadderDismounts()         { return g_ladderDismounts; }
     Hell::SlotMap<Light>& GetLights()                           { return g_lights; }
     Hell::SlotMap<SpotLight>& GetSpotLights()                   { return g_spotLights; }
     Hell::SlotMap<Mermaid>& GetMermaids()                       { return g_mermaids; }
@@ -109,6 +115,7 @@ namespace Unloved::World {
     Hell::SlotMap<PlanarQuadObject>& GetPlanarQuadObjects()     { return g_planarQuadObjects; }
     Hell::SlotMap<PointPairObject>& GetPointPairObjects()       { return g_pointPairObjects; }
     Hell::SlotMap<Shark>& GetSharks()                           { return g_sharks; }
+    Hell::SlotMap<Snake>& GetSnakes()                           { return g_snakes; }
     Hell::SlotMap<SpawnPoint>& GetSpawnPointsCampaign()         { return g_spawnPointsCampaign; }
     Hell::SlotMap<SpawnPoint>& GetSpawnPointsDeathMatch()       { return g_spawnPointsDeathMatch; }
     Hell::SlotMap<Staircase>& GetStaircases()                   { return g_staircases; }
@@ -117,22 +124,22 @@ namespace Unloved::World {
     Hell::SlotMap<Wire>& GetWires()                             { return g_wires; }
     Hell::SlotMap<Window>& GetWindows()                         { return g_windows; }
 
-    // Animated Game Objects
+    // Skinned Game Objects
 
-    uint64_t AddAnimatedGameObject() {
-        const uint64_t id = GetNextObjectId(ObjectType::ANIMATED_GAME_OBJECT);
-        g_animatedGameObjects.emplace_with_id(id, id);
+    uint64_t CreateSkinnedGameObject() {
+        const uint64_t id = GetNextObjectId(ObjectType::SKINNED_GAME_OBJECT);
+        g_skinnedGameObjects.emplace_with_id(id, id);
         return id;
     }
 
-    AnimatedGameObject* GetAnimatedGameObjectByObjectId(uint64_t objectId) {
-        return GetAnimatedGameObjects().get(objectId);
+    SkinnedGameObject* GetSkinnedGameObjectByObjectId(uint64_t objectId) {
+        return GetSkinnedGameObjects().get(objectId);
     }
 
     // Bullet Casings
 
     uint64_t AddBulletCasing(BulletCasingCreateInfo createInfo) {
-        Editor::AssignEditorName(createInfo, GetBulletCasings());
+        EditorSession::AssignEditorName(createInfo, GetBulletCasings());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::BULLET_CASING);
         GetBulletCasings().emplace_with_id(id, id, createInfo);
         return id;
@@ -145,7 +152,7 @@ namespace Unloved::World {
     // Christmas Lights
 
     uint64_t AddChristmasLights(ChristmasLightsCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetChristmasLightSets());
+        EditorSession::AssignEditorName(createInfo, GetChristmasLightSets());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::CHRISTMAS_LIGHTS);
         GetChristmasLightSets().emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -158,7 +165,7 @@ namespace Unloved::World {
     // Christmas Trees
 
     uint64_t AddChristmasTree(ChristmasTreeCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetChristmasTrees());
+        EditorSession::AssignEditorName(createInfo, GetChristmasTrees());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::TREE);
         GetChristmasTrees().emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -193,7 +200,7 @@ namespace Unloved::World {
     // Dobermanns
 
     uint64_t AddDobermann(DobermannCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetDobermanns());
+        EditorSession::AssignEditorName(createInfo, GetDobermanns());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::DOBERMANN);
         GetDobermanns().emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -206,7 +213,7 @@ namespace Unloved::World {
     // Doors
 
     uint64_t AddDoor(DoorCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetDoors());
+        EditorSession::AssignEditorName(createInfo, GetDoors());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::DOOR);
         GetDoors().emplace_with_id(id, id, createInfo, spawnOffset);
         NavMeshManager::MarkDynamicDirty();
@@ -221,7 +228,7 @@ namespace Unloved::World {
     // Fences
 
     uint64_t AddFence(FenceCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetFences());
+        EditorSession::AssignEditorName(createInfo, GetFences());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::FENCE);
         GetFences().emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -234,7 +241,7 @@ namespace Unloved::World {
     // Fireplaces
 
     uint64_t AddFireplace(FireplaceCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetFireplaces());
+        EditorSession::AssignEditorName(createInfo, GetFireplaces());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::FIREPLACE);
         GetFireplaces().emplace_with_id(id, id, createInfo, spawnOffset);
         HouseBuilder::MarkDirty();
@@ -248,7 +255,7 @@ namespace Unloved::World {
     // Game Objects
 
     uint64_t AddGameObject(GameObjectCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetGameObjects());
+        EditorSession::AssignEditorName(createInfo, GetGameObjects());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::GAME_OBJECT);
         GetGameObjects().emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -277,7 +284,7 @@ namespace Unloved::World {
     // Generic Animated Objects
 
     uint64_t AddGenericAnimatedObject(GenericAnimatedObjectCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetGenericAnimatedObjects());
+        EditorSession::AssignEditorName(createInfo, GetGenericAnimatedObjects());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::GENERIC_ANIMATED_OBJECT);
         GetGenericAnimatedObjects().emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -290,7 +297,7 @@ namespace Unloved::World {
     // Generic Objects
 
     uint64_t AddGenericObject(GenericObjectCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetGenericObjects());
+        EditorSession::AssignEditorName(createInfo, GetGenericObjects());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::GENERIC_OBJECT);
 
         GetGenericObjects().emplace_with_id(id, id, createInfo, spawnOffset);
@@ -305,7 +312,7 @@ namespace Unloved::World {
     // House Locations
 
     uint64_t AddHouseLocation(HouseLocationCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetHouseLocations());
+        EditorSession::AssignEditorName(createInfo, GetHouseLocations());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::HOUSE_LOCATION);
         GetHouseLocations().emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -318,7 +325,7 @@ namespace Unloved::World {
     // Jetties
 
     uint64_t AddJetty(JettyCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, g_jetties);
+        EditorSession::AssignEditorName(createInfo, g_jetties);
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::JETTY);
         g_jetties.emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -327,7 +334,7 @@ namespace Unloved::World {
     // Kangaroos
 
     uint64_t AddKangaroo(KangarooCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, g_kangaroos);
+        EditorSession::AssignEditorName(createInfo, g_kangaroos);
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::KANGAROO);
         g_kangaroos.emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -340,7 +347,7 @@ namespace Unloved::World {
     // Ladders
 
     uint64_t AddLadder(LadderCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetLadders());
+        EditorSession::AssignEditorName(createInfo, GetLadders());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::LADDER);
         GetLadders().emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -350,10 +357,23 @@ namespace Unloved::World {
         return GetLadders().get(objectId);
     }
 
+    // Ladder Dismounts
+
+    uint64_t AddLadderDismount(LadderDismountCreateInfo createInfo, SpawnOffset spawnOffset) {
+        EditorSession::AssignEditorName(createInfo, GetLadderDismounts());
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::LADDER_DISMOUNT);
+        GetLadderDismounts().emplace_with_id(id, id, createInfo, spawnOffset);
+        return id;
+    }
+
+    LadderDismount* GetLadderDismountByObjectId(uint64_t objectId) {
+        return GetLadderDismounts().get(objectId);
+    }
+
     // Lights
 
     uint64_t AddLight(LightCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetLights());
+        EditorSession::AssignEditorName(createInfo, GetLights());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::LIGHT);
         GetLights().emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -465,7 +485,7 @@ namespace Unloved::World {
     // Mermaids
 
     uint64_t AddMermaid(MermaidCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetMermaids());
+        EditorSession::AssignEditorName(createInfo, GetMermaids());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::MERMAID);
         GetMermaids().emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -482,7 +502,7 @@ namespace Unloved::World {
             createInfo.soundFontName = "YamahaGrandLiteV2";
         }
 
-        Editor::AssignEditorName(createInfo, GetPianos());
+        EditorSession::AssignEditorName(createInfo, GetPianos());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::PIANO);
         GetPianos().emplace_with_id(id, id, createInfo, spawnOffset);
         NavMeshManager::MarkStaticDirty();
@@ -515,12 +535,12 @@ namespace Unloved::World {
     // Pick Ups
 
     uint64_t AddPickUp(PickUpCreateInfo createInfo, SpawnOffset spawnOffset) {
-        if (!Bible::GetItemInfoByName(createInfo.name)) {
-            Logging::Warning() << "World::AddPickUp(..) failed: '" << createInfo.name << "' ItemInfo not found in bible";
+        if (!Bible::GetItemInfo(createInfo.item)) {
+            Logging::Warning() << "World::AddPickUp(..) failed: '" << Hell::Enum::ToString(createInfo.item) << "' ItemInfo not found in bible";
             return 0;
         }
 
-        Editor::AssignEditorName(createInfo, GetPickUps());
+        EditorSession::AssignEditorName(createInfo, GetPickUps());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::PICK_UP);
         GetPickUps().emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -533,7 +553,7 @@ namespace Unloved::World {
     // Picture Frames
 
     uint64_t AddPictureFrame(PictureFrameCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetPictureFrames());
+        EditorSession::AssignEditorName(createInfo, GetPictureFrames());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::PICTURE_FRAME);
         GetPictureFrames().emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -546,7 +566,7 @@ namespace Unloved::World {
     // Power Pole Sets
 
     uint64_t AddPowerPoleSet(PowerPoleSetCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetPowerPoleSets());
+        EditorSession::AssignEditorName(createInfo, GetPowerPoleSets());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::POWER_POLE_SET);
         GetPowerPoleSets().emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -559,7 +579,7 @@ namespace Unloved::World {
     // Sharks
 
     uint64_t AddShark(SharkCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, g_sharks);
+        EditorSession::AssignEditorName(createInfo, g_sharks);
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::SHARK);
         g_sharks.emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -569,17 +589,30 @@ namespace Unloved::World {
         return g_sharks.get(objectId);
     }
 
+    // Snakes
+
+    uint64_t AddSnake(SnakeCreateInfo createInfo, SpawnOffset spawnOffset) {
+        EditorSession::AssignEditorName(createInfo, g_sharks);
+        const uint64_t id = Unloved::GetNextObjectId(ObjectType::SNAKE);
+        g_snakes.emplace_with_id(id, id, createInfo, spawnOffset);
+        return id;
+    }
+
+    Snake* GetSnakeByObjectId(uint64_t objectId) {
+        return g_snakes.get(objectId);
+    }
+
     // Spawn Points
 
     uint64_t AddSpawnPointCampaign(SpawnPointCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, g_spawnPointsCampaign);
+        EditorSession::AssignEditorName(createInfo, g_spawnPointsCampaign);
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::SPAWN_POINT_CAMPAIGN);
         g_spawnPointsCampaign.emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
     }
 
     uint64_t AddSpawnPointDeathMatch(SpawnPointCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, g_spawnPointsDeathMatch);
+        EditorSession::AssignEditorName(createInfo, g_spawnPointsDeathMatch);
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::SPAWN_POINT_DEATHMATCH);
         g_spawnPointsDeathMatch.emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -596,7 +629,7 @@ namespace Unloved::World {
     // Staircases
 
     uint64_t AddStaircase(StaircaseCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetStaircases());
+        EditorSession::AssignEditorName(createInfo, GetStaircases());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::STAIRCASE);
         GetStaircases().emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -609,7 +642,7 @@ namespace Unloved::World {
     // Trim Sets
 
     uint64_t AddTrimSet(TrimSetCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetTrimSets());
+        EditorSession::AssignEditorName(createInfo, GetTrimSets());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::TRIM_SET);
         GetTrimSets().emplace_with_id(id, id, createInfo, spawnOffset);
         return id;
@@ -627,7 +660,7 @@ namespace Unloved::World {
             return 0;
         }
 
-        Editor::AssignEditorName(createInfo, GetWalls());
+        EditorSession::AssignEditorName(createInfo, GetWalls());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::WALL);
 
         GetWalls().emplace_with_id(id, id, createInfo, spawnOffset);
@@ -665,7 +698,7 @@ namespace Unloved::World {
     // Windows
 
     uint64_t AddWindow(WindowCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetWindows());
+        EditorSession::AssignEditorName(createInfo, GetWindows());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::WINDOW);
         GetWindows().emplace_with_id(id, id, createInfo, spawnOffset);
         HouseBuilder::MarkDirty();
@@ -679,7 +712,7 @@ namespace Unloved::World {
     // World Planes
 
     uint64_t AddWorldPlane(WorldPlaneCreateInfo createInfo, SpawnOffset spawnOffset) {
-        Editor::AssignEditorName(createInfo, GetWorldPlanes());
+        EditorSession::AssignEditorName(createInfo, GetWorldPlanes());
         const uint64_t id = Unloved::GetNextObjectId(ObjectType::WORLD_PLANE);
 
         GetWorldPlanes().emplace_with_id(id, id, createInfo, spawnOffset);
@@ -704,7 +737,7 @@ namespace Unloved::World {
             bool numberedSuffix = true;
             for (size_t i = suffixStart + 1; i < createInfo.editorName.size(); i++) numberedSuffix &= createInfo.editorName[i] >= '0' && createInfo.editorName[i] <= '9';
             const std::string baseName = createInfo.editorName.substr(0, suffixStart);
-            if (numberedSuffix && !Editor::EditorNameAvailable(objects, baseName)) createInfo.editorName = baseName;
+            if (numberedSuffix && !EditorSession::EditorNameAvailable(objects, baseName)) createInfo.editorName = baseName;
         }
         return addObject(createInfo, SpawnOffset());
     }
@@ -728,6 +761,7 @@ namespace Unloved::World {
         case ObjectType::KANGAROO:               return DuplicateObject_T(GetKangaroos(), objectId, AddKangaroo);
         case ObjectType::JETTY:                  return DuplicateObject_T(GetJetties(), objectId, AddJetty);
         case ObjectType::LADDER:                 return DuplicateObject_T(GetLadders(), objectId, AddLadder);
+        case ObjectType::LADDER_DISMOUNT:        return DuplicateObject_T(GetLadderDismounts(), objectId, AddLadderDismount);
         case ObjectType::LIGHT:                  return DuplicateObject_T(GetLights(), objectId, AddLight);
         case ObjectType::MERMAID:                return DuplicateObject_T(GetMermaids(), objectId, AddMermaid);
         case ObjectType::PIANO:                  return DuplicateObject_T(GetPianos(), objectId, AddPiano);
@@ -764,7 +798,7 @@ namespace Unloved::World {
         bool updated = false;
 
         switch (GetObjectIdType(objectId)) {
-        case ObjectType::ANIMATED_GAME_OBJECT: updated = SetPosition_T(GetAnimatedGameObjects(), objectId, position); break;
+        case ObjectType::SKINNED_GAME_OBJECT: updated = SetPosition_T(GetSkinnedGameObjects(), objectId, position); break;
         case ObjectType::CHRISTMAS_LIGHTS: updated = SetPosition_T(GetChristmasLightSets(), objectId, position); break;
         case ObjectType::DDGI_VOLUME:    updated = SetPosition_T(GetDDGIVolumes(), objectId, position); break;
         case ObjectType::DOBERMANN:      updated = SetPosition_T(GetDobermanns(), objectId, position); break;
@@ -776,8 +810,10 @@ namespace Unloved::World {
         case ObjectType::GENERIC_OBJECT: updated = SetPosition_T(GetGenericObjects(), objectId, position); break;
         case ObjectType::HOUSE_LOCATION: updated = SetPosition_T(GetHouseLocations(), objectId, position); break;
         case ObjectType::WORLD_PLANE:    updated = SetPosition_T(GetWorldPlanes(), objectId, position); break;
+        case ObjectType::KANGAROO:       updated = SetPosition_T(GetKangaroos(), objectId, position); break;
         case ObjectType::JETTY:          updated = SetPosition_T(GetJetties(), objectId, position); break;
         case ObjectType::LADDER:         updated = SetPosition_T(GetLadders(), objectId, position); break;
+        case ObjectType::LADDER_DISMOUNT:updated = SetPosition_T(GetLadderDismounts(), objectId, position); break;
         case ObjectType::LIGHT:          updated = SetPosition_T(GetLights(), objectId, position); break;
         case ObjectType::MERMAID:        updated = SetPosition_T(GetMermaids(), objectId, position); break;
         case ObjectType::PIANO:          updated = SetPosition_T(GetPianos(), objectId, position); break;
@@ -823,6 +859,7 @@ namespace Unloved::World {
         case ObjectType::GENERIC_ANIMATED_OBJECT: return SetRotation_T(GetGenericAnimatedObjects(), objectId, rotation);
         case ObjectType::GENERIC_OBJECT: return SetRotation_T(GetGenericObjects(), objectId, rotation);
         case ObjectType::HOUSE_LOCATION: return SetRotation_T(GetHouseLocations(), objectId, rotation);
+        case ObjectType::KANGAROO:       return SetRotation_T(GetKangaroos(), objectId, rotation);
         case ObjectType::JETTY:          return SetRotation_T(GetJetties(), objectId, rotation);
         case ObjectType::LADDER:         return SetRotation_T(GetLadders(), objectId, rotation);
         case ObjectType::LIGHT:          return SetRotation_T(GetLights(), objectId, rotation);
@@ -876,7 +913,7 @@ namespace Unloved::World {
         const glm::vec3* position = nullptr;
 
         switch (GetObjectIdType(objectId)) {
-        case ObjectType::ANIMATED_GAME_OBJECT:   position = GetPosition_T(GetAnimatedGameObjects(), objectId); break;
+        case ObjectType::SKINNED_GAME_OBJECT:   position = GetPosition_T(GetSkinnedGameObjects(), objectId); break;
         case ObjectType::BULLET_CASING:          position = GetCreateInfoPosition_T(GetBulletCasings(), objectId); break;
         case ObjectType::CHRISTMAS_LIGHTS:       position = GetPosition_T(GetChristmasLightSets(), objectId); break;
         case ObjectType::TREE:                   position = GetPosition_T(GetChristmasTrees(), objectId); break;
@@ -892,6 +929,7 @@ namespace Unloved::World {
         case ObjectType::WORLD_PLANE:            position = GetWorldSpaceCenter_T(GetWorldPlanes(), objectId); break;
         case ObjectType::KANGAROO:               position = GetPosition_T(GetKangaroos(), objectId); break;
         case ObjectType::LADDER:                 position = GetPosition_T(GetLadders(), objectId); break;
+        case ObjectType::LADDER_DISMOUNT:        position = GetPosition_T(GetLadderDismounts(), objectId); break;
         case ObjectType::JETTY:                  position = GetPosition_T(GetJetties(), objectId); break;
         case ObjectType::LIGHT:                  position = GetPosition_T(GetLights(), objectId); break;
         case ObjectType::MERMAID:                position = GetPosition_T(GetMermaids(), objectId); break;
@@ -902,6 +940,7 @@ namespace Unloved::World {
         case ObjectType::PLANAR_QUAD_OBJECT:     position = GetPosition_T(GetPlanarQuadObjects(), objectId); break;
         case ObjectType::POINT_PAIR_OBJECT:      position = GetPosition_T(GetPointPairObjects(), objectId); break;
         case ObjectType::SHARK:                  position = GetCreateInfoPosition_T(GetSharks(), objectId); break;
+        case ObjectType::SNAKE:                  position = GetCreateInfoPosition_T(GetSnakes(), objectId); break;
         case ObjectType::SPAWN_POINT_CAMPAIGN:   position = GetPosition_T(GetSpawnPointsCampaign(), objectId); break;
         case ObjectType::SPAWN_POINT_DEATHMATCH: position = GetPosition_T(GetSpawnPointsDeathMatch(), objectId); break;
         case ObjectType::STAIRCASE:              position = GetPosition_T(GetStaircases(), objectId); break;
@@ -956,6 +995,7 @@ namespace Unloved::World {
         case ObjectType::KANGAROO:               rotation = GetRotation_T(GetKangaroos(), objectId); break;
         case ObjectType::JETTY:                  rotation = GetRotation_T(GetJetties(), objectId); break;
         case ObjectType::LADDER:                 rotation = GetRotation_T(GetLadders(), objectId); break;
+        case ObjectType::LADDER_DISMOUNT:        return invalid;
         case ObjectType::LIGHT:                  rotation = GetRotation_T(GetLights(), objectId); break;
         case ObjectType::MERMAID:                rotation = GetCreateInfoRotation_T(GetMermaids(), objectId); break;
         case ObjectType::PIANO:                  rotation = GetRotation_T(GetPianos(), objectId); break;
@@ -968,10 +1008,11 @@ namespace Unloved::World {
         case ObjectType::STAIRCASE:              rotation = GetRotation_T(GetStaircases(), objectId); break;
         case ObjectType::WINDOW:                 rotation = GetRotation_T(GetWindows(), objectId); break;
         case ObjectType::WORLD_PLANE:            rotation = GetRotation_T(GetWorldPlanes(), objectId); break;
-        case ObjectType::ANIMATED_GAME_OBJECT:
+        case ObjectType::SKINNED_GAME_OBJECT:
         case ObjectType::FENCE:
         case ObjectType::POWER_POLE_SET:
         case ObjectType::SHARK:
+        case ObjectType::SNAKE:                  rotation = GetCreateInfoRotation_T(GetSnakes(), objectId); break;
         case ObjectType::WALL:
             return invalid;
         default:
@@ -1035,7 +1076,7 @@ namespace Unloved::World {
         const std::string* editorName = nullptr;
 
         switch (GetObjectIdType(objectId)) {
-        case ObjectType::ANIMATED_GAME_OBJECT:   editorName = GetEditorName_T(GetAnimatedGameObjects(), objectId); break;
+        case ObjectType::SKINNED_GAME_OBJECT:   editorName = GetEditorName_T(GetSkinnedGameObjects(), objectId); break;
         case ObjectType::BULLET_CASING:          editorName = GetEditorName_T(GetBulletCasings(), objectId); break;
         case ObjectType::CHRISTMAS_LIGHTS:       editorName = GetCreateInfoEditorName_T(GetChristmasLightSets(), objectId); break;
         case ObjectType::TREE:                   editorName = GetEditorName_T(GetChristmasTrees(), objectId); break;
@@ -1052,6 +1093,7 @@ namespace Unloved::World {
         case ObjectType::WORLD_PLANE:            editorName = GetEditorName_T(GetWorldPlanes(), objectId); break;
         case ObjectType::KANGAROO:               editorName = GetEditorName_T(GetKangaroos(), objectId); break;
         case ObjectType::LADDER:                 editorName = GetCreateInfoEditorName_T(GetLadders(), objectId); break;
+        case ObjectType::LADDER_DISMOUNT:        editorName = GetCreateInfoEditorName_T(GetLadderDismounts(), objectId); break;
         case ObjectType::LIGHT:                  editorName = GetCreateInfoEditorName_T(GetLights(), objectId); break;
         case ObjectType::MERMAID:                editorName = GetCreateInfoEditorName_T(GetMermaids(), objectId); break;
         case ObjectType::PIANO:                  editorName = GetEditorName_T(GetPianos(), objectId); break;
@@ -1061,6 +1103,7 @@ namespace Unloved::World {
         case ObjectType::PLANAR_QUAD_OBJECT:     editorName = GetEditorName_T(GetPlanarQuadObjects(), objectId); break;
         case ObjectType::POINT_PAIR_OBJECT:      editorName = GetEditorName_T(GetPointPairObjects(), objectId); break;
         case ObjectType::SHARK:                  editorName = GetEditorName_T(GetSharks(), objectId); break;
+        case ObjectType::SNAKE:                  editorName = GetEditorName_T(GetSnakes(), objectId); break;
         case ObjectType::SPAWN_POINT_CAMPAIGN:   editorName = GetCreateInfoEditorName_T(GetSpawnPointsCampaign(), objectId); break;
         case ObjectType::SPAWN_POINT_DEATHMATCH: editorName = GetCreateInfoEditorName_T(GetSpawnPointsDeathMatch(), objectId); break;
         case ObjectType::STAIRCASE:              editorName = GetCreateInfoEditorName_T(GetStaircases(), objectId); break;
@@ -1082,7 +1125,7 @@ namespace Unloved::World {
         if (objectId == 0) return false;
 
         switch (GetObjectIdType(objectId)) {
-        case ObjectType::ANIMATED_GAME_OBJECT:   return SetEditorName_T(GetAnimatedGameObjects(), objectId, editorName);
+        case ObjectType::SKINNED_GAME_OBJECT:    return SetEditorName_T(GetSkinnedGameObjects(), objectId, editorName);
         case ObjectType::BULLET_CASING:          return SetEditorName_T(GetBulletCasings(), objectId, editorName);
         case ObjectType::CHRISTMAS_LIGHTS:       return SetCreateInfoEditorName_T(GetChristmasLightSets(), objectId, editorName);
         case ObjectType::TREE:                   return SetEditorName_T(GetChristmasTrees(), objectId, editorName);
@@ -1099,6 +1142,7 @@ namespace Unloved::World {
         case ObjectType::WORLD_PLANE:            return SetEditorName_T(GetWorldPlanes(), objectId, editorName);
         case ObjectType::KANGAROO:               return SetEditorName_T(GetKangaroos(), objectId, editorName);
         case ObjectType::LADDER:                 return SetCreateInfoEditorName_T(GetLadders(), objectId, editorName);
+        case ObjectType::LADDER_DISMOUNT:        return SetCreateInfoEditorName_T(GetLadderDismounts(), objectId, editorName);
         case ObjectType::LIGHT:                  return SetCreateInfoEditorName_T(GetLights(), objectId, editorName);
         case ObjectType::MERMAID:                return SetCreateInfoEditorName_T(GetMermaids(), objectId, editorName);
         case ObjectType::PIANO:                  return SetEditorName_T(GetPianos(), objectId, editorName);
@@ -1108,6 +1152,7 @@ namespace Unloved::World {
         case ObjectType::PLANAR_QUAD_OBJECT:     return SetEditorName_T(GetPlanarQuadObjects(), objectId, editorName);
         case ObjectType::POINT_PAIR_OBJECT:      return SetEditorName_T(GetPointPairObjects(), objectId, editorName);
         case ObjectType::SHARK:                  return SetEditorName_T(GetSharks(), objectId, editorName);
+        case ObjectType::SNAKE:                  return SetEditorName_T(GetSnakes(), objectId, editorName);
         case ObjectType::SPAWN_POINT_CAMPAIGN:   return SetCreateInfoEditorName_T(GetSpawnPointsCampaign(), objectId, editorName);
         case ObjectType::SPAWN_POINT_DEATHMATCH: return SetCreateInfoEditorName_T(GetSpawnPointsDeathMatch(), objectId, editorName);
         case ObjectType::STAIRCASE:              return SetCreateInfoEditorName_T(GetStaircases(), objectId, editorName);
@@ -1138,7 +1183,7 @@ namespace Unloved::World {
         bool removed = false;
 
         switch (objectType) {
-        case ObjectType::ANIMATED_GAME_OBJECT:    removed = RemoveFromSlotMap(GetAnimatedGameObjects(), objectId); break;
+        case ObjectType::SKINNED_GAME_OBJECT:    removed = RemoveFromSlotMap(GetSkinnedGameObjects(), objectId); break;
         case ObjectType::BULLET_CASING:           removed = RemoveFromSlotMap(GetBulletCasings(), objectId); break;
         case ObjectType::CHRISTMAS_LIGHTS:        removed = RemoveFromSlotMap(GetChristmasLightSets(), objectId); break;
         case ObjectType::TREE:                    removed = RemoveFromSlotMap(GetChristmasTrees(), objectId); break;
@@ -1155,6 +1200,7 @@ namespace Unloved::World {
         case ObjectType::WORLD_PLANE:             removed = RemoveFromSlotMap(GetWorldPlanes(), objectId); break;
         case ObjectType::KANGAROO:                removed = RemoveFromSlotMap(GetKangaroos(), objectId); break;
         case ObjectType::LADDER:                  removed = RemoveFromSlotMap(GetLadders(), objectId); break;
+        case ObjectType::LADDER_DISMOUNT:         removed = RemoveFromSlotMap(GetLadderDismounts(), objectId); break;
         case ObjectType::LIGHT:                   removed = RemoveFromSlotMap(GetLights(), objectId); break;
         case ObjectType::SPOT_LIGHT:              removed = RemoveFromSlotMap(GetSpotLights(), objectId); break;
         case ObjectType::MERMAID:                 removed = RemoveFromSlotMap(GetMermaids(), objectId); break;
@@ -1165,6 +1211,7 @@ namespace Unloved::World {
         case ObjectType::PLANAR_QUAD_OBJECT:      removed = RemoveFromSlotMap(GetPlanarQuadObjects(), objectId); break;
         case ObjectType::POINT_PAIR_OBJECT:       removed = RemoveFromSlotMap(GetPointPairObjects(), objectId); break;
         case ObjectType::SHARK:                   removed = RemoveFromSlotMap(GetSharks(), objectId); break;
+        case ObjectType::SNAKE:                   removed = RemoveFromSlotMap(GetSnakes(), objectId); break;
         case ObjectType::SPAWN_POINT_CAMPAIGN:    removed = RemoveFromSlotMap(GetSpawnPointsCampaign(), objectId); break;
         case ObjectType::SPAWN_POINT_DEATHMATCH:  removed = RemoveFromSlotMap(GetSpawnPointsDeathMatch(), objectId); break;
         case ObjectType::STAIRCASE:               removed = RemoveFromSlotMap(GetStaircases(), objectId); break;
@@ -1251,6 +1298,7 @@ namespace Unloved::World {
     }
 
     void CleanUpAll() {
+        CoarseWorldBVH::ClearScenes();
         DDGIManager::CleanUp();
 
         CleanUpSlotMap(g_bulletCasings);
@@ -1269,6 +1317,7 @@ namespace Unloved::World {
         CleanUpSlotMap(g_jetties);
         CleanUpSlotMap(g_kangaroos);
         CleanUpSlotMap(g_ladders);
+        CleanUpSlotMap(g_ladderDismounts);
         CleanUpSlotMap(g_lights);
         CleanUpSlotMap(g_spotLights);
         CleanUpSlotMap(g_mermaids);
@@ -1279,6 +1328,7 @@ namespace Unloved::World {
         CleanUpSlotMap(g_planarQuadObjects);
         CleanUpSlotMap(g_pointPairObjects);
         CleanUpSlotMap(g_sharks);
+        CleanUpSlotMap(g_snakes);
         CleanUpSlotMap(g_spawnPointsCampaign);
         CleanUpSlotMap(g_spawnPointsDeathMatch);
         CleanUpSlotMap(g_staircases);

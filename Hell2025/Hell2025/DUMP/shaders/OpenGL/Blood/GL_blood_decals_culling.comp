@@ -1,0 +1,115 @@
+#version 460
+#include "../../common/OpenGL/GL_binding_indices.glsl"
+#include "../../common/constants.glsl"
+#include "../../common/types.glsl"
+#include "../../common/util.glsl"
+
+layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
+
+layout(std430, binding = SSBO_IDX_RENDERER_DATA)  readonly restrict  buffer rendererDataBuffer    { RendererData rendererData; };
+layout(std430, binding = SSBO_IDX_VIEWPORT_DATA)  readonly restrict  buffer viewportDataBuffer    { ViewportData viewportData[]; };
+layout(std430, binding = SSBO_IDX_BLOOD_CULLING_TILE_WORLD_BOUNDS)  readonly restrict  buffer tileWorldBoundsBuffer { TileWorldBounds tileWorldBounds[]; };
+layout(std430, binding = SSBO_IDX_BLOOD_CULLING_TILE_DECALS)  restrict           buffer tileBloodDecalsBuffer { TileInstanceData tileBloodDecals[]; };
+layout(std430, binding = SSBO_IDX_BLOOD_CULLING_DECALS)  readonly restrict  buffer BloodDecalBuffer      { BloodDecal bloodDecals[]; };
+layout(std430, binding = SSBO_IDX_BLOOD_CULLING_INDEX_POOL) restrict           buffer DecalIndexPool        { uint globalBloodDecalIndices[]; };
+layout(std430, binding = SSBO_IDX_BLOOD_CULLING_COUNTER) coherent restrict  buffer DecalCounter          { uint globalBloodDecalCounter; };
+
+uniform int u_decalCount;
+uniform int u_tileXCount;
+uniform int u_tileYCount;
+
+shared vec3 worldSpaceMin;
+shared vec3 worldSpaceMax;
+shared uint localDecalCount;
+shared uint localDecalIndices[256];
+shared uint globalBaseOffset;
+
+bool OrientedDecalIntersectsTile(uint index, vec3 tileMin, vec3 tileMax) {
+    // Get the Tile Center and Extents
+    vec3 tileCenter  = (tileMin + tileMax) * 0.5;
+    vec3 tileExtents = (tileMax - tileMin) * 0.5;
+
+    // Transform the Tile Center into the Decal's Local Space
+    mat4 invModel = bloodDecals[index].inverseModelMatrix;
+    vec3 localCenter = (invModel * vec4(tileCenter, 1.0)).xyz;
+
+    // Transform the Tile Axes into Decal Local Space to get the "projection" size
+    vec3 vX = abs(vec3(invModel[0][0], invModel[1][0], invModel[2][0]));
+    vec3 vY = abs(vec3(invModel[0][1], invModel[1][1], invModel[2][1]));
+    vec3 vZ = abs(vec3(invModel[0][2], invModel[1][2], invModel[2][2]));
+
+    // Calculate the projected radius of the tile AABB onto the decal's local axes
+    vec3 projectedExtents = tileExtents.x * vX + tileExtents.y * vY + tileExtents.z * vZ;
+
+    vec2 aspectScale = vec2(
+        bloodDecals[index].aspectScaleX,
+        bloodDecals[index].aspectScaleY
+    );
+
+    vec3 decalHalfExtents = vec3(
+        0.5 * aspectScale.x,
+        0.5 * BLOOD_DECAL_DEPTH_SCALE,
+        0.5 * aspectScale.y
+    );
+
+    // Check for intersection via separation on all 3 local axes
+    if (abs(localCenter.x) > (decalHalfExtents.x + projectedExtents.x)) return false;
+    if (abs(localCenter.y) > (decalHalfExtents.y + projectedExtents.y)) return false;
+    if (abs(localCenter.z) > (decalHalfExtents.z + projectedExtents.z)) return false;
+
+    return true;
+}
+
+
+void main() {
+    uint tileIndex = gl_WorkGroupID.y * u_tileXCount + gl_WorkGroupID.x;
+
+    // Initialize shared memory
+    if (gl_LocalInvocationIndex == 0) {
+        localDecalCount = 0;
+        worldSpaceMin = tileWorldBounds[tileIndex].boundsMin.xyz;
+        worldSpaceMax = tileWorldBounds[tileIndex].boundsMax.xyz;
+    }
+    barrier();
+
+    // Bail if there is no geometry at this pixel (boundsMin.w is the number of non-background pixels in this tile)
+    if (tileWorldBounds[tileIndex].boundsMin.w == 0.0) {
+        if (gl_LocalInvocationIndex == 0) {
+            tileBloodDecals[tileIndex].count = 0;
+        }
+        return;
+    }
+
+    // Parallel OBB Culling
+    uint totalThreads = TILE_SIZE * TILE_SIZE;
+    for (uint i = gl_LocalInvocationIndex; i < u_decalCount; i += totalThreads) {
+        if (OrientedDecalIntersectsTile(i, worldSpaceMin, worldSpaceMax)) {
+            uint slot = atomicAdd(localDecalCount, 1);
+            if (slot < 256) {
+                localDecalIndices[slot] = i;
+            }
+        }
+    }
+    barrier();
+
+    // Allocate and Write
+    if (gl_LocalInvocationIndex == 0) {
+        localDecalCount = min(localDecalCount, 256u);
+
+        if (localDecalCount > 0) {
+            globalBaseOffset = atomicAdd(globalBloodDecalCounter, localDecalCount);
+            tileBloodDecals[tileIndex].count = localDecalCount;
+            tileBloodDecals[tileIndex].offset = globalBaseOffset;
+        } else {
+            tileBloodDecals[tileIndex].count = 0;
+        }
+    }
+    barrier();
+
+    // Transfer local indices to global pool
+    if (localDecalCount > 0) {
+        for (uint i = gl_LocalInvocationIndex; i < localDecalCount; i += totalThreads) {
+            globalBloodDecalIndices[globalBaseOffset + i] = localDecalIndices[i];
+        }
+    }
+}

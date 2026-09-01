@@ -84,7 +84,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\imgui\include;vendor\lodepng\include;vendor\bvh\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\lodepng\include;vendor\bvh\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -123,7 +123,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;TRACY_ENABLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);vendor\earcut\include;vendor\clipper\include;src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\imgui\include;vendor\lodepng\include;vendor\bvh\include;vendor\fluidsynth\include;vendor\midifile\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);vendor\earcut\include;vendor\clipper\include;src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\lodepng\include;vendor\bvh\include;vendor\fluidsynth\include;vendor\midifile\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -169,7 +169,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;TRACY_ENABLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);vendor\earcut\include;vendor\clipper\include;src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\imgui\include;vendor\lodepng\include;vendor\bvh\include;vendor\fluidsynth\include;vendor\midifile\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);vendor\earcut\include;vendor\clipper\include;src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\lodepng\include;vendor\bvh\include;vendor\fluidsynth\include;vendor\midifile\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -209,6 +209,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
   <ItemGroup>
     <ClCompile Include="src\Hell\AssetLoader\PointAnimations.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\VATLoader.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\Animation.cpp" />
     <ClCompile Include="src\Hell\Serialization\JsonSerialization.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\GL_back_end.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\GL_commands.cpp" />
@@ -246,9 +247,14 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\Render\API\Vulkan\vk_types.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\Types\PointAnimation.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\Types\VAT.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Snake\Snake.cpp" />
     <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_editor.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_game.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_generic_animated_object.cpp" />
     <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu.cpp" />
     <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_config.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_physics.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_ragdoll.cpp" />
     <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_renderer.cpp" />
     <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_scratch.cpp" />
     <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_text.cpp" />
@@ -256,10 +262,13 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_profiling.cpp" />
     <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_play.cpp" />
     <ClCompile Include="src\Unloved\LazyKeyPresses.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Effects\BloodPoolState.cpp" />
     <ClCompile Include="src\Unloved\Objects\Exterior\Jetty.cpp" />
     <ClCompile Include="src\Unloved\Objects\House\PlanarObjectRebuild.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Humanoid\AnimatedHumanoid.cpp" />
     <ClCompile Include="src\Unloved\Objects\Renderables\PointAnimationInstance.cpp" />
     <ClCompile Include="src\Unloved\Objects\Renderables\VATInstance.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_animation.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_blit_road.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_compute_ftt.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_compute_skinning.cpp" />
@@ -273,6 +282,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Create\GL_create_texture_arrays.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_fire_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_VAT_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\Shared\GL_physics_shapes_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer_debug.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Update\GL_update_ssbos.cpp" />
@@ -344,13 +354,12 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_particle_passes.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_post_processing_re.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_visilibty_passes.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\Utility\GL_height_map_utility.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_debug_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_editor_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_emissive_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_imgui_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_geometry_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_grass_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\Shared\GL_occlusion_hiz_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_hair_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_heightmap_passes.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_lighting_pass.cpp" />
@@ -359,7 +368,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_shadow_map_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_skybox_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_spritesheet_pass.cpp" />
-    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_texture_reaback_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_UI_pass.cpp" />
     <ClCompile Include="src\Unloved\Render\API\OpenGL\Utility\GL_misc_utility.cpp" />
     <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_cubemapView.cpp" />
@@ -381,28 +389,29 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\Backend\Integration\GLFW.cpp" />
     <ClCompile Include="src\Hell\Backend\Integration\SDL.cpp" />
     <ClCompile Include="src\Unloved\Bible\Bible_text.cpp" />
-    <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\Bible_AnimatedMeshNodes.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Bible_skinned_models.cpp" />
     <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\Bible_WeaponMeshNodes.cpp" />
     <ClCompile Include="src\Unloved\Bible\Misc\CashRewards.cpp" />
-    <ClCompile Include="src\Unloved\Bible\Items\Bible_items.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Bible_items.cpp" />
     <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\Bible_PickUps.cpp" />
     <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\Bible_Doors.cpp" />
-    <ClCompile Include="src\Unloved\Bible\Info\Bible_WeaponAttachmentInfo.cpp" />
-    <ClCompile Include="src\Unloved\Bible\Info\Bible_WeaponInfo.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Bible_attachments.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Bible_weapons.cpp" />
     <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\GenericObjects\Bathroom.cpp" />
-    <ClCompile Include="src\Unloved\Bible\Info\Bible_AmmoInfo.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Bible_ammo.cpp" />
     <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\GenericObjects\Christmas.cpp" />
     <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\GenericObjects\Drawers.cpp" />
     <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\GenericObjects\Furniture.cpp" />
     <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\GenericObjects\Plants.cpp" />
     <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\GenericObjects\TestModels.cpp" />
-    <ClCompile Include="src\Unloved\Bible\Info\Bible_inventoryItemInfo.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Bible_inventory.cpp" />
     <ClCompile Include="src\Hell\BVH\BVH.cpp" />
     <ClCompile Include="src\Hell\BVH\Types\MeshBvh.cpp" />
     <ClCompile Include="src\Hell\BVH\Types\SceneBvh.cpp" />
     <ClCompile Include="src\Unloved\Camera\Frustum.cpp" />
     <ClCompile Include="src\Unloved\Config\Config.cpp" />
     <ClCompile Include="src\Unloved\Config\FlashlightConfig.cpp" />
+    <ClCompile Include="src\Unloved\Config\PhysicsConfig.cpp" />
     <ClCompile Include="src\Hell\Audio\Audio.cpp" />
     <ClCompile Include="src\Unloved\Session\Session.cpp" />
     <ClCompile Include="src\Unloved\Session\Session_players.cpp" />
@@ -426,9 +435,12 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\AssetFormats\SkinnedModelFormat.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\AnimationLoader.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\AssetLoader.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\BoneMaskLoader.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\IESLoader.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\MidiFileLoader.cpp" />
-    <ClCompile Include="src\Hell\AssetLoader\RagdollDataLoader.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\RagdollAssetLoader.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\LegacyRag\LegacyRagdollImporter.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\LegacyRag\LegacyRagReader.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\SpriteSheetLoader.cpp" />
     <ClCompile Include="src\Hell\AssetLoader\SoundFontLoader.cpp" />
     <ClCompile Include="src\Hell\File\File.cpp" />
@@ -437,13 +449,13 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\ResourceManagement\MaterialBuilder.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\ResourceID.cpp" />
     <ClCompile Include="src\Unloved\Bible\Bible.cpp" />
-    <ClCompile Include="src\Unloved\Systems\DDGI\DDGIGeometryBuilder.cpp" />
+    <ClCompile Include="src\Unloved\Systems\CoarseWorldBVH\CoarseWorldBVHGeometry.cpp" />
     <ClCompile Include="src\Unloved\Systems\DDGI\DDGIManager.cpp" />
     <ClCompile Include="src\Unloved\Systems\DDGI\DDGIVolume.cpp" />
     <ClCompile Include="src\Unloved\Systems\DDGI\PointCloud.cpp" />
+    <ClCompile Include="src\Unloved\Systems\CoarseWorldBVH\CoarseWorldBVH.cpp" />
     <ClCompile Include="src\Unloved\Systems\DirtyTracker\DirtyTracker.cpp" />
     <ClCompile Include="src\Hell\Logging\Logging.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editor_settings.cpp" />
     <ClCompile Include="src\Hell\ImageTools\ImageCompressor.cpp" />
     <ClCompile Include="src\Hell\ImageTools\ImageLoader.cpp" />
     <ClCompile Include="src\Hell\ImageTools\ImageUtil.cpp" />
@@ -452,24 +464,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Hell\ResourceManagement\TextureUploader.cpp" />
     <ClCompile Include="src\Unloved\Systems\Mirrors\MirrorManager.cpp" />
     <ClCompile Include="src\Unloved\Systems\Openables\OpenableManager.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editors\Editor_left_panel.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editors\Editor_map_height.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editors\Editor_house.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editors\Editor_map_object.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editor_file_menu.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editor_placement.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editor_rays.cpp" />
-    <ClCompile Include="src\Unloved\Editor\PlacementObjectCreation.cpp" />
-    <ClCompile Include="src\Unloved\Editor\PlacementSequencePoints.cpp" />
     <ClCompile Include="src\Unloved\EditorSession\PlacementTools.cpp" />
-    <ClCompile Include="src\Unloved\Editor\ObjectNames.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editor_rays_intersections.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editor_util.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Objects\Editor_picture_frame_placement.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Objects\Editor_spawn_location_placement.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Objects\Editor_walls.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editor_objects.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Objects\Editor_object_placement.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\ObjectNames.cpp" />
     <ClCompile Include="src\Hell\Math\LineMath.cpp" />
     <ClCompile Include="src\Hell\Math\OBB.cpp" />
     <ClCompile Include="src\Unloved\Player\Player_items.cpp" />
@@ -481,11 +477,11 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
       <ObjectFileName>$(IntDir)Hell_MidiFile.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="src\Hell\ResourceManagement\Types\SoundFont.cpp" />
+    <ClCompile Include="src\Hell\Math\Matrix.cpp" />
     <ClCompile Include="src\Hell\Math\Transform.cpp" />
     <ClCompile Include="src\Unloved\Debug\FeatureTest.cpp" />
-    <ClCompile Include="src\Unloved\Characters\Enemies\CharacterSpine.cpp" />
+    <ClCompile Include="src\Unloved\Characters\CharacterSpine.cpp" />
     <ClCompile Include="src\Unloved\Characters\Enemies\Dobermann\Dobermann.cpp" />
-    <ClCompile Include="src\Unloved\Characters\Enemies\Kangaroo\Kanagaroo_attack_logic.cpp" />
     <ClCompile Include="src\Unloved\Characters\Enemies\Kangaroo\Kangaroo_animation_state_machine.cpp" />
     <ClCompile Include="src\Unloved\Characters\Enemies\Kangaroo\Kangaroo_audio.cpp" />
     <ClCompile Include="src\Unloved\Characters\Enemies\Kangaroo\Kangaroo_debug_draw.cpp" />
@@ -497,13 +493,15 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Inventory\inventory_update.cpp" />
     <ClCompile Include="src\Unloved\Systems\HeightMap\HeightMap.cpp" />
     <ClCompile Include="src\Unloved\Systems\Map\MapManager.cpp" />
-    <ClCompile Include="src\Hell\Physics\Ragdoll\RagdollAPI.cpp" />
-    <ClCompile Include="src\Hell\Physics\Ragdoll\RagdollData.cpp" />
+    <ClCompile Include="src\Hell\Physics\Ragdoll\RagdollJoint.cpp" />
+    <ClCompile Include="src\Hell\Physics\Ragdoll\RagdollMass.cpp" />
+    <ClCompile Include="src\Hell\Physics\Ragdoll\RagdollShapeMesh.cpp" />
     <ClCompile Include="src\Hell\Physics\Ragdoll\Ragdoll.cpp" />
     <ClCompile Include="src\Unloved\Systems\Openables\Openable.cpp" />
     <ClCompile Include="src\Unloved\Systems\Bullets\BulletTrail.cpp" />
     <ClCompile Include="src\Unloved\Objects\Effects\Decal.cpp" />
     <ClCompile Include="src\Unloved\Objects\Traversal\Ladder.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Traversal\LadderDismount.cpp" />
     <ClCompile Include="src\Unloved\Objects\Traversal\Staircase.cpp" />
     <ClCompile Include="src\Unloved\Systems\ShadowMaps\ShadowMapManager.cpp" />
     <ClCompile Include="src\Unloved\Systems\TypeWriter\TypeWriter.cpp" />
@@ -524,18 +522,25 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Characters\Enemies\Kangaroo\Kanagaroo_movement.cpp" />
     <ClCompile Include="src\Unloved\Characters\Enemies\Kangaroo\Kangaroo.cpp" />
     <ClCompile Include="src\Unloved\Characters\Enemies\Kangaroo\Kangaroo_Util.cpp" />
-    <ClCompile Include="src\Unloved\Characters\Enemies\Shark\Shark_Update_HuntingPlayer.cpp" />
-    <ClCompile Include="src\Unloved\Characters\Enemies\Shark\Shark_util.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Shark\Shark_Animation.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Shark\Shark_Hunting.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Shark\Shark_Movement.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Shark\Shark_Update.cpp" />
     <ClCompile Include="src\Unloved\Systems\Pathfinding\AStar.cpp" />
     <ClCompile Include="src\Unloved\Systems\Pathfinding\MinHeap.cpp" />
     <ClCompile Include="src\Unloved\Systems\NavMesh\NavMesh.cpp" />
     <ClCompile Include="src\Unloved\Systems\Pathfinding\Pathfinding.cpp" />
     <ClCompile Include="src\Hell\Physics\Physics_ignore_lists.cpp" />
     <ClCompile Include="src\Hell\Physics\Types\CharacterController.cpp" />
-    <ClCompile Include="src\Unloved\Player\Player_character_model.cpp" />
-    <ClCompile Include="src\Unloved\Player\Player_ragdoll.cpp" />
     <ClCompile Include="src\Unloved\Player\Player_weapon_attachments.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Bible_animations.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Bible_humanoids.cpp" />
     <ClCompile Include="src\Unloved\Systems\Animator\Animator.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Animator\AnimationPlayback.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Animator\AnimatorInstance.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Animator\AnimationLayer.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Animator\SkeletonCache.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Animator\Skeleton.cpp" />
     <ClCompile Include="src\Unloved\Objects\Props\Christmas\ChristmasLights.cpp" />
     <ClCompile Include="src\Unloved\Objects\Props\Christmas\ChristmasTree.cpp" />
     <ClCompile Include="src\Unloved\Systems\BloodOLD\BloodSystemOLD.cpp" />
@@ -544,9 +549,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Characters\Mermaids\Mermaid\Mermaid.cpp" />
     <ClCompile Include="src\Unloved\Characters\Enemies\Shark\Shark.cpp" />
     <ClCompile Include="src\Unloved\Maps\MapFile.cpp" />
-    <ClCompile Include="src\Unloved\UI\Imgui\ImguiBackEnd.cpp" />
     <ClCompile Include="src\Legacy\File\JSON.cpp" />
-    <ClCompile Include="src\Unloved\UI\Imgui\Types\Types.cpp" />
     <ClCompile Include="src\Hell\Math\AABB.cpp" />
     <ClCompile Include="src\Unloved\Systems\Ocean\Ocean.cpp" />
     <ClCompile Include="src\Hell\Physics\Types\D6Joint.cpp" />
@@ -589,6 +592,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Objects\House\Wall.cpp" />
     <ClCompile Include="src\Unloved\Objects\House\Window.cpp" />
     <ClCompile Include="src\Hell\Physics\Physics.cpp" />
+    <ClCompile Include="src\Hell\Physics\PhysicsContactQuery.cpp" />
     <ClCompile Include="src\Hell\Physics\PhysicsIds.cpp" />
     <ClCompile Include="src\Hell\Physics\PhysicsIdWrappers.cpp" />
     <ClCompile Include="src\Hell\Physics\PhysicsOverlapQuery.cpp" />
@@ -610,17 +614,9 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Objects\Lighting\Light.cpp" />
     <ClCompile Include="src\Unloved\Objects\Lighting\SpotLight.cpp" />
     <ClCompile Include="src\Unloved\Objects\Renderables\SpriteSheetObject.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editor_debug.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editor_camera.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editor_dividers.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editor_input.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editor_mouseRays.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editor_ui.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editor_cursor.cpp" />
     <ClCompile Include="src\Hell\Input\InputMulti.cpp" />
     <ClCompile Include="src\Unloved\Player\Player.cpp" />
     <ClCompile Include="src\Unloved\Debug\Debug.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Editor.cpp" />
     <ClCompile Include="src\Unloved\EditorSession\EditorInspector.cpp" />
     <ClCompile Include="src\Unloved\EditorSession\Inspector\EditorInspectorAssets.cpp" />
     <ClCompile Include="src\Unloved\EditorSession\Inspector\EditorInspectorGeometry.cpp" />
@@ -629,7 +625,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\EditorSession\EditorHierarchy.cpp" />
     <ClCompile Include="src\Unloved\EditorSession\UI\EditorInputElements.cpp" />
     <ClCompile Include="src\Unloved\EditorSession\EditorObjectOptions.cpp" />
-    <ClCompile Include="src\Unloved\EditorSession\EditorMapTools.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\EditorToolbar.cpp" />
     <ClCompile Include="src\Unloved\EditorSession\EditorPlacement.cpp" />
     <ClCompile Include="src\Unloved\EditorSession\Interaction\EditorPointSequences.cpp" />
     <ClCompile Include="src\Unloved\EditorSession\EditorSession.cpp" />
@@ -640,7 +636,10 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\EditorSession\Core\EditorViewports.cpp" />
     <ClCompile Include="src\Unloved\EditorSession\Interaction\EditorVisibility.cpp" />
     <ClCompile Include="src\Unloved\EditorSession\Core\EditorWorkspace.cpp" />
-    <ClCompile Include="src\Unloved\Editor\Gizmo.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\BoneMask\EditorBoneMask.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Ragdoll\EditorRagdoll.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Ragdoll\EditorRagdollTest.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Gizmo\Gizmo.cpp" />
     <ClCompile Include="src\Unloved\Player\Player_camera.cpp" />
     <ClCompile Include="src\Unloved\Player\Player_Input.cpp" />
     <ClCompile Include="src\Unloved\Player\Player_movement.cpp" />
@@ -650,9 +649,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="src\Unloved\Render\RenderDataManager.cpp" />
     <ClCompile Include="src\Unloved\Render\Renderer.cpp" />
     <ClCompile Include="src\Unloved\Camera\Camera.cpp" />
-    <ClCompile Include="src\Hell\ResourceManagement\Types\Animation.cpp" />
     <ClCompile Include="src\Hell\ResourceManagement\Types\SkinnedModel.cpp" />
-    <ClCompile Include="src\Unloved\Objects\Renderables\AnimatedGameObject.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Renderables\SkinnedGameObject.cpp" />
     <ClCompile Include="src\Unloved\Objects\Props\GameObject.cpp" />
     <ClCompile Include="src\Hell\Input\Input.cpp" />
     <ClCompile Include="src\Hell\Time\Time.cpp" />
@@ -691,13 +689,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClCompile Include="vendor\clipper\src\clipper.offset.cpp" />
     <ClCompile Include="vendor\clipper\src\clipper.rectclip.cpp" />
     <ClCompile Include="vendor\glad\src\gl.c" />
-    <ClCompile Include="vendor\imgui\include\imgui\imgui.cpp" />
-    <ClCompile Include="vendor\imgui\include\imgui\imgui_demo.cpp" />
-    <ClCompile Include="vendor\imgui\include\imgui\imgui_draw.cpp" />
-    <ClCompile Include="vendor\imgui\include\imgui\imgui_impl_glfw.cpp" />
-    <ClCompile Include="vendor\imgui\include\imgui\imgui_impl_opengl3.cpp" />
-    <ClCompile Include="vendor\imgui\include\imgui\imgui_tables.cpp" />
-    <ClCompile Include="vendor\imgui\include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="vendor\lodepng\include\lodepng\lodepng.cpp" />
     <ClCompile Include="vendor\midifile\src\Binasc.cpp" />
     <ClCompile Include="vendor\midifile\src\MidiEvent.cpp" />
@@ -798,6 +789,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Physics.h" />
     <ClInclude Include="src\Hell\Physics\PhysicsTypes.h" />
     <ClInclude Include="src\Hell\Physics\PhysicsDebug.h" />
+    <ClInclude Include="src\Hell\Physics\PhysicsContactQuery.h" />
     <ClInclude Include="src\Hell\Physics\PhysicsIds.h" />
     <ClInclude Include="src\Hell\Physics\PhysicsIdWrappers.h" />
     <ClInclude Include="src\Hell\Physics\PhysicsOverlapQuery.h" />
@@ -805,9 +797,12 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Physics\PhysicsResourceManagement.h" />
     <ClInclude Include="src\Hell\Physics\PhysicsUtil.h" />
     <ClInclude Include="src\Hell\Render\DrawCommandTypes.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\Animation.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\BoneMask.h" />
     <ClInclude Include="src\Hell\ResourceManagement\Types\PointAnimation.h" />
     <ClInclude Include="src\Hell\ResourceManagement\Types\VAT.h" />
     <ClInclude Include="src\Hell\Serialization\Json.h" />
+    <ClInclude Include="src\Unloved\Characters\Enemies\Snake\Snake.h" />
     <ClInclude Include="src\Unloved\Common\Constants.h" />
     <ClInclude Include="src\Unloved\Common\Enums.h" />
     <ClInclude Include="src\Unloved\Common\PlanarQuad.h" />
@@ -816,8 +811,11 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Debug\DebugTypes.h" />
     <ClInclude Include="src\Unloved\Debug\Scratch.h" />
     <ClInclude Include="src\Unloved\Debug\Menu\Debug_menu.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Editor_enums.h" />
+    <ClInclude Include="src\Unloved\Objects\Effects\BloodPoolState.h" />
     <ClInclude Include="src\Unloved\Objects\Exterior\Jetty.h" />
     <ClInclude Include="src\Unloved\Objects\ObjectEnums.h" />
+    <ClInclude Include="src\Unloved\Characters\Humanoid\AnimatedHumanoid.h" />
     <ClInclude Include="src\Unloved\Objects\Renderables\BoneSegment.h" />
     <ClInclude Include="src\Unloved\Objects\Renderables\PointAnimationInstance.h" />
     <ClInclude Include="src\Unloved\Objects\Renderables\VATInstance.h" />
@@ -880,11 +878,12 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Systems\Particles\ParticleManager.h" />
     <ClInclude Include="src\Unloved\Debug\DebugDraw.h" />
     <ClInclude Include="src\Unloved\Debug\FeatureTest.h" />
-    <ClInclude Include="src\Unloved\Systems\DDGI\DDGIGeometryBuilder.h" />
+    <ClInclude Include="src\Unloved\Systems\CoarseWorldBVH\CoarseWorldBVHGeometry.h" />
     <ClInclude Include="src\Unloved\Systems\DDGI\DDGIManager.h" />
     <ClInclude Include="src\Unloved\Systems\DDGI\DDGITypes.h" />
     <ClInclude Include="src\Unloved\Systems\DDGI\DDGIVolume.h" />
     <ClInclude Include="src\Unloved\Systems\DDGI\PointCloud.h" />
+    <ClInclude Include="src\Unloved\Systems\CoarseWorldBVH\CoarseWorldBVH.h" />
     <ClInclude Include="src\Unloved\Systems\DirtyTracker\DirtyTracker.h" />
     <ClInclude Include="src\Hell\AssetCompiler\AssetCompiler.h" />
     <ClInclude Include="src\Hell\AssetCompiler\AssimpImporter.h" />
@@ -893,6 +892,8 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\AssetFormats\AssetFormatHeaders.h" />
     <ClInclude Include="src\Hell\AssetFormats\AssetFormats.h" />
     <ClInclude Include="src\Hell\AssetLoader\AssetLoader.h" />
+    <ClInclude Include="src\Hell\AssetLoader\LegacyRag\LegacyRagdollImporter.h" />
+    <ClInclude Include="src\Hell\AssetLoader\LegacyRag\LegacyRagReader.h" />
     <ClInclude Include="src\Hell\BVH\Types.h" />
     <ClInclude Include="src\Hell\BVH\Types\MeshBvh.h" />
     <ClInclude Include="src\Hell\BVH\Types\SceneBvh.h" />
@@ -954,6 +955,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Legacy\Common\HellFunctionTypes.h" />
     <ClInclude Include="src\Unloved\Config\Config.h" />
     <ClInclude Include="src\Unloved\Config\FlashlightConfig.h" />
+    <ClInclude Include="src\Unloved\Config\PhysicsConfig.h" />
     <ClInclude Include="src\Hell\Audio.h" />
     <ClInclude Include="src\Hell\Audio\Audio.h" />
     <ClInclude Include="src\Hell\Debug\DebugDraw.h" />
@@ -974,11 +976,12 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Geometry\PrimitiveMesh.h" />
     <ClInclude Include="src\Hell\Math\Math.h" />
     <ClInclude Include="src\Hell\Math\Easing.h" />
+    <ClInclude Include="src\Hell\Math\Matrix.h" />
     <ClInclude Include="src\Hell\Math\Transform.h" />
     <ClInclude Include="src\Hell\Math\OBB.h" />
     <ClInclude Include="src\Hell\Math\Ray.h" />
     <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollUtil.h" />
-    <ClInclude Include="src\Unloved\Characters\Enemies\CharacterSpine.h" />
+    <ClInclude Include="src\Unloved\Characters\CharacterSpine.h" />
     <ClInclude Include="src\Unloved\Characters\Enemies\Dobermann\Dobermann.h" />
     <ClInclude Include="src\Unloved\Inventory\Inventory.h" />
     <ClInclude Include="src\Unloved\Systems\HeightMap\HeightMap.h" />
@@ -991,17 +994,25 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Systems\NavMesh\NavMesh.h" />
     <ClInclude Include="src\Unloved\Systems\Pathfinding\Pathfinding.h" />
     <ClInclude Include="src\Hell\Physics\Types\CharacterController.h" />
-    <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollAPI.h" />
-    <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollData.h" />
+    <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollAsset.h" />
     <ClInclude Include="src\Hell\Physics\Ragdoll\Ragdoll.h" />
-    <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollTypes.h" />
+    <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollJoint.h" />
+    <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollMass.h" />
+    <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollShapeMesh.h" />
+    <ClInclude Include="src\Unloved\Bible\Bible_enums.h" />
     <ClInclude Include="src\Unloved\Systems\Animator\Animator.h" />
+    <ClInclude Include="src\Unloved\Systems\Animator\AnimationPlayback.h" />
+    <ClInclude Include="src\Unloved\Systems\Animator\AnimatorInstance.h" />
+    <ClInclude Include="src\Unloved\Systems\Animator\AnimationLayer.h" />
+    <ClInclude Include="src\Unloved\Systems\Animator\SkeletonCache.h" />
+    <ClInclude Include="src\Unloved\Systems\Animator\Skeleton.h" />
     <ClInclude Include="src\Unloved\Objects\Props\Christmas\ChristmasLights.h" />
     <ClInclude Include="src\Unloved\Objects\Props\Christmas\ChristmasTree.h" />
     <ClInclude Include="src\Hell\Containers\SlotMap.h" />
     <ClInclude Include="src\Unloved\Systems\Bullets\BulletTrail.h" />
     <ClInclude Include="src\Unloved\Objects\Effects\Decal.h" />
     <ClInclude Include="src\Unloved\Objects\Traversal\Ladder.h" />
+    <ClInclude Include="src\Unloved\Objects\Traversal\LadderDismount.h" />
     <ClInclude Include="src\Unloved\Objects\Traversal\Staircase.h" />
     <ClInclude Include="src\Legacy\Types\Game\Stairs.h" />
     <ClInclude Include="src\Unloved\Systems\TypeWriter\TypeWriter.h" />
@@ -1017,9 +1028,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\Characters\Enemies\Shark\Shark.h" />
     <ClInclude Include="src\Unloved\Systems\Openables\Openable.h" />
     <ClInclude Include="src\Hell\Math\LineMath.h" />
-    <ClInclude Include="src\Unloved\UI\Imgui\ImguiBackEnd.h" />
     <ClInclude Include="src\Legacy\File\JSON.h" />
-    <ClInclude Include="src\Unloved\UI\Imgui\Types\Types.h" />
     <ClInclude Include="src\Hell\Math\AABB.h" />
     <ClInclude Include="src\Unloved\Systems\Ocean\Ocean.h" />
     <ClInclude Include="src\Hell\Physics\CollisionReports.h" />
@@ -1080,7 +1089,6 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Hell\Input\InputMulti.h" />
     <ClInclude Include="src\Unloved\Player\Player.h" />
     <ClInclude Include="src\Unloved\Debug\Debug.h" />
-    <ClInclude Include="src\Unloved\Editor\Editor.h" />
     <ClInclude Include="src\Unloved\EditorSession\UI\EditorDialogs.h" />
     <ClInclude Include="src\Unloved\EditorSession\EditorHierarchy.h" />
     <ClInclude Include="src\Unloved\EditorSession\UI\EditorInputElements.h" />
@@ -1088,7 +1096,7 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\EditorSession\EditorObjectOptions.h" />
     <ClInclude Include="src\Unloved\EditorSession\EditorInspector.h" />
     <ClInclude Include="src\Unloved\EditorSession\Inspector\EditorInspectorInternal.h" />
-    <ClInclude Include="src\Unloved\EditorSession\EditorMapTools.h" />
+    <ClInclude Include="src\Unloved\EditorSession\EditorToolbar.h" />
     <ClInclude Include="src\Unloved\EditorSession\EditorPlacement.h" />
     <ClInclude Include="src\Unloved\EditorSession\Interaction\EditorPointSequences.h" />
     <ClInclude Include="src\Unloved\EditorSession\EditorSession.h" />
@@ -1101,22 +1109,20 @@ xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
     <ClInclude Include="src\Unloved\EditorSession\Core\EditorViewports.h" />
     <ClInclude Include="src\Unloved\EditorSession\Interaction\EditorVisibility.h" />
     <ClInclude Include="src\Unloved\EditorSession\Core\EditorWorkspace.h" />
-    <ClInclude Include="src\Unloved\Editor\Editor_placement.h" />
-    <ClInclude Include="src\Unloved\Editor\Editor_rays.h" />
-    <ClInclude Include="src\Unloved\Editor\PlacementObjectCreation.h" />
-    <ClInclude Include="src\Unloved\Editor\PlacementSequencePoints.h" />
+    <ClInclude Include="src\Unloved\EditorSession\BoneMask\EditorBoneMask.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Ragdoll\EditorRagdoll.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Ragdoll\EditorRagdollTest.h" />
     <ClInclude Include="src\Unloved\EditorSession\PlacementTools.h" />
-    <ClInclude Include="src\Unloved\Editor\ObjectNames.h" />
-    <ClInclude Include="src\Unloved\Editor\Gizmo.h" />
+    <ClInclude Include="src\Unloved\EditorSession\ObjectNames.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Gizmo\Gizmo.h" />
     <ClInclude Include="src\Unloved\Maps\MapFile.h" />
     <ClInclude Include="src\Unloved\Maps\MapFileFormat.h" />
     <ClInclude Include="src\Unloved\Render\RenderDataManager.h" />
     <ClInclude Include="src\Unloved\Render\Renderer.h" />
-    <ClInclude Include="src\Hell\ResourceManagement\Types\Animation.h" />
     <ClInclude Include="src\Hell\ResourceManagement\Types\SkinnedModel.h" />
     <ClInclude Include="src\Legacy\Timer.hpp" />
     <ClInclude Include="src\Unloved\Camera\Camera.h" />
-    <ClInclude Include="src\Unloved\Objects\Renderables\AnimatedGameObject.h" />
+    <ClInclude Include="src\Unloved\Objects\Renderables\SkinnedGameObject.h" />
     <ClInclude Include="src\Unloved\Objects\Props\GameObject.h" />
     <ClInclude Include="src\Hell\Common\Enums.h" />
     <ClInclude Include="src\Hell\Math\Primtives.h" />

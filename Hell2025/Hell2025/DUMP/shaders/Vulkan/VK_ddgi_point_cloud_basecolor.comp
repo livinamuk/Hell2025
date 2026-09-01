@@ -1,0 +1,43 @@
+#version 460
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+#include "../common/types.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
+
+layout(local_size_x = 128) in;
+
+layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
+layout(set = 0, binding = DESC_IDX_TEXTURE_SAMPLERS) uniform sampler textureSamplers[];
+
+layout(buffer_reference, scalar) buffer PointCloudBuffer { CloudPoint points[]; };
+layout(buffer_reference, scalar) readonly buffer PointCloudTextureInfoBuffer { CloudPointTextureInfo textureInfo[]; };
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsDDGIPointCloudBaseColor data;
+} pc;
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx >= pc.data.pointCount) return;
+    if (idx >= pc.data.textureInfoCount) return;
+
+    PointCloudBuffer pointCloud = PointCloudBuffer(pc.data.pointCloudDeviceAddress);
+    PointCloudTextureInfoBuffer pointCloudTextureInfo = PointCloudTextureInfoBuffer(pc.data.pointCloudTextureInfoDeviceAddress);
+
+    CloudPointTextureInfo info = pointCloudTextureInfo.textureInfo[idx];
+    if (info.baseColorIndex < 0) {
+        pointCloud.points[idx].baseColor = vec4(1.0);
+        return;
+    }
+
+    uint baseColorIndex = uint(info.baseColorIndex);
+    vec2 uv = vec2(info.u, info.v);
+    vec2 texSize = vec2(textureSize(sampler2D(textures[nonuniformEXT(baseColorIndex)], textureSamplers[nonuniformEXT(baseColorIndex)]), 0));
+    float targetRes = 16.0;
+    float mipLevel = log2(max(texSize.x, texSize.y) / targetRes);
+    pointCloud.points[idx].baseColor = textureLod(sampler2D(textures[nonuniformEXT(baseColorIndex)], textureSamplers[nonuniformEXT(baseColorIndex)]), uv, mipLevel);
+}

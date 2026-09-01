@@ -2,11 +2,10 @@
 
 #include "Hell/Audio.h"
 #include "Hell/Input.h"
+#include "Hell/Math/Interpolation.h"
 #include "Hell/Time.h"
 
-#include "Unloved/Render/Renderer.h" // For ragdoll draw settings. TODO: get me out of here
-
-#include "Unloved/Editor/Editor.h"
+#include "Unloved/EditorSession/EditorSession.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/World/World.h"
@@ -20,29 +19,16 @@ void Player::Update(float deltaTime) {
     m_moving = false;
 
     // Bail if in editor
-    if (Editor::IsOpen()) return;
-
+    if (EditorSession::IsActive()) return;
 
     if (Input::KeyPressed(HELL_KEY_G) && m_viewportIndex == 0) {
         TriggerVignette(glm::vec3(0.6f, 0.0f, 0.0f), 0.4f);
     }
 
-    // Update exclusive/ignored viewport indices
-    if (AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject()) {
+    // Update viewport visibility
+    if (SkinnedGameObject* viewWeapon = GetViewWeaponSkinnedGameObject()) {
         viewWeapon->SetExclusiveViewportIndex(m_viewportIndex);
     }
-    if (AnimatedGameObject* characterModel = GetCharacterModelAnimatedGameObject()) {
-        characterModel->SetIgnoredViewportIndex(m_viewportIndex);
-        if (Ragdoll* ragdoll = GetRagdoll()) {
-            if (Renderer::GetCurrentRendererSettings().debugDrawRagdolls) {
-                characterModel->DisableRendering();
-            }
-            else {
-                characterModel->EnableRendering();
-            }
-        }
-    }
-
     // Toggle inventory
     if (PressedToggleInventory() && m_shopInventory.IsClosed()) {
 
@@ -64,6 +50,7 @@ void Player::Update(float deltaTime) {
         // Hack to also exit shop if the inventory is being used to display your items when in shop to SELL
         m_shopInventory.CloseInventory();
         m_isInShop = false;
+        m_shopMermaidObjectId = 0;
 
         Audio::PlayAudio(AUDIO_SELECT, 1.00f);
     }
@@ -111,7 +98,10 @@ void Player::Update(float deltaTime) {
     //m_running = false; // REMOVE ME TO ENABLE SPRINTING
 
     // Respawn
-    if (IsAwaitingSpawn()) Respawn();
+    if (IsAwaitingSpawn()) {
+        Respawn();
+        return;
+    }
     if (IsDead() && m_timeSinceDeath > 3.25) {
         if (PressedFire() ||
             PressedReload() ||
@@ -125,7 +115,6 @@ void Player::Update(float deltaTime) {
     }
 
     UpdateVignette(deltaTime);;
-    UpdateLadderIds();
     UpdateMovement(deltaTime);
     UpdateHeadBob(deltaTime);
     UpdateBreatheBob(deltaTime);
@@ -140,14 +129,12 @@ void Player::Update(float deltaTime) {
     UpdateFlashlight(deltaTime);
     UpdateFlashlightFrustum();
     UpdatePlayingPiano(deltaTime);
-    UpdateCharacterModelHacks();
-    UpdateMelleBulletWave(deltaTime);
+    UpdateMeleeAttack();
     CalculateMuzzleFlashSpawnPosition();
 
-    // TODO: remove the false in this if
-    float minimumMermaidInteractYHeight = 28.0f;
-    if (PressedInteract() && GetFootPosition().y > minimumMermaidInteractYHeight && IsFacingClosestMermaid() && !IsInShop()) {
-        EnterShop();
+    if (PressedInteract() && !IsInShop()) {
+        const uint64_t mermaidObjectId = GetFacingMermaidObjectId();
+        if (mermaidObjectId) EnterShop(mermaidObjectId);
     }
 
     UpdateViewWeaponVisibility();
@@ -204,7 +191,7 @@ void Player::Update(float deltaTime) {
     //}
 
    //if (Input::KeyPressed(HELL_KEY_N) && m_viewportIndex == 0) {
-   //    auto* viewWeapon = GetViewWeaponAnimatedGameObject();
+   //    auto* viewWeapon = GetViewWeaponSkinnedGameObject();
    //    viewWeapon->PrintNodeNames();
    //}
 
@@ -223,6 +210,49 @@ void Player::Update(float deltaTime) {
             std::cout << "POS:" << GetCameraPosition() << " ROT: " << GetCameraRotation() << "\n";
         }
     }
+
+    glm::vec3 humanoidRotation = glm::vec3(0.0f, m_camera.GetEulerRotation().y + HELL_PI, 0.0f);
+
+    float crouchTargetBlend = (m_crouching) ? 1.0f : 0.0f;
+    float movementTargetBlend = (m_moving) ? 1.0f : 0.0f;
+    const bool walkingMode = m_movementMode == PlayerMovementMode::WALKING;
+    const bool airborne = walkingMode && !m_grounded;
+    const bool playingAirborneJump = m_jumpAnimationActive && walkingMode && (airborne || m_yVelocity > 0.0f);
+
+    const bool fastJumpBlendOut = m_moving || m_crouching || !walkingMode;
+    if (fastJumpBlendOut) {
+        m_stationaryJumpTailEligible = false;
+    }
+
+    const bool stationaryJumpTail =
+        m_jumpAnimationActive &&
+        walkingMode &&
+        m_grounded &&
+        m_stationaryJumpTailEligible &&
+        !fastJumpBlendOut &&
+        m_animatedHumanoid.GetJumpBlend() > 0.001f &&
+        !m_animatedHumanoid.IsJumpAnimationComplete();
+
+    float jumpTargetBlend = (playingAirborneJump || stationaryJumpTail) ? 1.0f : 0.0f;
+
+    float crouchBlendInterpSpeed = 30.0;
+    float movementBlendInterpSpeed = 20.0;
+    float jumpBlendInterpSpeed = (!playingAirborneJump && !fastJumpBlendOut) ? 6.0f : 20.0f;
+
+    float crouchBlend = Hell::Math::InterpTo(m_animatedHumanoid.GetCrouchBlend(), crouchTargetBlend, deltaTime, crouchBlendInterpSpeed);
+    float movementBlend = Hell::Math::InterpTo(m_animatedHumanoid.GetMovementBlend(), movementTargetBlend, deltaTime, movementBlendInterpSpeed);
+    float jumpBlend = Hell::Math::InterpTo(m_animatedHumanoid.GetJumpBlend(), jumpTargetBlend, deltaTime, jumpBlendInterpSpeed);
+    if (!playingAirborneJump && !stationaryJumpTail && jumpBlend <= 0.001f) {
+        m_jumpAnimationActive = false;
+        m_stationaryJumpTailEligible = false;
+    }
+
+    m_animatedHumanoid.SetPosition(GetFootPosition());
+    m_animatedHumanoid.SetRotation(humanoidRotation);
+    m_animatedHumanoid.SetCrouchBlend(crouchBlend);
+    m_animatedHumanoid.SetMovementBlend(movementBlend);
+    m_animatedHumanoid.SetJumpBlend(jumpBlend);
+    m_animatedHumanoid.DebugDraw();
 }
 
 void Player::UpdateVignette(float deltaTime) {

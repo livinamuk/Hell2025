@@ -1,0 +1,123 @@
+#version 430
+layout(local_size_x = 64, local_size_y = 2, local_size_z = 1) in;
+
+#define BINDING_SSBO_IN 0
+#define BINDING_SSBO_OUT 1
+
+layout(std430, binding = BINDING_SSBO_IN) readonly buffer Block { vec2 data[]; } fft_in;
+layout(std430, binding = BINDING_SSBO_OUT) writeonly buffer BlockOut { vec2 data[]; } fft_out;
+
+#define FFT_RADIX 8
+
+#define FFT_STRIDE 64  // previously uSrtide
+#define FFT_PADDING 64 // previously uP
+
+#define PI 3.14159265359
+#define SQRT_1_2 0.70710678118
+
+#define FFT_OUTPUT_STEP 1u
+#define FFT_OUTPUT_SHIFT 0u
+
+#define TWIDDLE_1_8 (vec2(+SQRT_1_2, +SQRT_1_2))
+#define TWIDDLE_3_8 (vec2(-SQRT_1_2, +SQRT_1_2))
+
+vec2 cmul(vec2 a, vec2 b) {
+    vec2 r3 = a.yx;
+    vec2 r1 = b.xx;
+    vec2 R0 = a * r1;
+    vec2 r2 = b.yy;
+    vec2 R1 = r2 * r3;
+    return R0 + vec2(-R1.x, R1.y);
+}
+
+vec2 load_global(uint offset) {
+    return fft_in.data[offset];
+}
+
+void store_global(uint offset, vec2 v) {
+    fft_out.data[offset] = v;
+}
+
+vec2 twiddle(uint k, uint p) {
+    float angle = PI * float(k) / float(p);
+    return vec2(cos(angle), sin(angle));
+}
+
+vec2 cmul_plus_j(vec2 v) {
+    return vec2(-v.y, v.x);
+}
+
+void butterfly(inout vec2 a, inout vec2 b, vec2 w) {
+    vec2 t = cmul(b, w);
+    b = a - t;
+    a = a + t;
+}
+
+void FFT8(inout vec2 a, inout vec2 b, inout vec2 c, inout vec2 d, inout vec2 e, inout vec2 f, inout vec2 g, inout vec2 h, uint i, uint p) {
+    uint k = i & (p - 1u);
+
+    vec2 w = twiddle(k, p);
+    butterfly(a, e, w);
+    butterfly(b, f, w);
+    butterfly(c, g, w);
+    butterfly(d, h, w);
+
+    vec2 w0 = twiddle(k, 2u * p);
+    vec2 w1 = cmul_plus_j(w0);
+
+    butterfly(a, c, w0);
+    butterfly(b, d, w0);
+    butterfly(e, g, w1);
+    butterfly(f, h, w1);
+
+    vec2 W0 = twiddle(k, 4u * p);
+    vec2 W1 = cmul(W0, TWIDDLE_1_8);
+    vec2 W2 = cmul_plus_j(W0);
+    vec2 W3 = cmul_plus_j(W1);
+
+    butterfly(a, b, W0);
+    butterfly(c, d, W2);
+    butterfly(e, f, W1);
+    butterfly(g, h, W3);
+}
+
+void FFT8_horiz(uvec2 i, uint p) {
+    uint octa_samples = gl_NumWorkGroups.x * gl_WorkGroupSize.x;
+    uint offset = i.y * octa_samples * 8u;
+
+    vec2 a = load_global(offset + i.x);
+    vec2 b = load_global(offset + i.x + octa_samples);
+    vec2 c = load_global(offset + i.x + 2u * octa_samples);
+    vec2 d = load_global(offset + i.x + 3u * octa_samples);
+    vec2 e = load_global(offset + i.x + 4u * octa_samples);
+    vec2 f = load_global(offset + i.x + 5u * octa_samples);
+    vec2 g = load_global(offset + i.x + 6u * octa_samples);
+    vec2 h = load_global(offset + i.x + 7u * octa_samples);
+
+    FFT8(a, b, c, d, e, f, g, h, FFT_OUTPUT_STEP * i.x, p);
+
+    uint k = (FFT_OUTPUT_STEP * i.x) & (p - 1u);
+    uint j = ((FFT_OUTPUT_STEP * i.x - k) * 8u) + k;
+
+    store_global(offset + ((j + 0u * p) >> FFT_OUTPUT_SHIFT), a);
+    store_global(offset + ((j + 1u * p) >> FFT_OUTPUT_SHIFT), e);
+    store_global(offset + ((j + 2u * p) >> FFT_OUTPUT_SHIFT), c);
+    store_global(offset + ((j + 3u * p) >> FFT_OUTPUT_SHIFT), g);
+    store_global(offset + ((j + 4u * p) >> FFT_OUTPUT_SHIFT), b);
+    store_global(offset + ((j + 5u * p) >> FFT_OUTPUT_SHIFT), f);
+    store_global(offset + ((j + 6u * p) >> FFT_OUTPUT_SHIFT), d);
+    store_global(offset + ((j + 7u * p) >> FFT_OUTPUT_SHIFT), h);
+}
+
+void FFT8_horiz() {
+    FFT8_horiz(gl_GlobalInvocationID.xy, FFT_PADDING);
+}
+
+void FFT8() {
+    FFT8_horiz();
+}
+
+void main() {
+    FFT8();
+}
+

@@ -182,7 +182,9 @@ void Player::UpdateInteract() {
                     m_inventory.GiveWeapon(pickUp->GetName());
                 }
                 else if (pickUp->GetType() == ItemType::AMMO) {
-                    m_inventory.GiveAmmo(pickUp->GetName(), Bible::GetAmmoPickUpAmount(pickUp->GetName()));
+                    Bible::ItemInfo* itemInfo = Bible::GetItemInfo(pickUp->GetItem());
+                    const AmmoInfo* ammoInfo = itemInfo ? Bible::GetAmmoInfo(itemInfo->GetAmmo()) : nullptr;
+                    if (ammoInfo) m_inventory.GiveAmmo(itemInfo->GetAmmo(), ammoInfo->pickupAmount);
                 }
                 else if (pickUp->GetType() == ItemType::UNDEFINED) {
                     Logging::Warning() << "Player " << m_viewportIndex << " tried to pick up a PickUp with name '" << pickUp->GetName() << "' but type '" << Hell::Enum::ToString(pickUp->GetType()) << "'";

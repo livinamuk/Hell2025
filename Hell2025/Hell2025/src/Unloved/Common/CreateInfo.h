@@ -11,6 +11,7 @@
 #include "Unloved/Common/PlanarQuad.h"
 #include "Unloved/Common/SequencePoint.h"
 #include "Unloved/Common/Types.h"
+#include "Unloved/Bible/Bible_enums.h"
 #include "Unloved/Objects/ObjectEnums.h"
 #include "Unloved/Render/RendererEnums.h"
 #include "Unloved/Physics/PhysicsEnums.h"
@@ -46,6 +47,11 @@ struct RigidStaticCreateInfo {
 };
 
 // World Objects
+
+struct EditableAxisSpan {
+    float minimum = -1.0f;
+    float maximum = 1.0f;
+};
 
 struct BulletCasingCreateInfo {
     glm::vec3 position = glm::vec3(0.0f);
@@ -107,6 +113,13 @@ struct DobermannCreateInfo {
     glm::vec3 rotation = glm::vec3(0.0f);
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Dobermann";
+};
+
+struct SnakeCreateInfo {
+    glm::vec3 position = glm::vec3(0.0f);
+    glm::vec3 rotation = glm::vec3(0.0f);
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "Snake";
 };
 
 struct DoorChainCreateInfo {
@@ -179,8 +192,6 @@ struct GenericAnimatedObjectCreateInfo {
     glm::vec3 rotation = glm::vec3(0.0f);
     float scale = 1.0f;
     GenericAnimatedObjectType type = GenericAnimatedObjectType::UNDEFINED;
-    std::string animationName = "";
-    float animationSpeed = 1.0f;
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Generic Animated Object";
 };
@@ -245,9 +256,16 @@ struct KangarooCreateInfo {
     std::string defaultEditorName = "Kangaroo";
 };
 
+struct LadderDismountCreateInfo {
+    glm::vec3 position = glm::vec3(0.00f);
+    std::string editorName = UNDEFINED_STRING;
+    std::string defaultEditorName = "Ladder Dismount";
+};
+
 struct LadderCreateInfo {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
+    EditableAxisSpan editableAxisSpan;
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Ladder";
     uint32_t stepCount = 1;
@@ -282,6 +300,8 @@ struct MapDataCreateInfo {
 struct MermaidCreateInfo {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
+    glm::vec3 shopTeleportPosition = glm::vec3(0.0f, 1.65f, 0.0f);
+    glm::vec3 shopTeleportEuler = glm::vec3(-0.08f, -1.65f, 0.0f);
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Mermaid";
 };
@@ -319,7 +339,7 @@ struct PianoCreateInfo {
 };
 
 struct PickUpCreateInfo {
-    std::string name = UNDEFINED_STRING;
+    Unloved::Bible::Item item = Unloved::Bible::Item::UNDEFINED;
     std::string editorName = UNDEFINED_STRING;
     std::string defaultEditorName = "Pick Up";
     glm::vec3 position = glm::vec3(0.0f);
@@ -327,7 +347,6 @@ struct PickUpCreateInfo {
     bool saveToFile = false;
     bool respawn = false;
     bool disablePhysicsAtSpawn = true;
-    ItemType type = ItemType::UNDEFINED;
     std::string parentObjectName = UNDEFINED_STRING;
     std::string parentMeshName = UNDEFINED_STRING;
 
@@ -457,10 +476,12 @@ struct CreateInfoCollection {
     std::vector<GenericAnimatedObjectCreateInfo> genericAnimatedObjects;
     std::vector<GenericObjectCreateInfo> genericObjects;
     std::vector<JettyCreateInfo> jetties;
+    std::vector<KangarooCreateInfo> kangaroos;
     std::vector<PlanarQuadObjectCreateInfo> planarQuadObjects;
     std::vector<PointPairCreateInfo> pointPairObjects;
     std::vector<WorldPlaneCreateInfo> worldPlanes;
     std::vector<LadderCreateInfo> ladders;
+    std::vector<LadderDismountCreateInfo> ladderDismounts;
     std::vector<LightCreateInfo> lights;
     std::vector<MermaidCreateInfo> mermaids;
     std::vector<PianoCreateInfo> pianos;

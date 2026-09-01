@@ -1,0 +1,113 @@
+#version 460
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+#include "../common/ddgi.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
+
+layout(local_size_x = 32) in;
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsDDGIProbePointIndices data;
+} pc;
+
+layout(buffer_reference, scalar) readonly buffer PointCloudBuffer { CloudPoint points[]; };
+layout(buffer_reference, scalar) readonly buffer GridOffsetsBuffer { uint cellOffsets[]; };
+layout(buffer_reference, scalar) readonly buffer GridCountsBuffer { uint cellCounts[]; };
+layout(buffer_reference, scalar) buffer ProbePointIndicesBuffer { uint probePointIndices[]; };
+layout(buffer_reference, scalar) buffer ProbePointOffsetsBuffer { uint probePointOffsets[]; };
+layout(buffer_reference, scalar) buffer ProbePointCountsBuffer { uint probePointCounts[]; };
+layout(buffer_reference, scalar) buffer ProbeIndexCounterBuffer { uint counter; };
+
+shared uint shared_probePointCount;
+shared uint shared_globalOffset;
+shared uint shared_tempIndices[2048];
+
+int GetGridCellIndex(ivec3 coords) {
+    if (any(lessThan(coords, ivec3(0))) || any(greaterThanEqual(coords, pc.data.gridDimensions))) {
+        return -1;
+    }
+
+    return coords.x + coords.y * pc.data.gridDimensions.x + coords.z * pc.data.gridDimensions.x * pc.data.gridDimensions.y;
+}
+
+void main() {
+    uint probeIdx = gl_WorkGroupID.x;
+    if (probeIdx >= pc.data.totalProbes) return;
+
+    uint threadIdx = gl_LocalInvocationID.x;
+
+    if (threadIdx == 0) shared_probePointCount = 0;
+    barrier();
+
+    DDGIVolume volume;
+    volume.origin = pc.data.volumeOrigin;
+    volume.probeSpacing = pc.data.probeSpacing;
+    volume.probeCounts = pc.data.probeCounts;
+    volume.totalProbes = int(pc.data.totalProbes);
+    volume.probeOffset = pc.data.probeOffset;
+
+    PointCloudBuffer pointCloud = PointCloudBuffer(pc.data.pointCloudDeviceAddress);
+    GridOffsetsBuffer gridOffsets = GridOffsetsBuffer(pc.data.pointCloudGridOffsetsDeviceAddress);
+    GridCountsBuffer gridCounts = GridCountsBuffer(pc.data.pointCloudGridCountsDeviceAddress);
+
+    ivec3 probeCoords = DDGIGetProbeCoords(int(probeIdx), volume);
+    vec3 probePos = DDGIGetProbeBaseWorldPosition(probeCoords, volume);
+
+    vec3 localPos = probePos - pc.data.gridMin;
+    ivec3 baseCellCoords = ivec3(floor(localPos / pc.data.gridCellSize));
+
+    const float maxDistSq = 3.0 * 3.0;
+
+    for (int dz = -1; dz <= 1; dz++) {
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                int cellIdx = GetGridCellIndex(baseCellCoords + ivec3(dx, dy, dz));
+                if (cellIdx < 0) continue;
+
+                uint start = gridOffsets.cellOffsets[cellIdx];
+                uint count = gridCounts.cellCounts[cellIdx];
+
+                for (uint i = threadIdx; i < count; i += 32) {
+                    uint pointIdx = start + i;
+                    vec3 pointPos = pointCloud.points[pointIdx].position.xyz;
+                    vec3 diff = pointPos - probePos;
+                    float distSq = dot(diff, diff);
+
+                    if (distSq < maxDistSq && distSq > 0.0001) {
+                        vec3 pointNormal = pointCloud.points[pointIdx].normal.xyz;
+                        if (dot(pointNormal, -diff) > 0.0) {
+                            uint localIndex = atomicAdd(shared_probePointCount, 1);
+                            if (localIndex < 2048) {
+                                shared_tempIndices[localIndex] = pointIdx;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    barrier();
+
+    ProbeIndexCounterBuffer probeIndexCounter = ProbeIndexCounterBuffer(pc.data.probeIndexCounterDeviceAddress);
+    ProbePointOffsetsBuffer probePointOffsets = ProbePointOffsetsBuffer(pc.data.probePointOffsetsDeviceAddress);
+    ProbePointCountsBuffer probePointCounts = ProbePointCountsBuffer(pc.data.probePointCountsDeviceAddress);
+
+    if (threadIdx == 0) {
+        uint totalFound = min(shared_probePointCount, 2048u);
+        shared_globalOffset = atomicAdd(probeIndexCounter.counter, totalFound);
+
+        probePointOffsets.probePointOffsets[probeIdx] = shared_globalOffset;
+        probePointCounts.probePointCounts[probeIdx] = totalFound;
+    }
+
+    barrier();
+
+    ProbePointIndicesBuffer probePointIndices = ProbePointIndicesBuffer(pc.data.probePointIndicesDeviceAddress);
+    uint totalFound = min(shared_probePointCount, 2048u);
+    for (uint i = threadIdx; i < totalFound; i += 32) {
+        probePointIndices.probePointIndices[shared_globalOffset + i] = shared_tempIndices[i];
+    }
+}

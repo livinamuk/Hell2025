@@ -51,6 +51,7 @@ namespace Unloved::EditorSession::MenuBar {
         bool g_wantsKeyboardCapture = false;
         EditorMenuAction g_pendingAction = EditorMenuAction::NONE;
         PlacementTool g_pendingPlacementTool = PlacementTool::NONE;
+        EditorSessionMode g_mode = EditorSessionMode::HOUSE;
 
         MenuItem Action(const char* label, const char* shortcut, EditorMenuAction action) {
             MenuItem item;
@@ -78,6 +79,25 @@ namespace Unloved::EditorSession::MenuBar {
             item.label = label;
             item.children = std::move(children);
             return item;
+        }
+
+        Menu CreateFileMenu(EditorSessionMode mode) {
+            Menu menu;
+            menu.label = "File";
+
+            menu.items.push_back(Action("New", "Ctrl+N", EditorMenuAction::NEW_FILE));
+            menu.items.push_back(Action("Open", "Ctrl+O", EditorMenuAction::OPEN_FILE));
+            if (mode == EditorSessionMode::RAGDOLL) {
+                menu.items.push_back(Action("Import rag", "", EditorMenuAction::IMPORT_RAG));
+            }
+            menu.items.push_back(Action("Save", "Ctrl+S", EditorMenuAction::SAVE));
+            if (mode == EditorSessionMode::RAGDOLL) {
+                menu.items.push_back(Action("Save As", "Ctrl+Shift+S", EditorMenuAction::SAVE_AS));
+            }
+            menu.items.push_back(Separator());
+            menu.items.push_back(Action("Close Editor", "`", EditorMenuAction::CLOSE_EDITOR));
+            menu.items.push_back(Action("Exit", "", EditorMenuAction::EXIT_APPLICATION));
+            return menu;
         }
 
         bool CanEmit(EditorMenuAction action) {
@@ -186,11 +206,19 @@ namespace Unloved::EditorSession::MenuBar {
             return Hell::Input::KeyDown(HELL_KEY_LEFT_CONTROL_GLFW) || Hell::Input::KeyDown(HELL_KEY_RIGHT_CONTROL);
         }
 
+        bool ShiftIsDown() {
+            return Hell::Input::KeyDown(HELL_KEY_LEFT_SHIFT_GLFW) || Hell::Input::KeyDown(HELL_KEY_RIGHT_SHIFT);
+        }
+
         EditorMenuAction GetShortcutAction() {
             if (!ControlIsDown()) return EditorMenuAction::NONE;
             if (Hell::Input::KeyPressed(HELL_KEY_N)) return EditorMenuAction::NEW_FILE;
             if (Hell::Input::KeyPressed(HELL_KEY_O)) return EditorMenuAction::OPEN_FILE;
-            if (Hell::Input::KeyPressed(HELL_KEY_S)) return EditorMenuAction::SAVE;
+            if (Hell::Input::KeyPressed(HELL_KEY_S)) {
+                return ShiftIsDown() && g_mode == EditorSessionMode::RAGDOLL
+                    ? EditorMenuAction::SAVE_AS
+                    : EditorMenuAction::SAVE;
+            }
             return EditorMenuAction::NONE;
         }
 
@@ -246,18 +274,7 @@ namespace Unloved::EditorSession::MenuBar {
 
     void Init() {
         g_menus.clear();
-
-        Menu fileMenu;
-        fileMenu.label = "File";
-        fileMenu.items = {
-            Action("New",          "Ctrl+N", EditorMenuAction::NEW_FILE),
-            Action("Open...",      "Ctrl+O", EditorMenuAction::OPEN_FILE),
-            Action("Save",         "Ctrl+S", EditorMenuAction::SAVE),
-            Separator(),
-            Action("Close Editor", "`",      EditorMenuAction::CLOSE_EDITOR),
-            Action("Exit",         "",       EditorMenuAction::EXIT_APPLICATION)
-        };
-        g_menus.push_back(std::move(fileMenu));
+        g_menus.push_back(CreateFileMenu(g_mode));
 
         Menu insertMenu;
         insertMenu.label = "Insert";
@@ -278,6 +295,7 @@ namespace Unloved::EditorSession::MenuBar {
                 Tool("Dobermann", PlacementTool::DOBERMANN),
                 Tool("Kangaroo", PlacementTool::KANGAROO),
                 Tool("Shark", PlacementTool::SHARK),
+                Tool("Snake", PlacementTool::SNAKE),
             }),
             Submenu("Furniture", {
                 Tool("Couch", PlacementTool::GENERIC_COUCH),
@@ -329,8 +347,11 @@ namespace Unloved::EditorSession::MenuBar {
                     Tool("Decking Post",   PlacementTool::DECKING_POST),
                 }),
             }),
-            Submenu("Misc", {
+            Submenu("Ladders", {
                 Tool("Ladder", PlacementTool::LADDER),
+                Tool("Ladder Dismount", PlacementTool::LADDER_DISMOUNT),
+            }),
+            Submenu("Misc", {
                 Tool("Piano", PlacementTool::PIANO),
             }),
             Submenu("Ornaments", {
@@ -404,6 +425,17 @@ namespace Unloved::EditorSession::MenuBar {
 
     void RefreshLayout() {
         UpdateGeometry();
+    }
+
+    void SetMode(EditorSessionMode mode) {
+        if (g_mode == mode) return;
+
+        Close();
+        g_mode = mode;
+        if (!g_menus.empty()) {
+            g_menus.front() = CreateFileMenu(mode);
+            UpdateGeometry();
+        }
     }
 
     void Update() {

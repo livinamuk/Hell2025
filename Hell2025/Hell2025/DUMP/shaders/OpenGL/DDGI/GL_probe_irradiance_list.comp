@@ -1,0 +1,27 @@
+#version 450
+#include "../../common/types.glsl"
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 4) buffer ProbeStates               { ProbeState probeStates[]; };
+layout(std430, binding = 5) buffer ProbeIrradianceCounter    { uint irradianceCounter; };
+layout(std430, binding = 6) buffer ProbeIrradianceIndices    { uint irradianceIndices[]; };
+layout(std430, binding = 7) readonly buffer DDGIVolumeBuffer { DDGIVolume volume; };
+
+void main() {
+    uint pIdx = gl_GlobalInvocationID.x;
+
+    if (pIdx >= uint(volume.totalProbes)) return;
+
+    uint globalProbeIdx = volume.probeOffset + pIdx;
+
+    if (probeStates[globalProbeIdx].isRelevant &&
+        probeStates[globalProbeIdx].irradianceCooldown > 0u) {
+
+        // Get a unique slot in the index list
+        uint slot = atomicAdd(irradianceCounter, 1);
+
+        // Write the original 1D probe index into the list
+        irradianceIndices[slot] = pIdx;
+    }
+}

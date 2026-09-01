@@ -13,13 +13,22 @@ PickUp::PickUp(uint64_t id, const PickUpCreateInfo& createInfo, const SpawnOffse
     m_createInfo.rotation.y += spawnOffset.yRotation;
     m_objectId = id;
 
-    ItemInfo* inventoryItemInfo = Bible::GetItemInfoByName(createInfo.name);
+    Bible::ItemInfo* inventoryItemInfo = Bible::GetItemInfo(createInfo.item);
     if (!inventoryItemInfo) return; // Should never happen
 
     m_initialTransform.position = m_createInfo.position;
     m_initialTransform.rotation = m_createInfo.rotation;
 
-    Bible::ConfigureMeshNodesByItemName(id, inventoryItemInfo->GetName(), &m_meshNodes, true);
+    Bible::ConfigureMeshNodesByItem(id, createInfo.item, &m_meshNodes, true);
+}
+
+const std::string& PickUp::GetName() const {
+    return Bible::GetItemName(m_createInfo.item);
+}
+
+ItemType PickUp::GetType() const {
+    const Bible::ItemInfo* itemInfo = Bible::GetItemInfo(m_createInfo.item);
+    return itemInfo ? itemInfo->GetType() : ItemType::UNDEFINED;
 }
 
 void PickUp::Update(float deltaTime) {

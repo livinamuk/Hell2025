@@ -1,0 +1,100 @@
+#version 460
+#include "../common/OpenGL/GL_binding_indices.glsl"
+#include "../common/constants.glsl"
+#include "../common/intersect.glsl"
+#include "../common/types.glsl"
+
+layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
+
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS) buffer lightsBuffer { Light lights[]; };
+readonly restrict layout(std430, binding = SSBO_IDX_SPOT_LIGHTS) buffer spotLightsBuffer { SpotLight spotLights[]; };
+layout(std430, binding = SSBO_IDX_LIGHT_CULLING_TILE_LIGHTS) buffer tileLightsBuffer { TileLights tilelights[]; };
+layout(std430, binding = SSBO_IDX_LIGHT_CULLING_TILE_WORLD_BOUNDS) buffer tileWorldBoundsBuffer { TileWorldBounds tileWorldBounds[]; };
+layout(std430, binding = SSBO_IDX_LIGHT_CULLING_TILE_SPOT_LIGHTS) buffer tileSpotLightsBuffer { TileSpotLights tileSpotLights[]; };
+
+shared uint tilelightCount;
+shared uint tileSpotLightCount;
+
+shared vec3 worldSpaceMin;
+shared vec3 worldSpaceMax;
+shared float validDepthSampleCount;
+
+void main() {
+	uint tileIndex = gl_WorkGroupID.y * uint(rendererData.tileCountX) + gl_WorkGroupID.x;
+
+	// Defaults
+	if (gl_LocalInvocationIndex == 0) {
+        // Output defaults
+		tilelights[tileIndex].lightCount = 0;
+		tilelightCount = 0;
+		tileSpotLights[tileIndex].lightCount = 0;
+		tileSpotLightCount = 0;
+
+        // Pull tile world bounds out of the SSBO
+        // And the valid sample count
+        worldSpaceMin = tileWorldBounds[tileIndex].boundsMin.xyz;
+        worldSpaceMax = tileWorldBounds[tileIndex].boundsMax.xyz;
+        validDepthSampleCount = tileWorldBounds[tileIndex].boundsMin.w;
+	}
+	barrier();
+
+	// Light culling
+	if (validDepthSampleCount > 0) {
+		uint invocationCount = gl_WorkGroupSize.x * gl_WorkGroupSize.y;
+		uint loopCount = (rendererData.lightCount + invocationCount - 1u) / invocationCount;
+
+        for (uint i = 0u; i < loopCount; i++) {
+			uint lightIndex = gl_LocalInvocationIndex + i * invocationCount;
+
+            if (lightIndex < rendererData.lightCount) {
+				vec3 lightPos = vec3(lights[lightIndex].posX, lights[lightIndex].posY, lights[lightIndex].posZ);
+				float lightRadius = lights[lightIndex].radius;
+
+                vec3 lightAabbMin = lights[lightIndex].worldBoundsMin.xyz;
+                vec3 lightAabbMax = lights[lightIndex].worldBoundsMax.xyz;
+
+                // First broad reject using your tight light bounds
+                if (AABBsIntersect(worldSpaceMin, worldSpaceMax, lightAabbMin, lightAabbMax) &&
+
+                    // Then reject AABB corner false positives using the actual spherical light radius
+                    SphereVsAABB(worldSpaceMin, worldSpaceMax, lightPos, lightRadius)) {
+                    uint index = atomicAdd(tilelightCount, 1);
+
+                    const uint MAX_LIGHTS_PER_TILE = 127;
+                    if (index < MAX_LIGHTS_PER_TILE) {
+                        tilelights[tileIndex].lightIndices[index] = lightIndex;
+                    }
+                }
+			}
+		}
+	}
+	barrier();
+
+	// Spot-light culling. Cone AABBs are already tight and conservative; the
+	// lighting shader performs the exact cone/IES rejection per pixel.
+	if (validDepthSampleCount > 0) {
+		uint invocationCount = gl_WorkGroupSize.x * gl_WorkGroupSize.y;
+		uint loopCount = (rendererData.spotLightCount + invocationCount - 1u) / invocationCount;
+
+		for (uint i = 0u; i < loopCount; i++) {
+			uint lightIndex = gl_LocalInvocationIndex + i * invocationCount;
+			if (lightIndex >= rendererData.spotLightCount) continue;
+
+			SpotLight light = spotLights[lightIndex];
+			if (light.positionModifier.w <= 0.05) continue;
+			if (!AABBsIntersect(worldSpaceMin, worldSpaceMax, light.worldBoundsMin.xyz, light.worldBoundsMax.xyz)) continue;
+
+			uint index = atomicAdd(tileSpotLightCount, 1u);
+			if (index < uint(MAX_SPOT_LIGHTS)) {
+				tileSpotLights[tileIndex].lightIndices[index] = lightIndex;
+			}
+		}
+	}
+	barrier();
+
+	if (gl_LocalInvocationIndex == 0) {
+		tilelights[tileIndex].lightCount = min(tilelightCount, 127u);
+		tileSpotLights[tileIndex].lightCount = min(tileSpotLightCount, uint(MAX_SPOT_LIGHTS));
+	}
+}

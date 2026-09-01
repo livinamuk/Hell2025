@@ -1,0 +1,137 @@
+#version 460 core
+
+#include "../../common/taa_common.glsl"
+
+layout(local_size_x = TAA_GROUP_SIZE, local_size_y = TAA_GROUP_SIZE, local_size_z = 1) in;
+
+layout(binding = 0) uniform sampler2D u_colorBuffer;
+layout(binding = 1) uniform sampler2D u_depthBuffer;
+layout(binding = 2) uniform sampler2D u_historyBuffer;
+layout(binding = 3) uniform sampler2D u_velocityBuffer;
+
+layout(rgba16f, binding = 0) uniform writeonly image2D u_outputBuffer;
+
+uniform ivec2 u_viewportOrigin;
+uniform ivec2 u_viewportSize;
+uniform bool u_historyValid;
+
+shared vec3 g_taaTile[TAA_TILE_SAMPLE_COUNT];
+
+ivec2 ClampLocalPixelToViewport(ivec2 localPixel) {
+    return clamp(localPixel, ivec2(0), u_viewportSize - ivec2(1));
+}
+
+ivec2 LocalPixelToGlobalPixel(ivec2 localPixel) {
+    return u_viewportOrigin + ClampLocalPixelToViewport(localPixel);
+}
+
+vec3 Tap(ivec2 tilePosition) {
+    return g_taaTile[tilePosition.x + TAA_TILE_DIM * tilePosition.y];
+}
+
+void PopulateTile() {
+    uint localIndex = gl_LocalInvocationIndex;
+    const uint samplesPerQuarter = uint(TAA_TILE_SAMPLE_COUNT / 4);
+
+    if (localIndex >= samplesPerQuarter) {
+        return;
+    }
+
+    ivec2 anchor = ivec2(gl_WorkGroupID.xy) * TAA_GROUP_SIZE - ivec2(TAA_RADIUS);
+
+    for (uint quarter = 0u; quarter < 4u; ++quarter) {
+        uint tileIndex = localIndex + quarter * samplesPerQuarter;
+        ivec2 tileOffset = ivec2(int(tileIndex) % TAA_TILE_DIM, int(tileIndex) / TAA_TILE_DIM);
+        ivec2 pixel = LocalPixelToGlobalPixel(anchor + tileOffset);
+        g_taaTile[tileIndex] = TAAReinhard(texelFetch(u_colorBuffer, pixel, 0).rgb);
+    }
+}
+
+vec2 GetClosestVelocity(ivec2 pixel, out bool isSkyPixel) {
+    vec2 velocity = vec2(0.0);
+    float closestDepth = 0.0;
+
+    for (int y = -1; y <= 1; ++y) {
+        for (int x = -1; x <= 1; ++x) {
+            ivec2 samplePixel = LocalPixelToGlobalPixel(pixel - u_viewportOrigin + ivec2(x, y));
+            float depth = texelFetch(u_depthBuffer, samplePixel, 0).r;
+
+            if (depth > closestDepth) {
+                velocity = texelFetch(u_velocityBuffer, samplePixel, 0).rg;
+                closestDepth = depth;
+            }
+        }
+    }
+
+    isSkyPixel = closestDepth == 0.0;
+    return velocity;
+}
+
+void main() {
+    PopulateTile();
+    barrier();
+
+    ivec2 localPixel = ivec2(gl_GlobalInvocationID.xy);
+    if (any(greaterThanEqual(localPixel, u_viewportSize))) {
+        return;
+    }
+
+    ivec2 pixel = u_viewportOrigin + localPixel;
+    ivec2 outputSize = imageSize(u_outputBuffer);
+    vec2 texelSize = 1.0 / vec2(outputSize);
+    vec2 uv = (vec2(pixel) + 0.5) * texelSize;
+    ivec2 tilePosition = ivec2(gl_LocalInvocationID.xy) + ivec2(TAA_RADIUS);
+    vec3 center = Tap(tilePosition);
+
+    // Initializes history from the current frame
+    if (!u_historyValid) {
+        imageStore(u_outputBuffer, pixel, vec4(center, 1.0));
+        return;
+    }
+
+    float weightSum = 0.0;
+    vec3 valueSum = vec3(0.0);
+    vec3 valueSquaredSum = vec3(0.0);
+
+    for (int y = -TAA_RADIUS; y <= TAA_RADIUS; ++y) {
+        for (int x = -TAA_RADIUS; x <= TAA_RADIUS; ++x) {
+            vec3 neighbor = Tap(tilePosition + ivec2(x, y));
+            float weight = exp(-3.0 * float(x * x + y * y) /
+                               float((TAA_RADIUS + 1) * (TAA_RADIUS + 1)));
+            valueSquaredSum += neighbor * neighbor * weight;
+            valueSum += neighbor * weight;
+            weightSum += weight;
+        }
+    }
+
+    vec3 mean = valueSum / weightSum;
+    vec3 meanSquared = valueSquaredSum / weightSum;
+    vec3 deviation = sqrt(max(meanSquared - mean * mean, vec3(0.0)));
+
+    bool isSkyPixel;
+    vec2 hellVelocity = GetClosestVelocity(pixel, isSkyPixel);
+    vec2 viewportScale = vec2(u_viewportSize) / vec2(outputSize);
+
+    // The G-buffer stores raw current-minus-previous NDC displacement. Convert
+    // it to previous-minus-current texture-UV displacement. GL_UPPER_LEFT makes
+    // image-space Y run opposite clip-space Y, so only X changes sign here.
+    vec2 velocity = vec2(-hellVelocity.x, hellVelocity.y) * 0.5 * viewportScale;
+
+    float staticPixelFactor = isSkyPixel
+        ? 0.0
+        : 1.0 - smoothstep(0.0, 0.02, length(velocity));
+
+    float boxSize = mix(0.5, 2.5, staticPixelFactor);
+
+    vec3 neighborhoodMin = mean - deviation * boxSize;
+    vec3 neighborhoodMax = mean + deviation * boxSize;
+
+    vec2 viewportUvMin = (vec2(u_viewportOrigin) + 0.5) * texelSize;
+    vec2 viewportUvMax = (vec2(u_viewportOrigin + u_viewportSize) - 0.5) * texelSize;
+    vec3 history = TAASampleHistoryCatmullRom(u_historyBuffer, uv + velocity, texelSize, viewportUvMin, viewportUvMax);
+
+    vec3 clampedHistory = clamp(history, neighborhoodMin, neighborhoodMax);
+    vec3 result = mix(clampedHistory, center, 1.0 / 16.0);
+
+    imageStore(u_outputBuffer, pixel, vec4(result, 1.0));
+}

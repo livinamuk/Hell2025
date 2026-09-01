@@ -1,0 +1,90 @@
+#version 460
+#include "../common/OpenGL/GL_binding_indices.glsl"
+#include "../common/constants.glsl"
+#include "../common/types.glsl"
+#include "../common/util.glsl"
+
+layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
+
+layout(std430, binding = SSBO_IDX_RENDERER_DATA)  readonly restrict  buffer rendererDataBuffer        { RendererData rendererData; };
+layout(std430, binding = SSBO_IDX_VIEWPORT_DATA)  readonly restrict  buffer viewportDataBuffer        { ViewportData viewportData[]; };
+layout(std430, binding = SSBO_IDX_CHRISTMAS_CULLING_TILE_WORLD_BOUNDS)  readonly restrict  buffer tileWorldBoundsBuffer     { TileWorldBounds tileWorldBounds[]; };
+layout(std430, binding = SSBO_IDX_CHRISTMAS_CULLING_TILE_LIGHTS)  restrict           buffer tileChristmasLightsBuffer { TileInstanceData tileChristmasLights[]; };
+layout(std430, binding = SSBO_IDX_CHRISTMAS_CULLING_LIGHTS) readonly restrict  buffer ChristmasLightsBuffer     { ChristmasLight christmasLights[]; };
+layout(std430, binding = SSBO_IDX_CHRISTMAS_CULLING_INDEX_POOL) restrict           buffer ChristmasLightIndexPool   { uint globalChristmasLightIndices[]; };
+layout(std430, binding = SSBO_IDX_CHRISTMAS_CULLING_COUNTER) coherent restrict  buffer ChristmasLightCounter     { uint globalChristmasLightCounter; };
+
+uniform int u_christmasLightCount;
+uniform int u_tileXCount;
+uniform int u_tileYCount;
+
+shared vec3 worldSpaceMin;
+shared vec3 worldSpaceMax;
+shared uint localChristmasLightCount;
+shared uint localChristmasLightIndices[256];
+shared uint globalBaseOffset;
+
+bool SphereVsAABB(vec3 aabbMin, vec3 aabbMax, vec3 sphereOrigin, float sphereRadius) {
+    vec3 closestPoint = clamp(sphereOrigin, aabbMin, aabbMax);
+    float distanceSquared = dot(closestPoint - sphereOrigin, closestPoint - sphereOrigin);
+    return distanceSquared <= (sphereRadius * sphereRadius);
+}
+
+void main() {
+    ivec2 resolution = ivec2(rendererData.gBufferWidth, rendererData.gBufferHeight);
+    if (gl_GlobalInvocationID.x >= resolution.x || gl_GlobalInvocationID.y >= resolution.y) {
+        return;
+    }
+
+    uint tileIndex = gl_WorkGroupID.y * u_tileXCount + gl_WorkGroupID.x;
+
+    // Initialize shared memory
+    if (gl_LocalInvocationIndex == 0) {
+        localChristmasLightCount = 0;
+        worldSpaceMin = tileWorldBounds[tileIndex].boundsMin.xyz;
+        worldSpaceMax = tileWorldBounds[tileIndex].boundsMax.xyz;
+    }
+    barrier();
+
+    // Bail if there is no geometry at this pixel (boundsMin.w is the number of non-background pixels in this tile)
+    if (tileWorldBounds[tileIndex].boundsMin.w == 0.0) {
+        if (gl_LocalInvocationIndex == 0) {
+            tileChristmasLights[tileIndex].count = 0;
+        }
+        return;
+    }
+
+    // Tile AABB vs light sphere intersection tests
+    uint totalThreads = TILE_SIZE * TILE_SIZE;
+    for (uint i = gl_LocalInvocationIndex; i < u_christmasLightCount; i += totalThreads) {
+        vec3 sphereOrigin = christmasLights[i].position.rgb;
+        float sphereRadius = rendererData.christmasLightRadius;
+
+        if (SphereVsAABB(worldSpaceMin, worldSpaceMax, sphereOrigin, sphereRadius)) {
+            uint slot = atomicAdd(localChristmasLightCount, 1);
+            if (slot < 256) {
+                localChristmasLightIndices[slot] = i;
+            }
+        }
+    }
+    barrier();
+
+    // Allocate and Write
+    if (gl_LocalInvocationIndex == 0) {
+        if (localChristmasLightCount > 0) {
+            globalBaseOffset = atomicAdd(globalChristmasLightCounter, localChristmasLightCount);
+            tileChristmasLights[tileIndex].count = localChristmasLightCount;
+            tileChristmasLights[tileIndex].offset = globalBaseOffset;
+        } else {
+            tileChristmasLights[tileIndex].count = 0;
+        }
+    }
+    barrier();
+
+    // Transfer local indices to global pool
+    if (localChristmasLightCount > 0) {
+        for (uint i = gl_LocalInvocationIndex; i < localChristmasLightCount; i += totalThreads) {
+            globalChristmasLightIndices[globalBaseOffset + i] = localChristmasLightIndices[i];
+        }
+    }
+}

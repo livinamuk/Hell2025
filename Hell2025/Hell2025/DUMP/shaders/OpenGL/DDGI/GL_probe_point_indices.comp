@@ -1,0 +1,95 @@
+#version 450
+layout(local_size_x = 32) in; // 1 warp per probe
+
+#include "../../common/ddgi.glsl"
+
+layout(std430, binding = 0) readonly buffer DDGIVolumeBuffer   { DDGIVolume volume; };
+layout(std430, binding = 1) readonly buffer GridOffsetsBuffer  { uint cellOffsets[]; };
+layout(std430, binding = 2) readonly buffer GridCountsBuffer   { uint cellCounts[]; };
+layout(std430, binding = 3) writeonly buffer BakedIndices      { uint bakedIndices[]; };
+layout(std430, binding = 4) writeonly buffer BakedOffsets      { uint bakedOffsets[]; };
+layout(std430, binding = 5) writeonly buffer BakedCounts       { uint bakedCounts[]; };
+layout(std430, binding = 6) buffer AtomicCounterBuffer         { uint g_indexCounter; };
+layout(std430, binding = 7) readonly buffer PointCloudBuffer   { CloudPoint points[]; };
+
+uniform vec3 u_gridMin;
+uniform ivec3 u_gridDimensions;
+uniform float u_gridCellSize;
+uniform int u_totalProbes;
+
+shared uint shared_probePointCount;
+shared uint shared_globalOffset;
+shared uint shared_tempIndices[2048]; 
+
+int GetGridCellIndex(ivec3 coords) {
+    if (any(lessThan(coords, ivec3(0))) || any(greaterThanEqual(coords, u_gridDimensions))) {
+        return -1;
+    }
+    return coords.x + coords.y * u_gridDimensions.x + coords.z * u_gridDimensions.x * u_gridDimensions.y;
+}
+
+void main() {
+    uint pIdx = gl_WorkGroupID.x;
+    if (pIdx >= u_totalProbes) return;
+
+    uint threadIdx = gl_LocalInvocationID.x;
+
+    if (threadIdx == 0) shared_probePointCount = 0;
+    barrier();
+
+    // Baked against BASE world position
+    ivec3 probeCoords = DDGIGetProbeCoords(int(pIdx), volume);
+    vec3 probePos = DDGIGetProbeBaseWorldPosition(probeCoords, volume);
+
+    vec3 localPos = probePos - u_gridMin;
+    ivec3 baseCellCoords = ivec3(floor(localPos / u_gridCellSize));
+
+    const float maxDistSq = 3.0 * 3.0;
+
+    for (int dz = -1; dz <= 1; dz++) {
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                
+                int cellIdx = GetGridCellIndex(baseCellCoords + ivec3(dx, dy, dz));
+                if (cellIdx < 0) continue;
+
+                uint start = cellOffsets[cellIdx];
+                uint count = cellCounts[cellIdx];
+
+                for (uint i = threadIdx; i < count; i += 32) {
+                    uint ptIdx = start + i;
+                    vec3 ptPos = points[ptIdx].position.xyz;
+                    vec3 diff = ptPos - probePos;
+                    float distSq = dot(diff, diff);
+
+                    if (distSq < maxDistSq && distSq > 0.0001) {
+                        vec3 ptNormal = points[ptIdx].normal.xyz;
+                        if (dot(ptNormal, -diff) > 0.0) {
+                            uint localPos = atomicAdd(shared_probePointCount, 1);
+                            if (localPos < 2048) {
+                                shared_tempIndices[localPos] = ptIdx;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    barrier();
+
+    if (threadIdx == 0) {
+        uint totalFound = min(shared_probePointCount, 2048u);
+        shared_globalOffset = atomicAdd(g_indexCounter, totalFound);
+        
+        bakedOffsets[pIdx] = shared_globalOffset;
+        bakedCounts[pIdx] = totalFound;
+    }
+
+    barrier();
+
+    uint totalFound = min(shared_probePointCount, 2048u);
+    for (uint i = threadIdx; i < totalFound; i += 32) {
+        bakedIndices[shared_globalOffset + i] = shared_tempIndices[i];
+    }
+}

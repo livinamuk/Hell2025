@@ -1,0 +1,11 @@
+#version 460
+#include "../common/OpenGL/GL_binding_indices.glsl"
+#include "../common/types.glsl"
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+readonly restrict layout(std430, binding = SSBO_IDX_LIGHTS) buffer lightsBuffer { Light lights[]; };
+
+void main() {
+
+}

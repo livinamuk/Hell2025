@@ -1,0 +1,81 @@
+#version 430
+#include "../../common/OpenGL/GL_binding_indices.glsl"
+#include "../../common/ocean_fft.glsl"
+
+struct Complex {
+    float r;
+    float i;
+};
+
+Complex add(const Complex a, const Complex b) {
+    return Complex(a.r + b.r, a.i + b.i);
+}
+
+Complex mult(const Complex a, const Complex b) {
+    return Complex(a.r * b.r - a.i * b.i, a.r * b.i + a.i * b.r);
+}
+
+Complex conjugate(const Complex a) {
+    return Complex(a.r, -a.i);
+}
+
+Complex eulerExp(const float s) {
+    return Complex(cos(s), sin(s));
+}
+
+layout (std430, binding = SSBO_IDX_OCEAN_SPECTRUM_H0) readonly restrict buffer BufferH0 { Complex h0[]; };
+layout (std430, binding = SSBO_IDX_OCEAN_SPECTRUM_H) restrict buffer BufferSpectrum { Complex spectrum[]; };
+layout (std430, binding = SSBO_IDX_OCEAN_SPECTRUM_DISPLACEMENT_X) writeonly restrict buffer BufferDispX { Complex dispX[]; };
+layout (std430, binding = SSBO_IDX_OCEAN_SPECTRUM_DISPLACEMENT_Z) writeonly restrict buffer BufferDispZ { Complex dispZ[]; };
+layout (std430, binding = SSBO_IDX_OCEAN_SPECTRUM_GRADIENT_X) writeonly restrict buffer BufferGradX { Complex gradX[]; };
+layout (std430, binding = SSBO_IDX_OCEAN_SPECTRUM_GRADIENT_Z) writeonly restrict buffer BufferGradZ { Complex gradZ[]; };
+
+uniform float u_domainSize;
+uniform float u_gravity;
+uniform float u_time;
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+void main() {
+    const float kPi = 3.141592653589793;
+    const float epsilon = 1e-12f;
+
+    const uint indexX = gl_GlobalInvocationID.x;
+    const uint indexZ = gl_GlobalInvocationID.y;
+
+    if (indexX >= OCEAN_FFT_RESOLUTION || indexZ >= OCEAN_FFT_RESOLUTION) return;
+
+    // Wrap to the true negative wave vector
+    const uint indexXMirrored = (OCEAN_FFT_RESOLUTION - indexX) % OCEAN_FFT_RESOLUTION;
+    const uint indexZMirrored = (OCEAN_FFT_RESOLUTION - indexZ) % OCEAN_FFT_RESOLUTION;
+
+    const uint index = indexZ * OCEAN_FFT_RESOLUTION + indexX;
+    const uint indexMirrored = indexZMirrored * OCEAN_FFT_RESOLUTION + indexXMirrored;
+
+    const float centeredIndexX = float(indexX) - float(OCEAN_FFT_RESOLUTION) * 0.5;
+    const float centeredIndexZ = float(indexZ) - float(OCEAN_FFT_RESOLUTION) * 0.5;
+    const float kx = centeredIndexX * (2.0f * kPi / u_domainSize);
+    const float kz = centeredIndexZ * (2.0f * kPi / u_domainSize);
+    const float kLength = sqrt(kx * kx + kz * kz);
+    const float w = sqrt(u_gravity * kLength);
+
+    Complex h0_val = h0[index];
+    Complex h0_mirrored_val = h0[indexMirrored];
+
+    Complex term1 = mult(h0_val, eulerExp(w * u_time));
+    Complex term2 = mult(conjugate(h0_mirrored_val), eulerExp(-w * u_time));
+
+    spectrum[index] = add(term1, term2);
+
+    gradX[index] = Complex(-kx * spectrum[index].i, kx * spectrum[index].r);
+    gradZ[index] = Complex(-kz * spectrum[index].i, kz * spectrum[index].r);
+
+    if (kLength > epsilon) {
+        dispX[index] = Complex(kx / kLength * spectrum[index].i, -kx / kLength * spectrum[index].r);
+        dispZ[index] = Complex(kz / kLength * spectrum[index].i, -kz / kLength * spectrum[index].r);
+    }
+    else {
+        dispX[index] = Complex(0.0, 0.0);
+        dispZ[index] = Complex(0.0, 0.0);
+    }
+}

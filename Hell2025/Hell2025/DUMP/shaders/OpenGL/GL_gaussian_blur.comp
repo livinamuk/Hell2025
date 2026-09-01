@@ -1,0 +1,48 @@
+#version 430 core
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout (binding = 0) writeonly uniform image2D OutputImage;
+layout (binding = 1) uniform sampler2D InputImage;
+
+uniform int u_radius = 4;
+uniform vec2 u_direction;
+
+const float PI = 3.14159265359;
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+
+    ivec2 inputImageSize = imageSize(OutputImage);
+
+    if (pixelCoords.x >= inputImageSize.x || pixelCoords.y >= inputImageSize.y) {
+        return;
+    }
+
+    vec2 uv = (vec2(pixelCoords) + 0.5) / vec2(inputImageSize);
+    vec2 offsetMultiplier = u_direction / vec2(inputImageSize);
+    vec3 blurredColor = vec3(0.0);
+    float sigma = float(u_radius) / 1.5;
+    float sigmaSq = sigma * sigma;
+    float gaussianTermMultiplier = -0.5 / sigmaSq;
+    float weightSum = 0.0;
+
+    for (int i = -u_radius; i <= u_radius; ++i) {
+        vec2 offset = float(i) * offsetMultiplier;
+        vec2 sampleUV = uv + offset;
+
+        if (all(greaterThanEqual(sampleUV, vec2(0.0))) && all(lessThan(sampleUV, vec2(1.0)))) {
+            float weight = exp(float(i * i) * gaussianTermMultiplier);
+            vec3 sampleColor = texture(InputImage, sampleUV).rgb;
+            blurredColor += sampleColor * weight;
+            weightSum += weight;
+        }
+    }
+    if (weightSum > 0.0) {
+        blurredColor /= weightSum;
+    } else {
+        blurredColor = texture(InputImage, uv).rgb;
+    }
+
+    imageStore(OutputImage, pixelCoords, vec4(blurredColor, 1.0));
+}

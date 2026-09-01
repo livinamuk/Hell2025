@@ -17,7 +17,8 @@
 #include "Unloved/Config/Config.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Debug/DebugDraw.h"
-#include "Unloved/Editor/Editor.h"
+#include "Unloved/EditorSession/EditorSession.h"
+#include "Unloved/EditorSession/Core/EditorViewports.h"
 #include "Unloved/EditorSession/UI/EditorLayout.h"
 #include "Unloved/Objects/Effects/Decal.h"
 #include "Unloved/Systems/Mirrors/MirrorManager.h"
@@ -130,7 +131,7 @@ namespace Debug {
     }
 
     void UpdateDebugText() {
-        if (Editor::IsOpen()) return;
+        if (EditorSession::IsActive()) return;
 
         BlitDebugStats();
 
@@ -141,6 +142,7 @@ namespace Debug {
         }
 
         if (Debug::GetDebugTextMode() == DebugTextMode::PER_PLAYER) return;
+        if (Debug::GetDebugTextMode() == DebugTextMode::PER_PLAYER_LADDER_INFO) return;
         if (Debug::GetDebugTextMode() == DebugTextMode::NONE)       return;
 
         // Regular global debug
@@ -188,7 +190,7 @@ namespace Debug {
         glm::vec3 viewPos = inverseViewMatrix[3];
         glm::vec3 rayOrigin = viewPos;
 
-        int hoveredViewportIndex = Editor::GetHoveredViewportIndex();
+        int hoveredViewportIndex = EditorSession::Viewports::GetHoveredViewportIndex();
         Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(hoveredViewportIndex);
 
         int mouseX = Input::GetMouseX();
@@ -236,8 +238,8 @@ namespace Debug {
         AddText("normalizedMouseX: " + std::to_string(normalizedMouseX));
         AddText("normalizedMouseY: " + std::to_string(normalizedMouseY));
         AddText("Hovered Unloved::Viewport Index: " + std::to_string(hoveredViewportIndex));
-        AddText("Mouse ray origin: " + Hell::String::FormatVec3(Editor::GetMouseRayOriginByViewportIndex(hoveredViewportIndex)));
-        AddText("Mouse ray direction: " + Hell::String::FormatVec3(Editor::GetMouseRayDirectionByViewportIndex(hoveredViewportIndex)));
+        AddText("Mouse ray origin: " + Hell::String::FormatVec3(EditorSession::Viewports::GetMouseRayOrigin(hoveredViewportIndex)));
+        AddText("Mouse ray direction: " + Hell::String::FormatVec3(EditorSession::Viewports::GetMouseRayDirection(hoveredViewportIndex)));
     }
 
     void BlitQuickDebugMessage(const std::string& message) {
@@ -248,7 +250,7 @@ namespace Debug {
     void DisplayQuickMessage() {
         if (g_quickMessageTimer > 0) {
             g_quickMessageTimer -= Hell::Time::DeltaTime();
-            if (Editor::IsOpen()) {
+            if (EditorSession::IsActive()) {
                 const glm::uvec2 internalResolution = UIBackEnd::GetCanvasResolution(UICanvas::INTERNAL);
                 const glm::uvec2 nativeResolution = UIBackEnd::GetCanvasResolution(UICanvas::NATIVE);
                 const float nativeToInternalScale = static_cast<float>(internalResolution.x) / static_cast<float>(nativeResolution.x);
@@ -279,25 +281,21 @@ namespace Debug {
         }
 
         if (g_debugRenderMode == DebugRenderMode::BONES) {
-            for (AnimatedGameObject& animatedGameObject : Unloved::World::GetAnimatedGameObjects()) {
-                animatedGameObject.DrawBones();
+            for (SkinnedGameObject& skinnedGameObject : Unloved::World::GetSkinnedGameObjects()) {
+                skinnedGameObject.DrawBones();
             }
             for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
                 Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
-                //player->GetCharacterModelAnimatedGameObject()->DrawBones(RED, i);
-                player->GetViewWeaponAnimatedGameObject()->DrawBones(i);
-                //player->GetCharacterModelAnimatedGameObject()->DrawBones();
+                player->GetViewWeaponSkinnedGameObject()->DrawBones(i);
             }
         }
         if (g_debugRenderMode == DebugRenderMode::BONE_TANGENTS) {
-            for (AnimatedGameObject& animatedGameObject : Unloved::World::GetAnimatedGameObjects()) {
-                //animatedGameObject.DrawBoneTangentVectors();
+            for (SkinnedGameObject& skinnedGameObject : Unloved::World::GetSkinnedGameObjects()) {
+                //skinnedGameObject.DrawBoneTangentVectors();
             }
             for (int i = 0; i < Unloved::Session::GetLocalPlayerCount(); i++) {
                 Unloved::Player* player = Unloved::Session::GetLocalPlayerByViewportIndex(i);
-                //player->GetCharacterModelAnimatedGameObject()->DrawBoneTangentVectors(0.001f, i);
-                player->GetViewWeaponAnimatedGameObject()->DrawBoneTangentVectors(0.0025f, i);
-                //player->GetCharacterModelAnimatedGameObject()->DrawBoneTangentVectors(0.001f, i);
+                player->GetViewWeaponSkinnedGameObject()->DrawBoneTangentVectors(0.0025f, i);
             }
         }
         if (g_debugRenderMode == DebugRenderMode::CLIPPING_VOLUMES) {

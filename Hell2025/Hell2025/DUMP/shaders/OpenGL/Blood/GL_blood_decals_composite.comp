@@ -1,0 +1,46 @@
+#version 450
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(rgba8, binding = 0) uniform image2D GBufferBaseColorMetallicImage;
+layout(rgb10_a2, binding = 1) uniform image2D GBufferNormalXYRoughnessMiscImage;
+layout(rgba16f, binding = 2) uniform image2D GBufferVelocityXYOcclusionSubSurfaceImage;
+layout(binding = 3) uniform sampler2D DecalMaskTexture;
+
+float saturate(float value) {
+	return clamp(value, 0.0, 1.0);
+}
+
+void main() {
+    ivec2 outputImageSize = imageSize(GBufferBaseColorMetallicImage);
+	ivec2 px = ivec2(gl_GlobalInvocationID.xy);
+
+    // Don't do work outside of screen bounds
+    if (any(greaterThanEqual(px, outputImageSize))) {
+        return;
+    }
+
+    float decalMask = texelFetch(DecalMaskTexture, px, 0).r;
+
+    // Don't do work if there is no decal here
+    if (decalMask <= 0.0) {
+        return;
+    }
+
+    vec4 baseColorMetallic = imageLoad(GBufferBaseColorMetallicImage, px);
+    vec4 normalXYRoughnessMisc = imageLoad(GBufferNormalXYRoughnessMiscImage, px);
+    vec4 velocityXYOcclusionSubSurface = imageLoad(GBufferVelocityXYOcclusionSubSurfaceImage, px);
+
+    vec3 bloodBaseColor = vec3(0.2, 0.00, 0);
+    float bloodRoughness = 0.125;
+    float bloodMetallic = 0.25;
+    float bloodAO = 1.0;
+
+    vec3 outputBaseColor = mix(baseColorMetallic.rgb, bloodBaseColor, decalMask);
+    float outputMetallic = mix(baseColorMetallic.a, bloodMetallic, decalMask);
+    float outputRoughness = mix(normalXYRoughnessMisc.b, bloodRoughness, decalMask);
+    float outputAO = mix(velocityXYOcclusionSubSurface.b, bloodAO, decalMask);
+
+   imageStore(GBufferBaseColorMetallicImage, px, vec4(outputBaseColor, outputMetallic));
+   imageStore(GBufferNormalXYRoughnessMiscImage, px, vec4(normalXYRoughnessMisc.rg, outputRoughness, normalXYRoughnessMisc.a));
+   imageStore(GBufferVelocityXYOcclusionSubSurfaceImage, px, vec4(velocityXYOcclusionSubSurface.rg, outputAO, velocityXYOcclusionSubSurface.a));
+}

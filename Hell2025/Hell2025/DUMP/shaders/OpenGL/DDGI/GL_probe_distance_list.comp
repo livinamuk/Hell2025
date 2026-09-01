@@ -1,0 +1,28 @@
+#version 450
+#include "../../common/types.glsl"
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 4) readonly buffer DDGIVolumeBuffer { DDGIVolume volume; };
+layout(std430, binding = 5) buffer ProbeStateBuffer          { ProbeState probeStates[]; };
+layout(std430, binding = 6) buffer ProbeDistanceCounter      { uint distanceCounter; };
+layout(std430, binding = 7) buffer ProbeDistanceInidices     { uint distanceIndices[]; };
+layout(std430, binding = 8) buffer ProbeDispatchArgs         { DispatchIndirectArgs command; };
+
+void main() {
+    uint pIdx = gl_GlobalInvocationID.x;
+
+    if (pIdx >= uint(volume.totalProbes)) return;
+
+    uint globalProbeIdx = volume.probeOffset + pIdx;
+
+    if (probeStates[globalProbeIdx].isRelevant &&
+        probeStates[globalProbeIdx].distanceCooldown > 0u) {
+        
+        // Get a unique slot in the packed list
+        uint slot = atomicAdd(distanceCounter, 1);
+
+        // Write the original 1D probe index into the list
+        distanceIndices[slot] = pIdx;
+    }
+}

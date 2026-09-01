@@ -1,0 +1,277 @@
+#version 460
+#include "../common/OpenGL/GL_binding_indices.glsl"
+
+#include "../common/lighting.glsl"
+#include "../common/normal_encoding.glsl"
+#include "../common/post_processing.glsl"
+#include "../common/reconstruction.glsl"
+#include "../common/types.glsl"
+#include "../common/util.glsl"
+#include "../common/viewport.glsl"
+
+layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
+
+layout(rgba16f, binding = 0) uniform image2D LightingImage;
+
+layout (binding = 1) uniform sampler2D BaseColorMetallicTexture;
+layout (binding = 2) uniform sampler2D NormalXYRoughnessMiscTexture;
+layout (binding = 3) uniform sampler2D VelocityXYOcclusionSubSurfaceTexture;
+layout (binding = 4) uniform sampler2D u_depthTexture;
+layout (binding = 5) uniform sampler2D DownsizedLightingTexture;
+layout (binding = 6) uniform sampler2D ViewSpaceDepthTexture;
+
+readonly restrict layout(std430, binding = SSBO_IDX_RENDERER_DATA) buffer rendererDataBuffer { RendererData rendererData; };
+readonly restrict layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+
+uniform float u_maxRayDistance = 8.0;
+uniform int u_minSteps = 24; // The higher the floor, the better the result
+uniform int u_maxSteps = 50; // The higher the upper, the better the result
+uniform float u_thickness = 0.02;
+uniform float u_stride = 0.5; // Lower means better quality, but more steps along the ray, aka worse performance
+
+uniform float u_ssrIntensity = 0.125;
+uniform float u_edgeFade = 0.01; // Larger values mean more aggressive fade out
+uniform int u_debugMode = 0;
+
+float Hash12(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
+float EdgeFade(vec2 uv) {
+    float edge = min(min(uv.x, 1.0 - uv.x), min(uv.y, 1.0 - uv.y));
+    return clamp(edge / max(u_edgeFade, 0.0001), 0.0, 1.0);
+}
+
+// Atlas/global UV -> texelFetch
+float FetchViewZ_GlobalUV(vec2 globalUV, ivec2 viewZSize) {
+    ivec2 p = ivec2(globalUV * vec2(viewZSize));
+    return texelFetch(ViewSpaceDepthTexture, p, 0).r;
+}
+
+// Refine an intersection between [tA, tB] where dz(tA) <= 0 and dz(tB) > 0.
+// Returns true if we get a refined hit that passes the thickness gate.
+bool BinaryRefineHit(vec3 P_view, vec3 R_view, mat4 projectionMatrix, ivec4 viewportRect, ivec2 viewZSize, float thickness, inout float tA, inout float tB, out vec2 outViewportUV, out float outT)
+{
+    float a = tA;
+    float b = tB;
+
+    vec2 uv = vec2(0.0);
+    float bestT = b;
+
+    for (int j = 0; j < 6; ++j) {
+        float m = 0.5 * (a + b);
+
+        vec3 midP_view = P_view + R_view * m;
+        vec4 midClip = projectionMatrix * vec4(midP_view, 1.0);
+        if (midClip.w <= 0.000001) {
+            b = m;
+            continue;
+        }
+
+        vec2 midViewportUV = ViewportUVFromClipPosition(midClip);
+        if (any(lessThan(midViewportUV, vec2(0.0))) || any(greaterThan(midViewportUV, vec2(1.0)))) {
+            b = m;
+            continue;
+        }
+
+        vec2 midGlobalUV = ScreenUVFromViewportUV(midViewportUV, viewZSize, viewportRect);
+
+        float midSceneP_view = FetchViewZ_GlobalUV(midGlobalUV, viewZSize);
+        float midDz = midSceneP_view - midP_view.z;
+
+        if (midDz > 0.0) {
+            b = m;
+            uv = midViewportUV;
+            bestT = m;
+        } else {
+            a = m;
+        }
+    }
+
+    vec3 refineP_view = P_view + R_view * bestT;
+    vec4 refineClip = projectionMatrix * vec4(refineP_view, 1.0);
+    if (refineClip.w <= 0.000001) return false;
+
+    vec2 refineViewportUV = ViewportUVFromClipPosition(refineClip);
+    if (any(lessThan(refineViewportUV, vec2(0.0))) || any(greaterThan(refineViewportUV, vec2(1.0)))) return false;
+
+    vec2 refineGlobalUV = ScreenUVFromViewportUV(refineViewportUV, viewZSize, viewportRect);
+
+    float refineSceneP_view = FetchViewZ_GlobalUV(refineGlobalUV, viewZSize);
+
+    float refineDz = refineSceneP_view - refineP_view.z;
+
+    if (refineDz > 0.0 && refineDz < thickness) {
+        outViewportUV = refineViewportUV;
+        outT = bestT;
+        return true;
+    }
+
+    return false;
+}
+
+void main() {
+    ivec2 px = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 outputImageSize = imageSize(LightingImage);
+
+    if (px.x >= outputImageSize.x || px.y >= outputImageSize.y) {
+        return;
+    }
+
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataArr[viewportIndex].xOffset, viewportDataArr[viewportIndex].yOffset, viewportDataArr[viewportIndex].width, viewportDataArr[viewportIndex].height);
+    vec2 viewportUV = ViewportUVFromPixel(px, outputImageSize, viewportRect);
+    mat4 inverseProjectionView = viewportDataArr[viewportIndex].inverseJitteredProjectionViewReverseZ;
+
+    float depth = texelFetch(u_depthTexture, px, 0).r;
+    if (depth <= 0.0) return;
+    vec3 worldPos = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
+
+    vec4 baseColorMetallic = texelFetch(BaseColorMetallicTexture, px, 0);
+    vec4 normalXYRoughnessMisc = texelFetch(NormalXYRoughnessMiscTexture, px, 0);
+    vec4 velocityXYOcclusionSubSurface = texelFetch(VelocityXYOcclusionSubSurfaceTexture, px, 0);
+    vec3 N_world = DecodeOct(normalXYRoughnessMisc.rg);
+    float roughness = normalXYRoughnessMisc.b;
+    float metallic = baseColorMetallic.a;
+    float ao = velocityXYOcclusionSubSurface.b;
+    float gloss = 1 - roughness;
+
+    // Early out if the point is too dark to notice SSR anyways
+    if (ao < 0.125) {
+        return;
+    }
+
+    // Early out for areas with basically no SSR
+    if (gloss < 0.15) return;
+
+    mat4 viewMatrix = viewportDataArr[viewportIndex].view;
+    // Convert the jittered projection-view back to a projection matrix so
+    // view-space ray samples land on the same pixel grid as the depth buffer.
+    mat4 inverseView = viewportDataArr[viewportIndex].inverseView;
+    mat4 projectionMatrix = viewportDataArr[viewportIndex].jitteredProjectionViewReverseZ * inverseView;
+
+    vec3 viewPosWorld = inverseView[3].xyz;
+
+    ivec2 viewZSize = textureSize(ViewSpaceDepthTexture, 0);
+
+    vec3 V_world = normalize(viewPosWorld - worldPos);
+    vec3 R_world = normalize(reflect(-V_world, N_world));
+
+    vec3 baseColor = baseColorMetallic.rgb;
+    vec3 gammaBaseColor = pow(baseColor, vec3(2.2));
+    vec3 F0 = mix(vec3(0.04), gammaBaseColor, metallic);
+
+    float NoV = clamp(dot(N_world, V_world), 0.0, 1.0);
+    vec3 F = FresnelSchlick(NoV, F0);
+
+    // Fresnel gate early out
+    float Fstrength = max(max(F.r, F.g), F.b);
+    if (Fstrength < 0.02) return;
+
+    vec3 P_view = (viewMatrix * vec4(worldPos, 1.0)).xyz;
+    vec3 R_view = normalize((viewMatrix * vec4(R_world, 0.0)).xyz);
+
+    float jitter = Hash12(vec2(px)) - 0.5;
+    float rayT = u_stride * (0.5 + jitter);
+
+    float hit = 0.0;
+    vec2 hitViewportUV = vec2(0.0);
+    vec2 hitGlobalUV = vec2(0.0);
+    float hitRayT = 0.0;
+    vec3 hitColor = vec3(0.0);
+
+    float maxT = u_maxRayDistance;
+
+    float rayTPrev = rayT;
+    float dzPrev = 0.0;
+    bool hasPrev = false;
+
+    //float steps = mix(u_minSteps, u_maxSteps, gloss * gloss);
+    int steps = int(mix(float(u_minSteps), float(u_maxSteps), gloss * gloss));
+
+    for (int i = 0; i < steps; ++i) {
+        if (rayT > maxT) break;
+
+        vec3 sampleP_view = P_view + R_view * rayT;
+
+        vec4 clip = projectionMatrix * vec4(sampleP_view, 1.0);
+        if (clip.w <= 0.000001) break;
+
+        vec2 sampleViewportUV = ViewportUVFromClipPosition(clip);
+
+        if (any(lessThan(sampleViewportUV, vec2(0.0))) || any(greaterThan(sampleViewportUV, vec2(1.0)))) {
+            break;
+        }
+
+        vec2 sampleGlobalUV = ScreenUVFromViewportUV(sampleViewportUV, viewZSize, viewportRect);
+        float sceneP_view = FetchViewZ_GlobalUV(sampleGlobalUV, viewZSize);
+
+        float thickness = u_thickness + rayT * 0.002;
+        float dz = sceneP_view - sampleP_view.z;
+
+        if (hasPrev) {
+            bool crossed = (dzPrev <= 0.0 && dz > 0.0);
+            if (crossed) {
+                float tA = rayTPrev;
+                float tB = rayT;
+                vec2 refineViewportUV;
+                float refineT;
+
+                if (BinaryRefineHit(P_view, R_view, projectionMatrix, viewportRect, viewZSize, thickness, tA, tB, refineViewportUV, refineT)) {
+                    hit = 1.0;
+                    hitViewportUV = refineViewportUV;
+                    hitGlobalUV = ScreenUVFromViewportUV(refineViewportUV, viewZSize, viewportRect);
+                    hitRayT = refineT;
+                }
+
+                // break unconditionally on crossing to prevent ray tunneling
+                break;
+            }
+        }
+
+        hasPrev = true;
+        rayTPrev = rayT;
+        dzPrev = dz;
+
+        float stepBase = u_stride * mix(1.0, 2.0, roughness);
+        float stepSlope = stepBase * 0.05;
+        rayT += stepBase + rayT * stepSlope;
+    }
+
+    if (hit > 0.5) {
+        float maxMip = float(textureQueryLevels(DownsizedLightingTexture) - 1);
+        //float lod = clamp(roughness * roughness * maxMip, 0.0, maxMip);
+        //float lod = clamp(sqrt(roughness) * maxMip, 0.0, maxMip);
+        float lod = clamp(pow(roughness, 0.75) * maxMip, 0.0, maxMip);
+
+        // IMPORTANT: sample lighting in atlas/global UV space
+        hitColor = textureLod(DownsizedLightingTexture, hitGlobalUV, lod).rgb;
+    }
+
+    vec4 base = imageLoad(LightingImage, px);
+
+    float edgeW = (hit > 0.5) ? EdgeFade(hitViewportUV) : 0.0;
+
+    if (u_debugMode == 1) {
+        imageStore(LightingImage, px, vec4(vec3(hit), 1.0));
+        return;
+    }
+    if (u_debugMode == 2) {
+        imageStore(LightingImage, px, vec4(hitColor, 1.0));
+        return;
+    }
+
+    float roughW = clamp((1.0 - roughness) * 2.5, 0.0, 1.0);
+    roughW = roughW * roughW;
+
+    float weight = hit * u_ssrIntensity * edgeW * roughW;
+    vec3 energyConservation = max(vec3(0.0), vec3(1.0) - (F * weight));
+
+    vec3 reflection = hitColor * weight * F;
+    vec3 composed = (base.rgb * energyConservation) + reflection;
+    composed *= ao;
+
+    imageStore(LightingImage, px, vec4(composed, base.a));
+}

@@ -1,0 +1,65 @@
+#version 460
+#include "../../common/ddgi.glsl"
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+restrict layout(std430, binding = 4) readonly buffer DDGIVolumeBuffer { DDGIVolume volume; };
+restrict layout(std430, binding = 5) buffer ProbeStateBuffer          { ProbeState probeStates[]; };
+restrict layout(std430, binding = 6) buffer DirtyDoorAABBBuffer       { AABB dirtyDoorAABBs[]; };
+
+uniform int u_dirtyDoorAABBCount;
+uniform float u_time;
+
+void ApplyDirtyDoorDistanceUpdate(uint probeIdx) {
+    uint globalProbeIdx = volume.probeOffset + probeIdx;
+    ivec3 probeCoords = DDGIGetProbeCoords(int(probeIdx), volume);
+    vec3 probePos = DDGIGetProbeWorldPosition(probeCoords, volume, probeStates[globalProbeIdx]);
+
+    // Define the probe's area of influence
+    float influenceRadius = volume.probeSpacing * PROBE_MAX_RAY_DISTANCE;
+    float influenceRadiusSq = influenceRadius * influenceRadius;
+
+    // Check for intersections with dirty doors
+    for (int i = 0; i < u_dirtyDoorAABBCount; i++) {
+        AABB door = dirtyDoorAABBs[i];
+
+        // Find the closest point on the AABB to the probe's center
+        vec3 closestPoint = clamp(probePos, door.boundsMin.xyz, door.boundsMax.xyz);
+
+        // Calculate squared distance from probe to the closest point on the AABB
+        vec3 diff = closestPoint - probePos;
+        float distSq = dot(diff, diff);
+
+        // If the distance is less than the influence radius squared, the probe can "see" the door
+        if (distSq <= influenceRadiusSq) {
+            probeStates[globalProbeIdx].distanceCooldown = PROBE_MAX_DISTANCE_COOLDOWN;
+
+            // Once u know it needs an update, stop checking the rest of the doors for this probe
+            break;
+        }
+    }
+}
+
+void main() {
+    uint probeIdx = gl_GlobalInvocationID.x;
+    if (probeIdx >= volume.totalProbes) return;
+
+    uint globalProbeIdx = volume.probeOffset + probeIdx;
+    probeStates[globalProbeIdx].isRelevant = false;
+
+    ApplyDirtyDoorDistanceUpdate(probeIdx);
+
+    bool init = false;
+
+    if (u_time < 2.5) { // HACK TO PREVENT COLORFUL PROBE GLITCH
+        init = true;    // HACK TO PREVENT COLORFUL PROBE GLITCH
+    }                   // HACK TO PREVENT COLORFUL PROBE GLITCH
+
+    if (init) {
+        probeStates[globalProbeIdx].distanceCooldown = PROBE_MAX_DISTANCE_COOLDOWN;
+        probeStates[globalProbeIdx].irradianceCooldown = PROBE_MAX_IRRADIANCE_COOLDOWN;
+        probeStates[globalProbeIdx].relocationOffset = vec3(0.0);
+        probeStates[globalProbeIdx].isActive = true;
+        probeStates[globalProbeIdx].isRelevant = true;
+    }
+}

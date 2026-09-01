@@ -1,0 +1,50 @@
+#version 460 core
+
+layout(local_size_x = 16, local_size_y = 8, local_size_z = 1) in;
+
+layout(binding = 0) uniform sampler2D u_sourceTexture;
+layout(r11f_g11f_b10f, binding = 1) writeonly uniform image2D u_outputImage;
+
+uniform ivec2 u_sourceOffset;
+uniform ivec2 u_sourceExtent;
+uniform ivec2 u_outputExtent;
+uniform ivec2 u_direction;
+uniform int u_sourceMip;
+uniform float u_filterScale;
+
+const float OUTER_WEIGHT = 0.095766798098283;
+const float OUTER_OFFSET = 3.29793480799148;
+const float INNER_WEIGHT = 0.303053194596644;
+const float INNER_OFFSET = 1.40919987708521;
+const float CENTER_WEIGHT = 0.202360014610147;
+
+vec3 SampleSource(vec2 sourcePixel) {
+    // Never sample outside this viewport
+    vec2 firstPixelCenter = vec2(u_sourceOffset) + vec2(0.5);
+    vec2 lastPixelCenter = vec2(u_sourceOffset + u_sourceExtent) - vec2(0.5);
+    vec2 clampedPixel = clamp(sourcePixel, firstPixelCenter, lastPixelCenter);
+    vec2 sourceTextureExtent = vec2(textureSize(u_sourceTexture, u_sourceMip));
+    return textureLod(u_sourceTexture, clampedPixel / sourceTextureExtent, float(u_sourceMip)).rgb;
+}
+
+void main() {
+    ivec2 outputPixel = ivec2(gl_GlobalInvocationID.xy);
+    if (any(greaterThanEqual(outputPixel, u_outputExtent))) {
+        return;
+    }
+
+    // Map into the active source rectangle
+    // Horizontal passes downsample here
+    vec2 sourceToOutputScale = vec2(u_sourceExtent) / vec2(u_outputExtent);
+    vec2 sourceCenter = vec2(u_sourceOffset) + (vec2(outputPixel) + vec2(0.5)) * sourceToOutputScale;
+    vec2 sampleStep = vec2(u_direction) * sourceToOutputScale * u_filterScale;
+
+    // Nine tap Gaussian packed into five bilinear samples
+    vec3 result = SampleSource(sourceCenter) * CENTER_WEIGHT;
+    result += SampleSource(sourceCenter - sampleStep * INNER_OFFSET) * INNER_WEIGHT;
+    result += SampleSource(sourceCenter + sampleStep * INNER_OFFSET) * INNER_WEIGHT;
+    result += SampleSource(sourceCenter - sampleStep * OUTER_OFFSET) * OUTER_WEIGHT;
+    result += SampleSource(sourceCenter + sampleStep * OUTER_OFFSET) * OUTER_WEIGHT;
+
+    imageStore(u_outputImage, outputPixel, vec4(result, 1.0));
+}

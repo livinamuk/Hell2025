@@ -56,6 +56,33 @@ void OpenGLShadowCubeMapArray::ClearDepthLayer(int layerIndex, float clearValue)
     glClearTexSubImage(m_depthTexture, 0, 0, 0, layerIndex * 6, m_size, m_size, 6, GL_DEPTH_COMPONENT, GL_FLOAT, &clearValue);
 }
 
+void OpenGLShadowCubeMapArray::ClearDepthFaces(int layerIndex, uint8_t faceMask, float clearValue) {
+    if (layerIndex < 0 || layerIndex >= static_cast<int>(m_numberOfCubemaps)) return;
+
+    faceMask &= uint8_t(0x3f);
+    uint32_t faceIndex = 0;
+    while (faceIndex < 6) {
+        while (faceIndex < 6 && (faceMask & uint8_t(1u << faceIndex)) == 0) faceIndex++;
+        if (faceIndex == 6) break;
+
+        const uint32_t firstFace = faceIndex;
+        while (faceIndex < 6 && (faceMask & uint8_t(1u << faceIndex)) != 0) faceIndex++;
+        const GLsizei faceCount = static_cast<GLsizei>(faceIndex - firstFace);
+        glClearTexSubImage(
+            m_depthTexture,
+            0,
+            0,
+            0,
+            layerIndex * 6 + static_cast<GLint>(firstFace),
+            m_size,
+            m_size,
+            faceCount,
+            GL_DEPTH_COMPONENT,
+            GL_FLOAT,
+            &clearValue);
+    }
+}
+
 void OpenGLShadowCubeMapArray::ClearDepthLayers(float clearValue) {
     glClearTexImage(m_depthTexture, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &clearValue);
 }

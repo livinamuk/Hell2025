@@ -1,0 +1,159 @@
+#version 460 core
+#include "../common/OpenGL/GL_binding_indices.glsl"
+#include "../common/types.glsl"
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+uniform int u_viewportIndex;
+uniform int u_gridSize;
+uniform int u_pointsPerChunk;
+uniform float u_spacing;
+uniform float u_chunkWorldSize;
+uniform float u_minCullDistance;
+uniform float u_maxCullDistance;
+uniform float u_cullExponent;
+uniform float u_bladeBoundingRadius;
+
+struct DrawElementsIndirectCommand {
+    uint count;
+    uint instanceCount;
+    uint firstIndex;
+    int baseVertex;
+    uint baseInstance;
+};
+
+struct ChunkMetadata {
+    ivec2 chunkCoord;
+    uint pointCount;
+    uint unused;
+    vec4 boundsMin;
+    vec4 boundsMax;
+};
+
+layout(std430, binding = SSBO_IDX_GRASS_POSITION_INDIRECT_COMMAND) buffer IndirectDrawCommand {
+    DrawElementsIndirectCommand drawCommand;
+};
+
+readonly layout(std430, binding = SSBO_IDX_NEW_GRASS_CHUNK_METADATA) buffer GrassChunkMetadata {
+    ChunkMetadata chunkMetadata[];
+};
+
+readonly layout(std430, binding = SSBO_IDX_NEW_GRASS_CACHED_POINTS) buffer CachedGrassPoints {
+    uvec2 cachedGrassPoints[];
+};
+
+writeonly layout(std430, binding = SSBO_IDX_GRASS_POSITION_BLADE_POSITIONS) buffer VisibleGrassPositions {
+    vec4 visibleGrassPositions[];
+};
+
+readonly layout(std430, binding = SSBO_IDX_NEW_GRASS_VISIBLE_CHUNKS) buffer VisibleGrassChunks {
+    uint visibleChunkSlots[];
+};
+
+readonly layout(std430, binding = SSBO_IDX_NEW_GRASS_CHUNK_VISIBILITY) buffer GrassChunkVisibility {
+    uint chunkVisibility[];
+};
+
+readonly layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer ViewportDataBuffer {
+    ViewportData viewportDataArr[];
+};
+
+shared uint s_visibleCount;
+shared uint s_outputBase;
+
+float SignedDistance(vec3 point, vec4 plane) {
+    return dot(plane.xyz, point) + plane.w;
+}
+
+bool IntersectsSphere(vec3 center, float radius, int viewportIndex) {
+    if (SignedDistance(center, viewportDataArr[viewportIndex].frustumPlane0) < -radius) return false;
+    if (SignedDistance(center, viewportDataArr[viewportIndex].frustumPlane1) < -radius) return false;
+    if (SignedDistance(center, viewportDataArr[viewportIndex].frustumPlane2) < -radius) return false;
+    if (SignedDistance(center, viewportDataArr[viewportIndex].frustumPlane3) < -radius) return false;
+    if (SignedDistance(center, viewportDataArr[viewportIndex].frustumPlane4) < -radius) return false;
+    if (SignedDistance(center, viewportDataArr[viewportIndex].frustumPlane5) < -radius) return false;
+    return true;
+}
+
+uint HashGrassCell(ivec2 chunkCoord, ivec2 localCell, uint salt) {
+    uint hash = uint(chunkCoord.x) * 0x8da6b343u;
+    hash ^= uint(chunkCoord.y) * 0xd8163841u;
+    hash ^= uint(localCell.x) * 0xcb1ab31fu;
+    hash ^= uint(localCell.y) * 0x165667b1u;
+    hash ^= salt;
+    hash ^= hash >> 16u;
+    hash *= 0x7feb352du;
+    hash ^= hash >> 15u;
+    hash *= 0x846ca68bu;
+    hash ^= hash >> 16u;
+    return hash;
+}
+
+float GrassCellNoise(ivec2 chunkCoord, ivec2 localCell, uint salt) {
+    return float(HashGrassCell(chunkCoord, localCell, salt) >> 8u) * (1.0 / 16777216.0);
+}
+
+vec2 GrassCellJitter(ivec2 chunkCoord, ivec2 localCell) {
+    return vec2(
+        GrassCellNoise(chunkCoord, localCell, 0xa511e9b3u),
+        GrassCellNoise(chunkCoord, localCell, 0x63d83595u)) - 0.5;
+}
+
+float GrassKeepProbability(float cameraDistance) {
+    const float distanceRange = max(u_maxCullDistance - u_minCullDistance, 0.0001);
+    const float distanceAlpha = clamp((cameraDistance - u_minCullDistance) / distanceRange, 0.0, 1.0);
+    return pow(1.0 - distanceAlpha, max(u_cullExponent, 0.0001));
+}
+
+void main() {
+    if (chunkVisibility[gl_WorkGroupID.y] == 0u) return;
+
+    if (gl_LocalInvocationIndex == 0u) s_visibleCount = 0u;
+    barrier();
+
+    const uint slotIndex = visibleChunkSlots[gl_WorkGroupID.y];
+    const uint localPointIndex = gl_WorkGroupID.x * gl_WorkGroupSize.x + gl_LocalInvocationID.x;
+    const ChunkMetadata metadata = chunkMetadata[slotIndex];
+
+    bool visible = localPointIndex < metadata.pointCount;
+    vec3 visiblePosition = vec3(0.0);
+    uint bladeHash = 0u;
+
+    if (visible) {
+        const uint cachedPointIndex = slotIndex * uint(u_pointsPerChunk) + localPointIndex;
+        const uvec2 cachedPoint = cachedGrassPoints[cachedPointIndex];
+        const uint localGridIndex = cachedPoint.x;
+        const uint gridX = localGridIndex % uint(u_gridSize);
+        const uint gridZ = localGridIndex / uint(u_gridSize);
+        const ivec2 localCell = ivec2(gridX, gridZ);
+        const vec2 rootJitter = GrassCellJitter(metadata.chunkCoord, localCell) * (u_spacing * 0.8);
+        vec3 basePosition = vec3(
+            float(metadata.chunkCoord.x) * u_chunkWorldSize + float(gridX) * u_spacing + rootJitter.x,
+            uintBitsToFloat(cachedPoint.y),
+            float(metadata.chunkCoord.y) * u_chunkWorldSize + float(gridZ) * u_spacing + rootJitter.y);
+
+        visible = IntersectsSphere(basePosition, u_bladeBoundingRadius, u_viewportIndex);
+
+        if (visible) {
+            bladeHash = HashGrassCell(metadata.chunkCoord, localCell, 0x68e31da4u);
+            const float densityRank = float(bladeHash >> 8u) * (1.0 / 16777216.0);
+            const float cameraDistance = length(basePosition - viewportDataArr[u_viewportIndex].viewPos.xyz);
+            visible = densityRank < GrassKeepProbability(cameraDistance);
+            if (visible) visiblePosition = basePosition;
+        }
+
+    }
+
+    uint localOutputIndex = 0u;
+    if (visible) localOutputIndex = atomicAdd(s_visibleCount, 1u);
+    barrier();
+
+    if (gl_LocalInvocationIndex == 0u) {
+        s_outputBase = atomicAdd(drawCommand.instanceCount, s_visibleCount);
+    }
+    barrier();
+
+    if (visible) {
+        visibleGrassPositions[s_outputBase + localOutputIndex] = vec4(visiblePosition, uintBitsToFloat(bladeHash));
+    }
+}

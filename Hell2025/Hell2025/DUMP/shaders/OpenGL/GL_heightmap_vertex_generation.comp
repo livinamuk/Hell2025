@@ -1,0 +1,80 @@
+#version 450
+#include "../common/OpenGL/GL_binding_indices.glsl"
+layout(local_size_x = 16, local_size_y = 16) in;
+
+// World heightmap (already +1 texel on each axis vs source)
+layout(binding = 0, r32f) readonly uniform image2D heightmapImage;
+
+struct Vertex {
+    float position[3];
+    float normal[3];
+    float uv[2];
+    float tangent[3];
+};
+
+layout(binding = SSBO_IDX_HEIGHTMAP_VERTEX_OUTPUT, std430) buffer VertexBuffer { Vertex vertices[]; };
+
+// Per-chunk uniforms
+uniform int u_chunkX;        // chunk coordinate in cells (not vertices)
+uniform int u_chunkZ;
+uniform int u_baseVertex;    // start of this chunk's vertices in VBO
+uniform int u_chunkSize = 32;     // inner cells per side (e.g. 32). Vertices per side = u_chunkSize + 1
+
+void main() {
+    const ivec2 mapSize = imageSize(heightmapImage);   // world map size including +1 border
+    const int chunkW = u_chunkSize + 1;
+    const int chunkD = u_chunkSize + 1;
+
+    ivec2 gid = ivec2(gl_GlobalInvocationID.xy);
+    if (gid.x >= chunkW || gid.y >= chunkD) return;
+
+    // Local coords in this chunk
+    const int lx = gid.x;    // [0..u_chunkSize]
+    const int lz = gid.y;    // [0..u_chunkSize]
+
+    // Linear vertex index
+    const int localIndex = lz * chunkW + lx;
+    const int vIdx = u_baseVertex + localIndex;
+
+    // World grid sample coordinates into the world heightmap
+    // With +1 border, the max x/z we will query on the last chunk equals mapSize-1.
+    const int gx = u_chunkX * u_chunkSize + lx;
+    const int gz = u_chunkZ * u_chunkSize + lz;
+
+    // Clamp to valid texels [0 .. mapSize-1]
+    const int sx = clamp(gx, 0, mapSize.x - 1);
+    const int sz = clamp(gz, 0, mapSize.y - 1);
+
+    // Height
+    float h = imageLoad(heightmapImage, ivec2(sx, sz)).r;
+
+    // Position in grid units
+    vertices[vIdx].position[0] = float(gx);
+    vertices[vIdx].position[1] = h;
+    vertices[vIdx].position[2] = float(gz);
+
+    // UVs across the full world map. Using mapSize-1 ensures last vertex hits 1.0.
+    vertices[vIdx].uv[0] = (mapSize.x > 1) ? float(sx) / float(mapSize.x - 1) : 0.0;
+    vertices[vIdx].uv[1] = (mapSize.y > 1) ? float(sz) / float(mapSize.y - 1) : 0.0;
+
+    // Neighbor samples for normal, clamped to border
+    float lH = imageLoad(heightmapImage, ivec2(max(sx - 1, 0), sz)).r;
+    float rH = imageLoad(heightmapImage, ivec2(min(sx + 1, mapSize.x - 1), sz)).r;
+    float dH = imageLoad(heightmapImage, ivec2(sx, max(sz - 1, 0))).r;
+    float uH = imageLoad(heightmapImage, ivec2(sx, min(sz + 1, mapSize.y - 1))).r;
+
+    // Finite differences in grid units
+    vec3 dx = vec3(1.0, 0.5 * (rH - lH), 0.0);
+    vec3 dz = vec3(0.0, 0.5 * (uH - dH), 1.0);
+    vec3 n  = normalize(cross(dz, dx));
+    vertices[vIdx].normal[0] = n.x;
+    vertices[vIdx].normal[1] = n.y;
+    vertices[vIdx].normal[2] = n.z;
+
+    // Tangent along +X
+    vec3 t = normalize(vec3(1.0, rH - lH, 0.0));
+    vertices[vIdx].tangent[0] = t.x;
+    vertices[vIdx].tangent[1] = t.y;
+    vertices[vIdx].tangent[2] = t.z;
+
+}

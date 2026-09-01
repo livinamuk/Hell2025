@@ -1,276 +1,292 @@
 #include "Ragdoll.h"
+#include "RagdollJoint.h"
+#include "RagdollShapeMesh.h"
 
 #include "RagdollUtil.h"
 
 #include "Hell/Logging.h"
+#include "Hell/Math/Matrix.h"
 #include "Hell/Physics/PhysicsIds.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
+#include "Unloved/Config/PhysicsConfig.h"
 
+#pragma warning(push, 0)
+#include <physx/foundation/PxMathUtils.h>
+#pragma warning(pop)
+
+#include <algorithm>
+#include <array>
 #include <cmath>
-#include <iostream>
+#include <limits>
+#include <unordered_map>
+#include <unordered_set>
 
-inline PxTransform PxTransformFromRest(const RdMatrix& restM, float sceneScale) {
-    PxMat44 M = RdMatrixToPxMat44(restM);
+namespace {
+    constexpr float JOINT_LIMIT_MARGIN = 0.999f;
+    constexpr float RAGDOLL_SLEEP_THRESHOLD = 5e-6f;
 
-    // Extract basis columns + translation from PxMat44
-    PxVec3 x(M.column0.x, M.column0.y, M.column0.z);
-    PxVec3 y(M.column1.x, M.column1.y, M.column1.z);
-    PxVec3 z(M.column2.x, M.column2.y, M.column2.z);
-    PxVec3 t(M.column3.x, M.column3.y, M.column3.z);
+    PxQuat SwingFromQuarterAngleTangents(float y, float z) {
+        const float lengthSquared = y * y + z * z;
+        const float inverseDenominator = 1.0f / (1.0f + lengthSquared);
+        return PxQuat(
+            0.0f,
+            2.0f * y * inverseDenominator,
+            2.0f * z * inverseDenominator,
+            (1.0f - lengthSquared) * inverseDenominator
+        );
+    }
 
-    // Descaling / orthonormalization
-    x = x.getNormalized();
-    y = (y - x * x.dot(y)).getNormalized();
-    z = x.cross(y);
+    PxQuat ProjectSwingToJointLimits(const PxD6Joint& joint, const PxQuat& swing) {
+        const PxD6Motion::Enum swing1Motion = joint.getMotion(PxD6Axis::eSWING1);
+        const PxD6Motion::Enum swing2Motion = joint.getMotion(PxD6Axis::eSWING2);
 
-    // Ensure right handed basis (no mirroring)
-    if (x.cross(y).dot(z) < 0.0f) z = -z;
+        if (swing1Motion == PxD6Motion::eFREE && swing2Motion == PxD6Motion::eFREE) {
+            return swing;
+        }
+        if (swing1Motion == PxD6Motion::eLOCKED && swing2Motion == PxD6Motion::eLOCKED) {
+            return PxQuat(PxIdentity);
+        }
 
-    // Build rotation from the orthonormal columns
-    PxMat33 R(x, y, z);          // PxMat33 takes columns
-    PxQuat  q(R);                // quaternion from 3x3
+        const PxJointLimitCone limits = joint.getSwingLimit();
+        const float denominator = std::max(0.000001f, 1.0f + swing.w);
+        float swing1Angle = 4.0f * std::atan2(swing.y, denominator);
+        float swing2Angle = 4.0f * std::atan2(swing.z, denominator);
 
-    // Scale TRANSLATION only
-    PxVec3 p = t * sceneScale;
+        if (swing1Motion == PxD6Motion::eLOCKED) {
+            swing1Angle = 0.0f;
+        }
+        if (swing2Motion == PxD6Motion::eLOCKED) {
+            swing2Angle = 0.0f;
+        }
 
-    return PxTransform(p, q);
+        if (swing1Motion == PxD6Motion::eLIMITED && swing2Motion == PxD6Motion::eLIMITED) {
+            const PxVec3 radii(
+                0.0f,
+                std::max(0.0001f, limits.yAngle * JOINT_LIMIT_MARGIN),
+                std::max(0.0001f, limits.zAngle * JOINT_LIMIT_MARGIN)
+            );
+            const float ellipseDistance =
+                PxSqr(swing1Angle / radii.y) +
+                PxSqr(swing2Angle / radii.z);
+
+            if (ellipseDistance > 1.0f) {
+                const PxVec3 clamped = PxEllipseClamp(PxVec3(0.0f, swing1Angle, swing2Angle), radii);
+                swing1Angle = clamped.y;
+                swing2Angle = clamped.z;
+            }
+        }
+        else {
+            if (swing1Motion == PxD6Motion::eLIMITED) {
+                const float limit = std::max(0.0001f, limits.yAngle * JOINT_LIMIT_MARGIN);
+                swing1Angle = std::clamp(swing1Angle, -limit, limit);
+            }
+            if (swing2Motion == PxD6Motion::eLIMITED) {
+                const float limit = std::max(0.0001f, limits.zAngle * JOINT_LIMIT_MARGIN);
+                swing2Angle = std::clamp(swing2Angle, -limit, limit);
+            }
+        }
+
+        return SwingFromQuarterAngleTangents(
+            std::tan(swing1Angle * 0.25f),
+            std::tan(swing2Angle * 0.25f)
+        );
+    }
+
+    PxQuat ProjectRotationToJointLimits(const PxD6Joint& joint, PxQuat relativeRotation) {
+        relativeRotation.normalize();
+        if (relativeRotation.w < 0.0f) {
+            relativeRotation = -relativeRotation;
+        }
+
+        PxQuat swing;
+        PxQuat twist;
+        PxSeparateSwingTwist(relativeRotation, swing, twist);
+
+        const PxD6Motion::Enum twistMotion = joint.getMotion(PxD6Axis::eTWIST);
+        if (twistMotion == PxD6Motion::eLOCKED) {
+            twist = PxQuat(PxIdentity);
+        }
+        else if (twistMotion == PxD6Motion::eLIMITED) {
+            const PxJointAngularLimitPair limits = joint.getTwistLimit();
+            const float angle = 2.0f * std::atan2(twist.x, twist.w);
+            const float clampedAngle = std::clamp(
+                angle,
+                limits.lower * JOINT_LIMIT_MARGIN,
+                limits.upper * JOINT_LIMIT_MARGIN
+            );
+            twist = PxQuat(clampedAngle, PxVec3(1.0f, 0.0f, 0.0f));
+        }
+
+        return (ProjectSwingToJointLimits(joint, swing) * twist).getNormalized();
+    }
 }
 
-inline PxU32 GetSolverIterationCount(RdUint solverIterations, RdUint rigidIterations) {
+inline PxTransform PxTransformFromRest(const glm::mat4& restMatrix) {
+    const glm::vec3 position = glm::vec3(restMatrix[3]);
+    const glm::quat rotation = Hell::Math::ExtractRotation(restMatrix);
+    return PxTransform(
+        Hell::Physics::GlmVec3toPxVec3(position),
+        Hell::Physics::GlmQuatToPxQuat(rotation)
+    );
+}
+
+inline PxU32 GetSolverIterationCount(uint32_t solverIterations, uint32_t rigidIterations) {
     return static_cast<PxU32>(std::min(255U, solverIterations * rigidIterations));
 }
 
-inline PxU32 GetSelfCollisionFilterWord(uint64_t ragdollId, const RagdollMarker& marker) {
-    if (marker.resolvedCollisionGroup < 256 || marker.groupIndex < 0) {
-        return 0;
+inline PxD6Motion::Enum ToPxMotion(RagdollAxisMotion motion) {
+    switch (motion) {
+        case RagdollAxisMotion::LOCKED:  return PxD6Motion::eLOCKED;
+        case RagdollAxisMotion::LIMITED: return PxD6Motion::eLIMITED;
+        case RagdollAxisMotion::FREE:    return PxD6Motion::eFREE;
     }
-
-    const PxU32 ragdollBits = static_cast<PxU32>(ragdollId & 0x0000ffff);
-    const PxU32 groupBits = static_cast<PxU32>((marker.groupIndex + 1) & 0xff);
-    return RAGDOLL_SELF_COLLISION_FILTER_TAG | (ragdollBits << 8) | groupBits;
+    return PxD6Motion::eLOCKED;
 }
 
-inline float ScaleJointSpring(float value) {
-    const float maxValue = std::numeric_limits<float>::max();
-    return value < maxValue / 1000.0f ? value * 1000.0f : value;
+inline void ApplyAngularLimits(PxD6Joint* joint, const std::array<RagdollAxisLimit, 3>& limits, bool enabled, const PxSpring& spring) {
+    const RagdollAxisLimit& twist = limits[0];
+    const RagdollAxisLimit& swing1 = limits[1];
+    const RagdollAxisLimit& swing2 = limits[2];
+
+    joint->setMotion(PxD6Axis::eTWIST,  enabled ? ToPxMotion(twist.motion)  : PxD6Motion::eFREE);
+    joint->setMotion(PxD6Axis::eSWING1, enabled ? ToPxMotion(swing1.motion) : PxD6Motion::eFREE);
+    joint->setMotion(PxD6Axis::eSWING2, enabled ? ToPxMotion(swing2.motion) : PxD6Motion::eFREE);
+
+    if (enabled && twist.motion == RagdollAxisMotion::LIMITED) {
+        const float range = std::max(0.0001f, twist.limit);
+        joint->setTwistLimit(PxJointAngularLimitPair(-range, range, spring));
+    }
+    if (enabled && swing1.motion == RagdollAxisMotion::LIMITED && swing2.motion == RagdollAxisMotion::LIMITED) {
+        joint->setSwingLimit(PxJointLimitCone(
+            std::max(0.0001f, swing1.limit),
+            std::max(0.0001f, swing2.limit),
+            spring
+        ));
+    }
 }
 
-void Ragdoll::Init(const glm::vec3& spawnPosition, const glm::vec3& spawnEulerRotation, const std::string& ragdollName, uint64_t ragdollId, uint64_t parentObjectId, PhysicsFilterData filterData) {
-    RagdollData* ragdollData = Hell::ResourceManager::GetRagdollDataByName(ragdollName);
-    if (!ragdollData) return;
+bool Ragdoll::Init(const glm::vec3& spawnPosition, const glm::vec3& spawnEulerRotation, const RagdollAsset& asset, uint64_t ragdollId, uint64_t parentObjectId, PhysicsFilterData filterData) {
+    CleanUp();
 
-    RagdollSolver& solver = ragdollData->m_solver;
+    const Config::Physics::Settings& physicsSettings = Config::Physics::GetSettings();
 
     m_ragdollId = ragdollId;
-    m_scale = RagdollUtil::GetPhysicsSceneScale(solver);
-    m_ragdollName = ragdollName;
+    m_ragdollName = asset.name;
     m_spawnTransform.position = spawnPosition;
     m_spawnTransform.rotation = spawnEulerRotation;
     m_markedForRemoval = false;
 
-    CleanUp();
-
-    PxTransform rootPose(Hell::Physics::GlmMat4ToPxMat44(m_spawnTransform.to_mat4()));
-
     PxPhysics* physics = Hell::Physics::GetPxPhysics();
     PxScene* scene = Hell::Physics::GetPxScene();
+    if (!physics || !scene || asset.markers.empty()) return false;
 
-    for (RagdollMarker& marker : ragdollData->m_markers) {
-        // Store color for rendering
-        glm::vec3 color = glm::vec3(marker.color.x(), marker.color.g(), marker.color.b());
-        m_markerColors.push_back(color);
+    const PxTransform rootPose(Hell::Physics::GlmMat4ToPxMat44(m_spawnTransform.to_mat4()));
+    std::unordered_map<RagdollMarkerId, PxRigidDynamic*> actorByMarkerId;
+    actorByMarkerId.reserve(asset.markers.size());
 
-        // Store bone name for skinning
-        m_markerBoneNames.push_back(marker.boneName);
+    for (const RagdollMarkerAsset& marker : asset.markers) {
+        PxShape* shape = RagdollUtil::CreateShape(marker);
+        if (!shape) {
+            Logging::Error() << "Ragdoll::Init() failed to create shape for marker '" << marker.name << "'";
+            CleanUp();
+            return false;
+        }
 
-        // Create mesh for rendering from shape
-        AddMarkerMeshData(marker, ragdollData->m_solver);
-
-        PxTransform restTransform = PxTransformFromRest(marker.originMatrix, m_scale);
-        PxRigidDynamic* pxrigid = physics->createRigidDynamic(rootPose.transform(restTransform));
-
-        // Kinematic/dynamic/inherit
-        const bool kinematic = (marker.resolvedInputType == (RdEnum)RdBehaviour::kKinematic);
-
-        PxShape* shape = RagdollUtil::CreateShape(marker, ragdollData->m_solver);
-
-        if (shape) {
-            PxFilterData pxFilterData;
-            pxFilterData.word0 = (PxU32)filterData.raycastGroup;
-            pxFilterData.word1 = (PxU32)filterData.collisionGroup;
-            pxFilterData.word2 = (PxU32)filterData.collidesWith;
-            pxFilterData.word3 = GetSelfCollisionFilterWord(m_ragdollId, marker);
-            shape->setQueryFilterData(pxFilterData);       // ray casts
-            shape->setSimulationFilterData(pxFilterData);  // collisions
-
-            pxrigid->attachShape(*shape);
+        const PxTransform restTransform = PxTransformFromRest(marker.bodyTransform);
+        PxRigidDynamic* rigid = physics->createRigidDynamic(rootPose.transform(restTransform));
+        if (!rigid) {
             shape->release();
-
-            // Mass/inertia
-            if (marker.densityCustom <= 0.0f) {
-                PxRigidBodyExt::setMassAndUpdateInertia(*pxrigid, PxReal(marker.mass));
-            }
-            else {
-                PxRigidBodyExt::updateMassAndInertia(*pxrigid, PxReal(marker.densityCustom));
-            }
-
-            if (marker.enableCCD) {
-                pxrigid->setRigidBodyFlag(PxRigidBodyFlag::eENABLE_CCD, true);
-            }
-
-            pxrigid->setLinearDamping((float)marker.linearDamping);
-            pxrigid->setAngularDamping((float)marker.angularDamping);
-            pxrigid->setRigidBodyFlag(PxRigidBodyFlag::eENABLE_GYROSCOPIC_FORCES, true);
-            pxrigid->setSleepThreshold((float)marker.sleepThreshold);
-            pxrigid->setStabilizationThreshold(0.01f);
-            pxrigid->setSolverIterationCounts(
-                GetSolverIterationCount(solver.positionIterations, marker.positionIterations),
-                GetSolverIterationCount(solver.velocityIterations, marker.velocityIterations)
-            );
-
-            float wakeCounter = std::numeric_limits<float>::max();
-            if (marker.wakeCounter > 1) {
-                wakeCounter = (1.0f / 24.0f) * static_cast<float>(solver.timeMultiplier) * static_cast<float>(marker.wakeCounter - 1);
-            }
-            pxrigid->setWakeCounter(wakeCounter);
-            pxrigid->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, kinematic);
-
-            if (marker.maxContactImpulse > 0) {
-                pxrigid->setMaxContactImpulse(marker.maxContactImpulse);
-            }
-            else {
-                pxrigid->setMaxContactImpulse(PX_MAX_F32);
-            }
-
-            if (marker.maxDepenetrationVelocity > 0) {
-                pxrigid->setMaxDepenetrationVelocity(marker.maxDepenetrationVelocity);
-            }
-            else {
-                pxrigid->setMaxDepenetrationVelocity(PX_MAX_F32);
-            }
-
-            scene->addActor(*pxrigid);
-            m_pxRigidDynamics.emplace_back(pxrigid);
-
-            // User data
-            PhysicsUserData physicsUserData;
-            physicsUserData.physicsType = PhysicsType::RIGID_DYNAMIC;
-            //physicsUserData.objectType = ObjectType::RAGDOLL_V2;
-            physicsUserData.physicsId = Hell::Physics::CreatePhysicsId(Hell::Physics::PhysicsObjectType::RAGDOLL);
-            physicsUserData.objectId = parentObjectId;
-            pxrigid->userData = new PhysicsUserData(physicsUserData);
+            CleanUp();
+            return false;
         }
+
+        PxFilterData pxFilterData;
+        pxFilterData.word0 = static_cast<PxU32>(filterData.raycastGroup);
+        pxFilterData.word1 = static_cast<PxU32>(filterData.collisionGroup);
+        pxFilterData.word2 = static_cast<PxU32>(filterData.collidesWith);
+        pxFilterData.word3 = 0;
+        shape->setQueryFilterData(pxFilterData);
+        shape->setSimulationFilterData(pxFilterData);
+
+        rigid->attachShape(*shape);
+        shape->release();
+
+        PxRigidBodyExt::setMassAndUpdateInertia(*rigid, std::max(0.001f, marker.rigidBody.mass));
+        rigid->setLinearDamping(marker.rigidBody.linearDamping);
+        rigid->setAngularDamping(marker.rigidBody.angularDamping);
+        rigid->setRigidBodyFlag(PxRigidBodyFlag::eENABLE_CCD, marker.rigidBody.enableCCD);
+        rigid->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, marker.rigidBody.isKinematic);
+        rigid->setSleepThreshold(RAGDOLL_SLEEP_THRESHOLD);
+        rigid->setSolverIterationCounts(
+            GetSolverIterationCount(physicsSettings.positionIterations, marker.rigidBody.positionIterations),
+            GetSolverIterationCount(physicsSettings.velocityIterations, marker.rigidBody.velocityIterations)
+        );
+
+        rigid->setMaxDepenetrationVelocity(marker.rigidBody.maxDepenetrationVelocity > 0.0f ? marker.rigidBody.maxDepenetrationVelocity : PX_MAX_F32);
+
+        PhysicsUserData physicsUserData;
+        physicsUserData.physicsType = PhysicsType::RIGID_DYNAMIC;
+        physicsUserData.physicsId = Hell::Physics::CreatePhysicsId(Hell::Physics::PhysicsObjectType::RAGDOLL);
+        physicsUserData.objectId = parentObjectId;
+        rigid->userData = new PhysicsUserData(physicsUserData);
+
+        scene->addActor(*rigid);
+        actorByMarkerId.emplace(marker.id, rigid);
+        m_pxRigidDynamics.push_back(rigid);
+        m_markerBoneNames.push_back(marker.boneName);
+        m_markerColors.push_back(glm::vec3(marker.color));
+        m_markerRestTransforms.push_back(marker.bodyTransform);
+        AddMarkerMeshData(marker);
     }
 
-    std::unordered_map<std::string, PxRigidDynamic*> actorByMarker;
-    for (int i = 0; i < ragdollData->m_markers.size(); i++) {
-        actorByMarker[ragdollData->m_markers[i].name] = m_pxRigidDynamics[i];
-    }
-
-    const float sceneScale = RagdollUtil::GetPhysicsSceneScale(ragdollData->m_solver);
-
-    #define LOCK_NEGATIVE_LINEAR 1
-
-    auto setLinearAxis = [&](PxD6Joint* d6, PxD6Axis::Enum axis, float lim, const PxSpring& linearSpring) {
-        #if LOCK_NEGATIVE_LINEAR
-        if (lim > 0.0f) {
-            d6->setMotion(axis, PxD6Motion::eLIMITED);
-            d6->setLinearLimit(axis, PxJointLinearLimitPair(-lim, lim, linearSpring));
-        }
-        else if (lim < 0.0f) {
-            d6->setMotion(axis, PxD6Motion::eLOCKED);
-        }
-        #else
-        if (lim > 0.0f) {
-            d6->setMotion(axis, PxD6Motion::eLIMITED);
-            d6->setLinearLimit(axis, PxJointLinearLimitPair(-lim, lim, linearSpring));
-        }
-        else if (lim == 0.0f) {
-            d6->setMotion(axis, PxD6Motion::eLOCKED);
-        }
-        else {
-            d6->setMotion(axis, PxD6Motion::eFREE);
-        }
-        #endif
-    };
-
-    for (RagdollJoint& j : ragdollData->m_joints)
-    {
-        auto itP = actorByMarker.find(j.parentName);
-        auto itC = actorByMarker.find(j.childName);
-        if (itP == actorByMarker.end() || itC == actorByMarker.end()) {
-            Logging::Warning() << "[D6] Missing actors for joint " << j.name;
-            continue;
+    for (const RagdollJointAsset& joint : asset.joints) {
+        const auto parent = actorByMarkerId.find(joint.parentMarkerId);
+        const auto child = actorByMarkerId.find(joint.childMarkerId);
+        if (parent == actorByMarkerId.end() || child == actorByMarkerId.end()) {
+            Logging::Error() << "Ragdoll::Init() failed to resolve actors for joint '" << joint.name << "'";
+            CleanUp();
+            return false;
         }
 
-        PxRigidActor* parent = itP->second;
-        PxRigidActor* child = itC->second;
+        const RagdollJointAsset runtimeJoint = RagdollJoint::CreatePhysicsReadyCopy(joint);
+        glm::mat4 parentFrameMatrix = Hell::Math::RemoveScaleAndShear(runtimeJoint.parentFrame);
+        glm::mat4 childFrameMatrix = Hell::Math::RemoveScaleAndShear(runtimeJoint.childFrame);
+        PxTransform parentFrame(Hell::Physics::GlmMat4ToPxMat44(parentFrameMatrix));
+        PxTransform childFrame(Hell::Physics::GlmMat4ToPxMat44(childFrameMatrix));
 
-        // parent/child local frames from JSON, scale translation only
-        PxTransform lp(Hell::Physics::GlmMat4ToPxMat44(RdMatrixToGlmMat4(j.parentFrame)));
-        PxTransform lc(Hell::Physics::GlmMat4ToPxMat44(RdMatrixToGlmMat4(j.childFrame)));
-        if (sceneScale != 1.0f) { lp.p *= sceneScale; lc.p *= sceneScale; }
+        PxD6Joint* d6 = PxD6JointCreate(*physics, parent->second, parentFrame, child->second, childFrame);
+        if (!d6) {
+            Logging::Error() << "Ragdoll::Init() failed to create joint '" << joint.name << "'";
+            CleanUp();
+            return false;
+        }
 
-        PxD6Joint* d6 = PxD6JointCreate(*physics, parent, lp, child, lc);
-        if (!d6) { Logging::Error() << "[D6] Create failed for " << j.name; continue; }
+        const float linearStiffness = joint.linearLimitStiffness > 0.0f ? joint.linearLimitStiffness : asset.solver.linearLimitStiffness;
+        const float linearDamping = joint.linearLimitDamping > 0.0f ? joint.linearLimitDamping : asset.solver.linearLimitDamping;
+        const float angularStiffness = joint.angularLimitStiffness > 0.0f ? joint.angularLimitStiffness : asset.solver.angularLimitStiffness;
+        const float angularDamping = joint.angularLimitDamping > 0.0f ? joint.angularLimitDamping : asset.solver.angularLimitDamping;
+        const PxSpring linearSpring(linearStiffness, linearDamping);
+        const PxSpring angularSpring(angularStiffness, angularDamping);
 
-        // Start FREE on all axes
-        d6->setMotion(PxD6Axis::eX, PxD6Motion::eFREE);
-        d6->setMotion(PxD6Axis::eY, PxD6Motion::eFREE);
-        d6->setMotion(PxD6Axis::eZ, PxD6Motion::eFREE);
-        d6->setMotion(PxD6Axis::eTWIST, PxD6Motion::eFREE);
-        d6->setMotion(PxD6Axis::eSWING1, PxD6Motion::eFREE);
-        d6->setMotion(PxD6Axis::eSWING2, PxD6Motion::eFREE);
-
-        if (j.limitEnabled) {
-            const PxSpring linearSpring(
-                ScaleJointSpring(static_cast<float>(j.limitLinearStiffness)),
-                ScaleJointSpring(static_cast<float>(j.limitLinearDamping))
-            );
-            const PxSpring angularSpring(
-                ScaleJointSpring(static_cast<float>(j.limitAngularStiffness)),
-                ScaleJointSpring(static_cast<float>(j.limitAngularDamping))
-            );
-
-            // Linear limits
-            setLinearAxis(d6, PxD6Axis::eX, (float)j.limitLinear.x(), linearSpring);
-            setLinearAxis(d6, PxD6Axis::eY, (float)j.limitLinear.y(), linearSpring);
-            setLinearAxis(d6, PxD6Axis::eZ, (float)j.limitLinear.z(), linearSpring);
-
-            // Angular limits
-            const float twist = (float)j.limitRange.x(); // radians
-            const float swing1 = (float)j.limitRange.y();
-            const float swing2 = (float)j.limitRange.z();
-
-            if (twist > 0.0f) {
-                d6->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLIMITED);
-                d6->setTwistLimit(PxJointAngularLimitPair(-twist, twist, angularSpring));
-            }
-            else if (twist < 0.0f) {
-                d6->setMotion(PxD6Axis::eTWIST, PxD6Motion::eLOCKED);
-            }
-
-            if (swing1 > 0.0f && swing2 > 0.0f) {
-                d6->setMotion(PxD6Axis::eSWING1, PxD6Motion::eLIMITED);
-                d6->setMotion(PxD6Axis::eSWING2, PxD6Motion::eLIMITED);
-                d6->setSwingLimit(PxJointLimitCone(swing1, swing2, angularSpring));
-            }
-            else {
-                if (swing1 < 0.0f) d6->setMotion(PxD6Axis::eSWING1, PxD6Motion::eLOCKED);
-                if (swing2 < 0.0f) d6->setMotion(PxD6Axis::eSWING2, PxD6Motion::eLOCKED);
-                // don't set swing limit
+        constexpr std::array<PxD6Axis::Enum, 3> LINEAR_AXES = { PxD6Axis::eX, PxD6Axis::eY, PxD6Axis::eZ };
+        for (size_t axisIndex = 0; axisIndex < LINEAR_AXES.size(); axisIndex++) {
+            const RagdollAxisLimit& limit = joint.linearLimits[axisIndex];
+            const PxD6Axis::Enum axis = LINEAR_AXES[axisIndex];
+            d6->setMotion(axis, joint.limitEnabled ? ToPxMotion(limit.motion) : PxD6Motion::eFREE);
+            if (joint.limitEnabled && limit.motion == RagdollAxisMotion::LIMITED) {
+                const float range = std::max(0.0f, limit.limit);
+                d6->setLinearLimit(axis, PxJointLinearLimitPair(-range, range, linearSpring));
             }
         }
 
-        if (!j.disableCollision) {
-            d6->setConstraintFlag(PxConstraintFlag::eCOLLISION_ENABLED, true);
-        }
+        ApplyAngularLimits(d6, runtimeJoint.angularLimits, runtimeJoint.limitEnabled, angularSpring);
+        d6->setConstraintFlag(PxConstraintFlag::eCOLLISION_ENABLED, false);
 
         m_pxD6Joints.push_back(d6);
     }
 
     DisableSimulation();
-    RecalculateRigidMass();
+    return true;
 }
 
 void Ragdoll::Update() {
@@ -279,38 +295,6 @@ void Ragdoll::Update() {
     //    PxMat44 pxMatrix(pxTransform);
     //    glm::mat4 matrix = Hell::Physics::PxMat44ToGlmMat4(pxMatrix);
     //}
-}
-
-void Ragdoll::RecalculateRigidMass() {
-    RagdollData* ragdollData = Hell::ResourceManager::GetRagdollDataByName(m_ragdollName);
-    if (!ragdollData) return;
-
-    const size_t count = std::min(m_pxRigidDynamics.size(), ragdollData->m_markers.size());
-    for (size_t i = 0; i < count; ++i) {
-        const RagdollMarker& marker = ragdollData->m_markers[i];
-        if (marker.geometryDescriptionComponent.type == RdGeometryType::kConvexHull) {
-            continue;
-        }
-
-        PxRigidDynamic* pxRigidDynamic = m_pxRigidDynamics[i];
-        if (!pxRigidDynamic) continue;
-
-        const PxU32 shapeCount = pxRigidDynamic->getNbShapes();
-        if (shapeCount == 0) continue;
-
-        std::vector<PxShape*> shapes(shapeCount);
-        pxRigidDynamic->getShapes(shapes.data(), shapeCount);
-
-        float volume = 0.0f;
-        for (PxShape* shape : shapes) {
-            volume += Hell::Physics::ComputeShapeVolume(shape);
-        }
-        if (volume <= 0.0f) continue;
-
-        const float density = marker.densityCustom > 0.0f ? static_cast<float>(marker.densityCustom) : 1.0f;
-        const float mass = volume * density;
-        PxRigidBodyExt::setMassAndUpdateInertia(*pxRigidDynamic, PxReal(mass));
-    }
 }
 
 void Ragdoll::MarkForRemoval() {
@@ -380,6 +364,7 @@ void Ragdoll::AddForce(uint64_t physicsId, const glm::vec3& force, bool wakeIfDi
 }
 
 void Ragdoll::AddImpulse(uint64_t physicsId, const glm::vec3& impulse, bool wakeIfDisabled) {
+    bool ownsPhysicsId = false;
     for (PxRigidDynamic* pxRigidDynamic : m_pxRigidDynamics) {
         if (!pxRigidDynamic) continue;
 
@@ -387,15 +372,31 @@ void Ragdoll::AddImpulse(uint64_t physicsId, const glm::vec3& impulse, bool wake
         if (!physicsUserData) continue;
 
         if (physicsUserData->physicsId == physicsId) {
-            if (!m_simulationEnabled) {
-                if (!wakeIfDisabled) return;
-                EnableSimulation();
-            }
-
-            pxRigidDynamic->addForce(PxVec3(impulse.x, impulse.y, impulse.z), PxForceMode::eIMPULSE, true);
-
-            return;
+            ownsPhysicsId = true;
+            break;
         }
+    }
+
+    if (!ownsPhysicsId) return;
+    if (!m_simulationEnabled) {
+        if (!wakeIfDisabled) return;
+        EnableSimulation();
+    }
+
+    float totalMass = 0.0f;
+    for (PxRigidDynamic* pxRigidDynamic : m_pxRigidDynamics) {
+        if (pxRigidDynamic) {
+            totalMass += pxRigidDynamic->getMass();
+        }
+    }
+    if (totalMass <= 0.0f) return;
+
+    const PxVec3 pxImpulse(impulse.x, impulse.y, impulse.z);
+    for (PxRigidDynamic* pxRigidDynamic : m_pxRigidDynamics) {
+        if (!pxRigidDynamic) continue;
+
+        const float massFraction = pxRigidDynamic->getMass() / totalMass;
+        pxRigidDynamic->addForce(pxImpulse * massFraction, PxForceMode::eIMPULSE, true);
     }
 }
 
@@ -455,12 +456,71 @@ void Ragdoll::DisableSimulation() {
     m_simulationEnabled = false;
 }
 
+void Ragdoll::ProjectPoseToJointLimits() {
+    std::unordered_map<PxRigidActor*, std::vector<PxD6Joint*>> jointsByParent;
+    std::unordered_set<PxRigidActor*> childActors;
+
+    for (PxD6Joint* joint : m_pxD6Joints) {
+        if (!joint) continue;
+
+        PxRigidActor* parentActor = nullptr;
+        PxRigidActor* childActor = nullptr;
+        joint->getActors(parentActor, childActor);
+        if (!parentActor || !childActor) continue;
+
+        jointsByParent[parentActor].push_back(joint);
+        childActors.insert(childActor);
+    }
+
+    std::vector<PxRigidActor*> pendingParents;
+    for (PxRigidDynamic* rigid : m_pxRigidDynamics) {
+        if (rigid && !childActors.contains(rigid)) {
+            pendingParents.push_back(rigid);
+        }
+    }
+
+    while (!pendingParents.empty()) {
+        PxRigidActor* parentActor = pendingParents.back();
+        pendingParents.pop_back();
+
+        const auto joints = jointsByParent.find(parentActor);
+        if (joints == jointsByParent.end()) continue;
+
+        for (PxD6Joint* joint : joints->second) {
+            PxRigidActor* ignoredParent = nullptr;
+            PxRigidActor* childActor = nullptr;
+            joint->getActors(ignoredParent, childActor);
+            if (!childActor) continue;
+
+            PxRigidDynamic* childRigid = static_cast<PxRigidDynamic*>(childActor);
+            const PxTransform parentAnchor = parentActor->getGlobalPose() * joint->getLocalPose(PxJointActorIndex::eACTOR0);
+            const PxTransform childFrame = joint->getLocalPose(PxJointActorIndex::eACTOR1);
+            PxTransform childPose = childRigid->getGlobalPose();
+
+            const PxQuat animatedChildFrameRotation = childPose.q * childFrame.q;
+            const PxQuat animatedJointRotation = parentAnchor.q.getConjugate() * animatedChildFrameRotation;
+            const PxQuat projectedJointRotation = ProjectRotationToJointLimits(*joint, animatedJointRotation);
+
+            childPose.q = (parentAnchor.q * projectedJointRotation * childFrame.q.getConjugate()).getNormalized();
+            childPose.p = parentAnchor.p - childPose.q.rotate(childFrame.p);
+            childRigid->setGlobalPose(childPose, false);
+            pendingParents.push_back(childActor);
+        }
+    }
+}
+
 void Ragdoll::EnableSimulation() {
+    ProjectPoseToJointLimits();
+
     for (PxRigidDynamic* pxRigidDynamic : m_pxRigidDynamics) {
         if (!pxRigidDynamic) continue;
 
         pxRigidDynamic->setActorFlag(PxActorFlag::eDISABLE_SIMULATION, false);
         pxRigidDynamic->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, false);
+        pxRigidDynamic->setLinearVelocity(PxVec3(0.0f), false);
+        pxRigidDynamic->setAngularVelocity(PxVec3(0.0f), false);
+        pxRigidDynamic->clearForce();
+        pxRigidDynamic->clearTorque();
         pxRigidDynamic->wakeUp();
     }
     m_simulationEnabled = true;
@@ -479,16 +539,11 @@ void Ragdoll::SetSpawnRotation(const glm::vec3& rotation) {
 }
 
 void Ragdoll::SetToInitialPose() {
-    RagdollData* ragdollData = Hell::ResourceManager::GetRagdollDataByName(m_ragdollName);
-    if (!ragdollData) return;
-
-    const PxTransform spawnTransform(Hell::Physics::GlmMat4ToPxMat44(m_spawnTransform.to_mat4()));
     PxTransform rootPose(Hell::Physics::GlmMat4ToPxMat44(m_spawnTransform.to_mat4()));
 
-    const size_t count = std::min(m_pxRigidDynamics.size(), ragdollData->m_markers.size());
+    const size_t count = std::min(m_pxRigidDynamics.size(), m_markerRestTransforms.size());
     for (size_t i = 0; i < count; ++i) {
-        const RagdollMarker& marker = ragdollData->m_markers[i];
-        PxTransform restTransform = PxTransformFromRest(marker.originMatrix, m_scale);
+        PxTransform restTransform = PxTransformFromRest(m_markerRestTransforms[i]);
         m_pxRigidDynamics[i]->setGlobalPose(rootPose.transform(restTransform));
         m_pxRigidDynamics[i]->setLinearVelocity(PxVec3(0));
         m_pxRigidDynamics[i]->setAngularVelocity(PxVec3(0));
@@ -496,16 +551,17 @@ void Ragdoll::SetToInitialPose() {
 }
 
 void Ragdoll::CleanUp() {
-    if (Hell::MeshBuffer* meshBuffer = Hell::ResourceManager::GetMeshBufferPtr("PhysicsDebugGeometry")) {
-        for (uint32_t meshId : m_markerDebugMeshIds) {
+    if (Hell::MeshBuffer* meshBuffer = Hell::ResourceManager::GetMeshBufferPtr("PhysicsShapeGeometry")) {
+        for (uint32_t meshId : m_markerMeshIds) {
             if (meshId != 0) {
                 meshBuffer->RemoveMesh(meshId);
             }
         }
     }
-    m_markerDebugMeshIds.clear();
+    m_markerMeshIds.clear();
     m_markerColors.clear();
     m_markerBoneNames.clear();
+    m_markerRestTransforms.clear();
 
     for (PxD6Joint* pxD6Joint : m_pxD6Joints) {
         if (pxD6Joint) {
@@ -530,6 +586,7 @@ void Ragdoll::CleanUp() {
         }
     }
     m_pxRigidDynamics.clear();
+    m_previousRigidWorldTransforms.clear();
 }
 
 bool Ragdoll::IsInMotion() {
@@ -567,6 +624,54 @@ const std::string& Ragdoll::GetBoneNameByPhysicsId(uint64_t physicsId) const {
     }
 
     return empty;
+}
+
+
+glm::vec3 Ragdoll::GetRigidWorldSpaceCenter(const std::string& boneName) const {
+
+    const size_t count = std::min(m_pxRigidDynamics.size(), m_markerBoneNames.size());
+    for (size_t i = 0; i < count; i++) {
+        if (m_markerBoneNames[i] != boneName) continue;
+
+        PxRigidDynamic* pxRigidDynamic = m_pxRigidDynamics[i];
+        if (!pxRigidDynamic) return glm::vec3(-999); // TODO: better error handling plus logging
+
+        glm::vec3 min = glm::vec3(std::numeric_limits<float>::max());
+        glm::vec3 max = glm::vec3(-std::numeric_limits<float>::max());
+
+        const PxU32 nbShapes = pxRigidDynamic->getNbShapes();
+        if (!nbShapes) continue;
+        std::vector<PxShape*> shapes(nbShapes);
+        pxRigidDynamic->getShapes(shapes.data(), nbShapes);
+
+        const PxTransform pose = pxRigidDynamic->getGlobalPose();
+        for (PxShape* s : shapes) {
+            const PxBounds3 b = PxShapeExt::getWorldBounds(*s, *pxRigidDynamic, 1.0f);
+            glm::vec3 bmin(b.minimum.x, b.minimum.y, b.minimum.z);
+            glm::vec3 bmax(b.maximum.x, b.maximum.y, b.maximum.z);
+            min = glm::min(min, bmin);
+            max = glm::max(max, bmax);
+        }
+
+        return (min + max) * 0.5f;
+    }
+
+    return glm::vec3(-999); // TODO: better error handling plus logging
+}
+
+uint64_t Ragdoll::GetPhysicsIdByBoneName(const std::string& boneName) const {
+    const size_t count = std::min(m_pxRigidDynamics.size(), m_markerBoneNames.size());
+    for (size_t i = 0; i < count; i++) {
+        if (m_markerBoneNames[i] != boneName) continue;
+
+        PxRigidDynamic* pxRigidDynamic = m_pxRigidDynamics[i];
+        if (!pxRigidDynamic) return 0;
+
+        PhysicsUserData* physicsUserData = static_cast<PhysicsUserData*>(pxRigidDynamic->userData);
+        return physicsUserData ? physicsUserData->physicsId : 0;
+    }
+
+    return 0;
 }
 
 AABB Ragdoll::GetWorldSpaceAABB() {
@@ -627,37 +732,39 @@ void Ragdoll::GetWorldSpaceAABBs(std::vector<AABB>& aabbs) {
 }
 
 void Ragdoll::UpdateWorldSpaceAABBs(float changeThreshold) {
-
-    std::vector<AABB> worldspaceAABBsPreviousFrame = m_worldSpaceAABBs;
-
     GetWorldSpaceAABBs(m_worldSpaceAABBs);
 
-    if (m_worldSpaceAABBs.size() != worldspaceAABBsPreviousFrame.size()) {
-        m_dirty = true;
+    std::vector<PxTransform> currentRigidWorldTransforms;
+    currentRigidWorldTransforms.reserve(m_pxRigidDynamics.size());
+
+    for (PxRigidDynamic* pxRigidDynamic : m_pxRigidDynamics) {
+        currentRigidWorldTransforms.push_back(pxRigidDynamic
+            ? pxRigidDynamic->getGlobalPose()
+            : PxTransform(PxIdentity));
     }
-    else {
-        m_dirty = false;
 
-        for (size_t i = 0; i < m_worldSpaceAABBs.size(); i++) {
-            const AABB& aabb = m_worldSpaceAABBs[i];
-            const AABB& aabbLastFrame = worldspaceAABBsPreviousFrame[i];
+    m_dirty = currentRigidWorldTransforms.size() != m_previousRigidWorldTransforms.size();
 
-            const glm::vec3& boundsMin = aabb.GetBoundsMin();
-            const glm::vec3& boundsMax = aabb.GetBoundsMax();
-            const glm::vec3& boundsMinLastFrame = aabbLastFrame.GetBoundsMin();
-            const glm::vec3& boundsMaxLastFrame = aabbLastFrame.GetBoundsMax();
+    if (!m_dirty) {
+        // Use the same threshold as world-space distance for translation and radians for rotation.
+        const float positionThresholdSquared = changeThreshold * changeThreshold;
+        const float rotationDotThreshold = std::cos(changeThreshold * 0.5f);
 
-            if (std::abs(boundsMin.x - boundsMinLastFrame.x) > changeThreshold ||
-                std::abs(boundsMin.y - boundsMinLastFrame.y) > changeThreshold ||
-                std::abs(boundsMin.z - boundsMinLastFrame.z) > changeThreshold ||
-                std::abs(boundsMax.x - boundsMaxLastFrame.x) > changeThreshold ||
-                std::abs(boundsMax.y - boundsMaxLastFrame.y) > changeThreshold ||
-                std::abs(boundsMax.z - boundsMaxLastFrame.z) > changeThreshold) {
+        for (size_t i = 0; i < currentRigidWorldTransforms.size(); i++) {
+            const PxTransform& currentTransform = currentRigidWorldTransforms[i];
+            const PxTransform& previousTransform = m_previousRigidWorldTransforms[i];
+            const PxVec3 positionDelta = currentTransform.p - previousTransform.p;
+            const float rotationSimilarity = std::abs(currentTransform.q.dot(previousTransform.q));
+
+            if (positionDelta.magnitudeSquared() > positionThresholdSquared ||
+                rotationSimilarity < rotationDotThreshold) {
                 m_dirty = true;
-                return;
+                break;
             }
         }
     }
+
+    m_previousRigidWorldTransforms = currentRigidWorldTransforms;
 }
 
 glm::vec3 Ragdoll::GetMarkerColorByRigidIndex(uint32_t index) const {
@@ -668,12 +775,12 @@ glm::vec3 Ragdoll::GetMarkerColorByRigidIndex(uint32_t index) const {
     return m_markerColors[index];
 }
 
-uint32_t Ragdoll::GetMarkerDebugMeshIdByRigidIndex(uint32_t index) const {
-    if (index >= m_markerDebugMeshIds.size()) {
-        Logging::Error() << "Ragdoll::GetMarkerDebugMeshIdByRigidIndex() failed, index " << index << " out of range of size " << m_pxRigidDynamics.size();
+uint32_t Ragdoll::GetMarkerMeshIdByRigidIndex(uint32_t index) const {
+    if (index >= m_markerMeshIds.size()) {
+        Logging::Error() << "Ragdoll::GetMarkerMeshIdByRigidIndex() failed, index " << index << " out of range of size " << m_pxRigidDynamics.size();
         return 0;
     }
-    return m_markerDebugMeshIds[index];
+    return m_markerMeshIds[index];
 }
 
 glm::mat4 Ragdoll::GetModelMatrixByRigidIndex(uint32_t index) const {
@@ -682,9 +789,9 @@ glm::mat4 Ragdoll::GetModelMatrixByRigidIndex(uint32_t index) const {
         return glm::mat4(1.0f);
     }
 
-    Hell::Transform scaleTransform;
-    scaleTransform.scale = glm::vec3(m_scale);
-    return Hell::Physics::PxMat44ToGlmMat4(m_pxRigidDynamics[index]->getGlobalPose()) * scaleTransform.to_mat4();
+    // Marker meshes are authored directly in rigid-local units, so only the
+    // rigid actor pose belongs in the model matrix.
+    return Hell::Physics::PxMat44ToGlmMat4(m_pxRigidDynamics[index]->getGlobalPose());
 }
 
 glm::mat4 Ragdoll::GetRigidWorldTransform(const std::string& boneName) const {
@@ -701,267 +808,13 @@ glm::mat4 Ragdoll::GetRigidWorldTransform(const std::string& boneName) const {
     return glm::mat4(1.0f);
 }
 
-void Ragdoll::AddMarkerMeshData(RagdollMarker& marker, RagdollSolver& solver) {
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
-    vertices.reserve(marker.convexMeshVertices.size());
-    indices.reserve(marker.convexMeshIndices.size());
-
-    const RdGeometryDescriptionComponent& desc = marker.geometryDescriptionComponent;
-
-    // Apply local shape transfrm
-    auto applyLocalShapeXform = [&](size_t begin) {
-        glm::mat4 R(1.0f);
-        R = glm::rotate(R, (float)desc.rotation.z(), glm::vec3(0, 0, 1));
-        R = glm::rotate(R, (float)desc.rotation.y(), glm::vec3(0, 1, 0));
-        R = glm::rotate(R, (float)desc.rotation.x(), glm::vec3(1, 0, 0));
-
-        const float s = RagdollUtil::GetPhysicsSceneScale(solver);
-        glm::vec3 T((float)desc.offset.x(),
-                    (float)desc.offset.y(),
-                    (float)desc.offset.z());
-        T /= s;
-
-        for (size_t i = begin; i < vertices.size(); ++i) {
-            glm::vec3 p = vertices[i].position;
-            p = glm::vec3(R * glm::vec4(p, 1.0f));
-            vertices[i].position = p + T;
-        }
-    };
-
-    if (desc.type == RdGeometryType::kConvexHull) {
-        for (RdPoint& point : marker.convexMeshVertices) {
-            Vertex& vertex = vertices.emplace_back();
-            vertex.position.x = point.x();
-            vertex.position.y = point.y();
-            vertex.position.z = point.z();
-        }
-        for (RdUint& index : marker.convexMeshIndices) {
-            indices.emplace_back(index);
-        }
-    }
-    else if (desc.type == RdGeometryType::kBox) {
-        const float hx = (float)desc.extents.x() * 0.5f;
-        const float hy = (float)desc.extents.y() * 0.5f;
-        const float hz = (float)desc.extents.z() * 0.5f;
-
-        const size_t vbase = vertices.size();
-
-        auto addFace = [&](glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3) {
-            const uint32_t base = (uint32_t)vertices.size();
-            Vertex v0; Vertex v1; Vertex v2; Vertex v3;
-            const glm::vec3 invS = glm::vec3(1.0f / RagdollUtil::GetPhysicsSceneScale(solver));
-            v0.position = p0 * invS; v1.position = p1 * invS; v2.position = p2 * invS; v3.position = p3 * invS;
-            v0.uv = { 0,0 }; v1.uv = { 1,0 }; v2.uv = { 1,1 }; v3.uv = { 0,1 };
-            vertices.push_back(v0); vertices.push_back(v1); vertices.push_back(v2); vertices.push_back(v3);
-            indices.push_back(base + 0); indices.push_back(base + 1); indices.push_back(base + 2);
-            indices.push_back(base + 0); indices.push_back(base + 2); indices.push_back(base + 3);
-        };
-
-        const glm::vec3 v000(-hx, -hy, -hz), v001(-hx, -hy, +hz), v010(-hx, +hy, -hz), v011(-hx, +hy, +hz);
-        const glm::vec3 v100(+hx, -hy, -hz), v101(+hx, -hy, +hz), v110(+hx, +hy, -hz), v111(+hx, +hy, +hz);
-
-        addFace(v100, v110, v111, v101); // +X
-        addFace(v001, v011, v010, v000); // -X
-        addFace(v010, v011, v111, v110); // +Y
-        addFace(v100, v101, v001, v000); // -Y
-        addFace(v101, v111, v011, v001); // +Z
-        addFace(v000, v010, v110, v100); // -Z
-
-        applyLocalShapeXform(vbase);
-    }
-
-    else if (desc.type == RdGeometryType::kCapsule) {
-        const float sceneScale = RagdollUtil::GetPhysicsSceneScale(solver);
-        const float r = (float)desc.radius / sceneScale;
-        const float half = 0.5f * (float)desc.length / sceneScale;
-        const unsigned int hemisphereRings = 12;
-        const unsigned int cylinderRings = 1;
-        const unsigned int segments = 24;
-
-        const size_t vbase = vertices.size();
-
-        const double PI = 3.14159265358979323846;
-        const double TAU = 6.28318530717958647692;
-        const double PI_HALF = 1.57079632679489661923;
-
-        const double hemisphereRingAngleIncrement = PI_HALF / (double)hemisphereRings;
-
-        auto append = [&](glm::dvec3 p, glm::dvec3 n) {
-            glm::vec3 pos = glm::vec3((float)p.x, (float)(p.y * r), (float)(p.z * r));
-            float u = (float)(std::atan2(p.z, p.y) / TAU);
-            if (u < 0.0f) u += 1.0f;
-            float v = (float)((p.x + (half + r)) / (2.0f * (half + r)));
-            Vertex vtx;
-            vtx.position = pos;
-            vtx.normal = glm::normalize(glm::vec3((float)n.x, (float)n.y, (float)n.z));
-            vtx.uv = glm::vec2(u, v);
-            vertices.push_back(vtx);
-        };
-
-        auto capVertex = [&](double x, double normalX) {
-            append({ x, 0.0, 0.0 }, { normalX, 0.0, 0.0 });
-        };
-
-        auto hemisphereVertexRings = [&](unsigned int count, double centerX, double startRingAngle, double ringAngleIncrement) {
-            const double segInc = TAU / (double)segments;
-            for (unsigned int i = 0; i != count; ++i) {
-                const double a = startRingAngle + (double)i * ringAngleIncrement;
-                const double s = std::sin(a);
-                const double c = std::cos(a);
-                for (unsigned int j = 0; j != segments; ++j) {
-                    const double b = (double)j * segInc;
-                    const double sb = std::sin(b), cb = std::cos(b);
-                    append({ centerX + s * (double)r, c * sb, c * cb },
-                           { s,                        c * sb, c * cb });
-                }
-            }
-        };
-
-        auto cylinderVertexRings = [&](const unsigned int count, const double startX, const glm::dvec2& inc) {
-            const glm::dvec2 baseNormal = { inc.y, -inc.x };
-            glm::dvec2 base = { 1.0, startX };
-            const double segInc = TAU / (double)segments;
-            for (unsigned int i = 0; i != count; ++i) {
-                for (unsigned int j = 0; j != segments; ++j) {
-                    const double b = (double)j * segInc;
-                    const double sb = std::sin(b), cb = std::cos(b);
-                    append({ base.y, base.x * sb, base.x * cb },
-                           { baseNormal.y, baseNormal.x * sb, baseNormal.x * cb });
-                }
-                base.x += inc.x;
-                base.y += inc.y;
-            }
-        };
-
-        auto bottomFaceRing = [&]() {
-            const unsigned int tip = (unsigned int)vbase;
-            for (unsigned int j = 0; j != segments; ++j) {
-                unsigned int topRight = (j != segments - 1) ? vbase + 1 + j + 1 : vbase + 1;
-                unsigned int bottom = tip;
-                unsigned int topLeft = vbase + 1 + j;
-                indices.push_back(topRight);
-                indices.push_back(bottom);
-                indices.push_back(topLeft);
-            }
-        };
-
-        auto faceRings = [&](unsigned int count, unsigned int offset) {
-            const unsigned int vertexSegments = segments;
-            for (unsigned int i = 0; i != count; ++i) {
-                for (unsigned int j = 0; j != segments; ++j) {
-                    const unsigned int bottomLeft = (unsigned int)vbase + offset + i * vertexSegments + j;
-                    const unsigned int bottomRight = (j != segments - 1)
-                        ? (unsigned int)vbase + offset + i * vertexSegments + j + 1
-                        : (unsigned int)vbase + offset + i * vertexSegments;
-                    const unsigned int topLeft = bottomLeft + vertexSegments;
-                    const unsigned int topRight = bottomRight + vertexSegments;
-                    indices.push_back(bottomRight);
-                    indices.push_back(bottomLeft);
-                    indices.push_back(topRight);
-                    indices.push_back(topRight);
-                    indices.push_back(bottomLeft);
-                    indices.push_back(topLeft);
-                }
-            }
-        };
-
-        auto topFaceRing = [&]() {
-            const unsigned int tip = (unsigned int)vertices.size() - 1;
-            const unsigned int ringStart = tip - segments;
-            for (unsigned int j = 0; j != segments; ++j) {
-                unsigned int topRight = (j != segments - 1) ? ringStart + j + 1 : ringStart;
-                unsigned int bottom = tip;
-                unsigned int topLeft = ringStart + j;
-                indices.push_back(topLeft);
-                indices.push_back(bottom);
-                indices.push_back(topRight);
-            }
-        };
-
-        capVertex(-(double)(half + r), -1.0);
-        hemisphereVertexRings(hemisphereRings - 1, -(double)half, -PI_HALF + hemisphereRingAngleIncrement, hemisphereRingAngleIncrement);
-        cylinderVertexRings(cylinderRings + 1, -(double)half, glm::dvec2{ 0.0, 2.0 * (double)half / (double)cylinderRings });
-        hemisphereVertexRings(hemisphereRings - 1, +(double)half, hemisphereRingAngleIncrement, hemisphereRingAngleIncrement);
-        capVertex(+(double)(half + r), 1.0);
-
-        bottomFaceRing();
-        faceRings(hemisphereRings * 2 - 2 + cylinderRings, 1);
-        topFaceRing();
-
-        applyLocalShapeXform(vbase);
-    }
-
-    else if (desc.type == RdGeometryType::kSphere) {
-        const float r = (float)desc.radius / RagdollUtil::GetPhysicsSceneScale(solver);
-        const int lat = 16, lon = 24;
-
-        const size_t vbase = vertices.size();
-
-        for (int y = 0; y <= lat; ++y) {
-            float v = (float)y / (float)lat;
-            float a1 = v * 3.14159265359f;
-            float sy = std::cos(a1);
-            float sr = std::sin(a1);
-
-            for (int x = 0; x <= lon; ++x) {
-                float u = (float)x / (float)lon;
-                float a2 = u * 6.28318530718f;
-                float cx = std::cos(a2);
-                float sx = std::sin(a2);
-
-                Vertex vert;
-                vert.position = { r * sr * cx, r * sy, r * sr * sx };
-                vert.uv = { u, v };
-                vertices.push_back(vert);
-            }
-        }
-
-        auto idx = [&](int x, int y) { return (uint32_t)(vbase + y * (lon + 1) + x); };
-
-        for (int y = 0; y < lat; ++y) {
-            for (int x = 0; x < lon; ++x) {
-                uint32_t a = idx(x, y);
-                uint32_t b = idx(x + 1, y);
-                uint32_t c = idx(x + 1, y + 1);
-                uint32_t d = idx(x, y + 1);
-                indices.push_back(a); indices.push_back(b); indices.push_back(c);
-                indices.push_back(a); indices.push_back(c); indices.push_back(d);
-            }
-        }
-
-        applyLocalShapeXform(vbase);
-    }
-
-    // Generate normals/tangents
-    for (int i = 0; i < indices.size(); i += 3) {
-        Vertex* vert0 = &vertices[indices[i]];
-        Vertex* vert1 = &vertices[indices[i + 1]];
-        Vertex* vert2 = &vertices[indices[i + 2]];
-
-        glm::vec3 deltaPos1 = vert1->position - vert0->position;
-        glm::vec3 deltaPos2 = vert2->position - vert0->position;
-        glm::vec2 deltaUV1 = vert1->uv - vert0->uv;
-        glm::vec2 deltaUV2 = vert2->uv - vert0->uv;
-
-        float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
-
-        glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
-        vert0->tangent = tangent;
-        vert1->tangent = tangent;
-        vert2->tangent = tangent;
-
-        glm::vec3 normal = glm::normalize(glm::cross(deltaPos1, deltaPos2));
-        vert0->normal = normal;
-        vert1->normal = normal;
-        vert2->normal = normal;
-    }
+void Ragdoll::AddMarkerMeshData(const RagdollMarkerAsset& marker) {
+    RagdollShapeMeshData meshData = RagdollShapeMesh::Create(marker.shape);
 
     uint32_t meshId = 0;
-    if (Hell::MeshBuffer* meshBuffer = Hell::ResourceManager::GetMeshBufferPtr("PhysicsDebugGeometry")) {
-        meshId = meshBuffer->AddMesh(vertices, indices, marker.name);
+    if (Hell::MeshBuffer* meshBuffer = Hell::ResourceManager::GetMeshBufferPtr("PhysicsShapeGeometry")) {
+        meshId = meshBuffer->AddMesh(meshData.vertices, meshData.indices, marker.name);
     }
-    m_markerDebugMeshIds.push_back(meshId);
-    //Logging::Debug() << "Added " << marker.shapeType << " vertex data: " << marker.name << " " << vertices.size() << " verts " << indices.size() << " indices";
+    m_markerMeshIds.push_back(meshId);
 }
 

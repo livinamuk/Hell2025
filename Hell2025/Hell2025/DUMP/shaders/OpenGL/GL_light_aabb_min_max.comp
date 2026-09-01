@@ -1,0 +1,52 @@
+#version 460 core
+#include "../common/OpenGL/GL_binding_indices.glsl"
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) uniform samplerCube u_WorldPosCubemap;
+
+struct AABB {
+    vec4 boundsMin;
+    vec4 boundsMax;
+};
+
+layout(std430, binding = SSBO_IDX_LIGHT_AABB_OUTPUT) buffer LightAABBBuffer {
+    AABB lightAABBs[];
+};
+
+uniform int u_lightIndex;
+uniform int u_resolution;
+
+void main() {
+    vec3 bMin = vec3(1e10);
+    vec3 bMax = vec3(-1e10);
+
+    // Brute force loop through every pixel on every face
+    for (int face = 0; face < 6; ++face) {
+        for (int y = 0; y < u_resolution; ++y) {
+            for (int x = 0; x < u_resolution; ++x) {
+                
+                vec2 uv = (vec2(x, y) + 0.5) / float(u_resolution);
+                vec2 texCoord = uv * 2.0 - 1.0;
+                
+                vec3 dir;
+                if(face == 0) dir = vec3( 1.0, -texCoord.y, -texCoord.x); // +X
+                if(face == 1) dir = vec3(-1.0, -texCoord.y,  texCoord.x); // -X
+                if(face == 2) dir = vec3( texCoord.x,  1.0,  texCoord.y); // +Y
+                if(face == 3) dir = vec3( texCoord.x, -1.0, -texCoord.y); // -Y
+                if(face == 4) dir = vec3( texCoord.x, -texCoord.y,  1.0); // +Z
+                if(face == 5) dir = vec3(-texCoord.x, -texCoord.y, -1.0); // -Z
+
+                vec3 pos = texture(u_WorldPosCubemap, dir).xyz;
+                
+                // Expand bounds
+                bMin = min(bMin, pos);
+                bMax = max(bMax, pos);
+            }
+        }
+    }
+
+    // Write directly to the SSBO as standard floats
+    lightAABBs[u_lightIndex].boundsMin = vec4(bMin, 1.0);
+    lightAABBs[u_lightIndex].boundsMax = vec4(bMax, 1.0);
+}

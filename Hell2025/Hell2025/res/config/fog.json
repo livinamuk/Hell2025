@@ -1,0 +1,61 @@
+{
+    "color": [
+        0.05200006440281868,
+        0.053000062704086304,
+        0.05000011995434761
+    ],
+    "colorStrength": 0.10000065714120865,
+    "distanceFog": {
+        "end": 60.000999450683594,
+        "exponent": 1.0,
+        "start": 20.0,
+        "strength": 0.20000001788139343
+    },
+    "enabled": true,
+    "height": {
+        "exponent": 1.0,
+        "fadeEnd": 31.0,
+        "fadeStart": 29.0,
+        "lowScatterMultiplier": 3.0
+    },
+    "motion": {
+        "timeScrollSpeed": 6.999997615814209,
+        "windVelocity": [
+            0.12999999523162842,
+            0.04999999701976776,
+            0.12999999523162842
+        ],
+        "xMorphSpeed": 5.5,
+        "yScrollSpeed": 2.200000047683716,
+        "zMorphSpeed": 5.5
+    },
+    "noise": {
+        "clumpSizeXZ": 10.666666984558105,
+        "clumpSizeY": 8.0,
+        "farMip": 2.0,
+        "farScaleMultiplier": 1.9999990463256836,
+        "maxMip": 2.0,
+        "minMip": 0.0,
+        "mipBias": 0.0,
+        "mipExponent": 5.599999904632568,
+        "mipFarDistance": 5.0,
+        "mipNearDistance": 1.1749999523162842,
+        "mipRespectStep": 0.0,
+        "mipScale": 1.0,
+        "nearMip": 0.0,
+        "nearScaleMultiplier": 1.0,
+        "scaleEndDistance": 22.0,
+        "scaleExponent": 2.0,
+        "scaleStartDistance": 6.0
+    },
+    "rayMarch": {
+        "ambientEndDistance": 5.0,
+        "ambientExponent": 1.0,
+        "ambientStartDistance": 1.0,
+        "densityBias": 0.004999999888241291,
+        "densityScale": 2.2999989986419678,
+        "extinctionScale": 0.030000001192092896,
+        "maxDistance": 30.0,
+        "stepCount": 10
+    }
+}

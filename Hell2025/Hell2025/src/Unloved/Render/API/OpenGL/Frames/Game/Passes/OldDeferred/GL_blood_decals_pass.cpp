@@ -1,6 +1,7 @@
 #include "Hell/Audio.h"
 #include "Hell/Debug/DebugDraw.h"
 #include "Hell/Input.h"
+#include "Hell/Logging.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
 
 #include "Unloved/EditorSession/EditorSession.h"
@@ -18,22 +19,25 @@ namespace OpenGL::Renderer {
     void BloodDecalComposite();
     void DecalTestPass();
     void NewBloodsDecalsPass();
+    void BloodPoolDecalDraw();
 
     void BloodDecalsPass() {
-        DecalTestPass();
         //NewBloodsDecalsPass();
         //
         //// DO NOT RENDER OLD BLOOD
         //return;
 
-        if (Unloved::RenderDataManager::GetBloodScreenSpaceDecalInstanceData().empty()) {
-            return;
-        }
+        //if (Unloved::RenderDataManager::GetBloodScreenSpaceDecalInstanceData().empty()) {
+        //    return;
+        //}
 
         BloodDecalTileCulling();
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
         BloodDecalDraw();
+        glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+
+        BloodPoolDecalDraw();
         glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
         BloodDecalComposite();
@@ -257,6 +261,90 @@ namespace OpenGL::Renderer {
                 SetUniformMat4("u_inverseModelMatrix", decal.inverseModelMatrix);
 
                 glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * mesh->baseIndex), mesh->baseVertex);
+            }
+        }
+
+        glColorMaski(0, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glColorMaski(1, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glColorMaski(2, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    }
+
+
+
+
+
+
+
+
+
+
+    void BloodPoolDecalDraw() {
+        return;
+
+        ProfilerOpenGLZoneFunction();
+
+        OpenGLFrameBuffer* gBuffer = OpenGL::ResourceManager::GetFrameBufferPtr("GBuffer");
+        OpenGLFrameBuffer* miscFullSizeFBO = OpenGL::ResourceManager::GetFrameBufferPtr("MiscFullSize");
+
+        if (!miscFullSizeFBO) return;
+        if (!gBuffer) return;
+
+        miscFullSizeFBO->Bind();
+        miscFullSizeFBO->DrawBuffers({ "BloodScreenSpaceDecalMask" });
+
+        Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
+
+        Model* model = Hell::ResourceManager::GetModelByName("Cube");
+        if (!model) return;
+        if (model->GetMeshIndices().empty()) return;
+
+        Mesh* mesh = meshBuffer.GetMeshById(model->GetMeshIndices()[0]);
+        if (!mesh) return;
+
+        BindShader("GenericBloodDecal");
+
+        glBindTextureUnit(1, gBuffer->GetDepthAttachmentHandle());
+        OpenGL::BindSSBO(SSBO_IDX_VIEWPORT_DATA, "ViewportData");
+
+        OpenGLRasterizerState state;
+        state.depthTestEnabled = true;
+        state.blendEnable = false;
+        state.cullfaceEnable = false;
+        state.depthMask = false;
+        state.depthFunc = GL_GREATER;
+
+        OpenGL::RasterizerStateManager::SetRasterizerState(state);
+
+        // Replace the decal material channels directly in the G-buffer.
+        glColorMaski(0, GL_TRUE,  GL_TRUE,  GL_TRUE,  GL_TRUE);
+        glColorMaski(1, GL_TRUE,  GL_TRUE,  GL_TRUE,  GL_TRUE);
+        glColorMaski(2, GL_FALSE, GL_FALSE, GL_TRUE,  GL_FALSE);
+
+        glBindVertexArray(OpenGL::ResourceManager::GetMeshBuffer("AssetGeometry").GetVAO());
+
+        Texture* texture = Hell::ResourceManager::GetTextureByName("BloodPool");
+        if (!texture) return;
+
+        glBindTextureUnit(0, texture->GetGLTexture().GetHandle());
+
+        for (int i = 0; i < 4; i++) {
+            Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(i);
+            if (!viewport->IsVisible()) continue;
+
+            OpenGL::Renderer::SetViewport(gBuffer, viewport);
+            OpenGL::SetUniformInt("u_viewportIndex", i);
+
+            for (const BloodPoolDecal& decal : Unloved::BloodSystem::GetBloodPoolDecals()) {
+                Hell::LocalFrame localFrame = Hell::LocalFrame(decal.normal);
+                Hell::QuatTransform transform = Hell::QuatTransform(decal.position, localFrame, glm::vec3(decal.scale));
+
+                const glm::mat4 modelMatrix = transform.ToMat4();
+                const glm::mat4 inverseModelMatrix = glm::inverse(modelMatrix);
+
+                SetUniformMat4("u_modelMatrix", modelMatrix);
+                SetUniformMat4("u_inverseModelMatrix", inverseModelMatrix);
+
+                glDrawElementsBaseVertex(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int)* mesh->baseIndex), mesh->baseVertex);
             }
         }
 

@@ -1,0 +1,32 @@
+#version 460
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+#include "../common/types.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsDDGIProbeDistanceList data;
+} pc;
+
+layout(buffer_reference, scalar) buffer ProbeStatesBuffer { ProbeState probeStates[]; };
+layout(buffer_reference, scalar) buffer ProbeDistanceCounterBuffer { uint counter; };
+layout(buffer_reference, scalar) buffer ProbeDistanceIndicesBuffer { uint probeDistanceIndices[]; };
+
+void main() {
+    uint probeIdx = gl_GlobalInvocationID.x;
+    if (probeIdx >= pc.data.totalProbes) return;
+
+    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pc.data.probeStatesDeviceAddress);
+    uint globalProbeIdx = pc.data.probeOffset + probeIdx;
+
+    if (probeStates.probeStates[globalProbeIdx].isRelevant && probeStates.probeStates[globalProbeIdx].distanceCooldown > 0u) {
+        ProbeDistanceCounterBuffer probeDistanceCounter = ProbeDistanceCounterBuffer(pc.data.probeDistanceCounterDeviceAddress);
+        ProbeDistanceIndicesBuffer probeDistanceIndices = ProbeDistanceIndicesBuffer(pc.data.probeDistanceIndicesDeviceAddress);
+        uint slot = atomicAdd(probeDistanceCounter.counter, 1);
+        probeDistanceIndices.probeDistanceIndices[slot] = probeIdx;
+    }
+}

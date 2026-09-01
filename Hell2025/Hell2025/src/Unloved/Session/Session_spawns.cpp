@@ -1,6 +1,7 @@
 #include "Session.h"
 
 #include "Hell/Common/Random.h"
+#include "Hell/Logging.h"
 
 #include "Unloved/World/World.h"
 
@@ -41,7 +42,7 @@ namespace Unloved::Session {
 
             float distanceToOtherPlayer = glm::distance(spawnPoint.GetPosition(), player->GetFootPosition());
 
-            if (distanceToOtherPlayer < 1.0f) {
+            if (distanceToOtherPlayer < 2.5f) {
                 return false;
             }
         }
@@ -60,6 +61,8 @@ namespace Unloved::Session {
                 return spawnPoint;
             }
         }
+
+        Logging::Debug() << "Failed to get a safe spawn point " << spawnPointCount << " times\n";
 
         return spawnPoints[fallbackIndex];
     }

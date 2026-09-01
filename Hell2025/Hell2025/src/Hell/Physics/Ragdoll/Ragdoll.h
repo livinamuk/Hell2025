@@ -1,6 +1,5 @@
 #pragma once
-#include "RagdollData.h"
-#include "RagdollTypes.h"
+#include "RagdollAsset.h"
 
 #include "Hell/Math/AABB.h"
 #include "Hell/Physics/PhysicsTypes.h"
@@ -17,8 +16,9 @@
 #include <string>
 #include <vector>
 
+
 struct Ragdoll {
-    void Init(const glm::vec3& spawnPosition, const glm::vec3& spawnEulerRotation, const std::string& ragdollName, uint64_t ragdollId, uint64_t parentObjectId, PhysicsFilterData filterData);
+    bool Init(const glm::vec3& spawnPosition, const glm::vec3& spawnEulerRotation, const RagdollAsset& asset, uint64_t ragdollId, uint64_t parentObjectId, PhysicsFilterData filterData);
     void CleanUp();
     void Update();
     void DisableSimulation();
@@ -33,7 +33,10 @@ struct Ragdoll {
     void AddImpulse(uint64_t physicsId, const glm::vec3& impulse, bool wakeIfDisabled);
     void AddImpulseAtPosition(uint64_t physicsId, const glm::vec3& impulse, const glm::vec3& position, bool wakeIfDisabled);
     void AddAngularVelocityChangeAtPosition(uint64_t physicsId, const glm::vec3& velocityChange, const glm::vec3& position, bool wakeIfDisabled);
+
     const std::string& GetBoneNameByPhysicsId(uint64_t physicsId) const;
+    uint64_t GetPhysicsIdByBoneName(const std::string& boneName) const;
+    glm::vec3 GetRigidWorldSpaceCenter(const std::string& boneName) const;
 
     bool IsInMotion();
     bool IsMarkedForRemoval() const;
@@ -44,7 +47,7 @@ struct Ragdoll {
     glm::mat4 GetRigidWorldTransform(const std::string& boneName) const;
     uint64_t GetRagdollId()                     { return m_ragdollId; }
     const std::string& GetRagdollName() const   { return m_ragdollName; }
-    uint32_t GetMarkerDebugMeshIdByRigidIndex(uint32_t index) const;
+    uint32_t GetMarkerMeshIdByRigidIndex(uint32_t index) const;
     glm::vec3 GetMarkerColorByRigidIndex(uint32_t index) const;
     glm::mat4 GetModelMatrixByRigidIndex(uint32_t index) const;
 
@@ -54,17 +57,18 @@ struct Ragdoll {
     bool IsDirty() const { return m_dirty; }
 
 private:
-    void AddMarkerMeshData(RagdollMarker& marker, RagdollSolver& solver);
-    void RecalculateRigidMass();
+    void AddMarkerMeshData(const RagdollMarkerAsset& marker);
+    void ProjectPoseToJointLimits();
 
     std::vector<physx::PxD6Joint*> m_pxD6Joints;
-    std::vector<uint32_t> m_markerDebugMeshIds;
+    std::vector<uint32_t> m_markerMeshIds;
     std::vector<glm::vec3> m_markerColors;
+    std::vector<glm::mat4> m_markerRestTransforms;
     std::vector<AABB> m_worldSpaceAABBs;
+    std::vector<physx::PxTransform> m_previousRigidWorldTransforms;
     std::string m_ragdollName;
     Hell::Transform m_spawnTransform;
     uint64_t m_ragdollId;
-    float m_scale = 1.0f;
     bool m_simulationEnabled = false;
     bool m_renderingEnabled = true;
     bool m_markedForRemoval = false;

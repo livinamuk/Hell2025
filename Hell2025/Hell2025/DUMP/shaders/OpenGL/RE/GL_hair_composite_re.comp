@@ -1,0 +1,35 @@
+#version 460
+
+layout(local_size_x = 24, local_size_y = 24, local_size_z = 1) in;
+
+layout (rgba16f, binding = 0) uniform image2D u_outputImage; // Gbuffer Lighting
+layout (rgba16f, binding = 1) uniform image2D u_emissiveImage; // 
+layout (binding = 2) uniform sampler2DMS u_hairTexture;
+
+void main() {
+	ivec2 px = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 outputImageSize = imageSize(u_outputImage);
+    vec2 uv_screenspace = (vec2(px) + 0.5) / vec2(outputImageSize);
+
+    // Early out if no hair
+    vec4 hair0 = texelFetch(u_hairTexture, px, 0);    
+    if (hair0.rgb == vec3(0)) return;
+
+    // Sample the rest
+    vec4 hair1 = texelFetch(u_hairTexture, px, 1);    
+    vec4 hair2 = texelFetch(u_hairTexture, px, 2);    
+    vec4 hair3 = texelFetch(u_hairTexture, px, 3);   
+    vec4 lighting = imageLoad(u_outputImage, px); 
+
+    // Sum and average
+    vec4 hair = (hair0 + hair1 + hair2 + hair3) / 4;
+
+    // Perform alpha compositing (hair over lighting)
+    vec3 finalColor = hair.rgb + lighting.rgb * (1.0 - hair.a);
+
+    //finalColor = hair.rgb;
+    
+    // Output
+    imageStore(u_outputImage, px, vec4(finalColor, 1));
+    imageStore(u_emissiveImage, px, vec4(0, 0, 0, 1));
+}

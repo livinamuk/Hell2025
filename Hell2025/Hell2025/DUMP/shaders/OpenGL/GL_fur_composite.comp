@@ -1,0 +1,33 @@
+#version 430 core
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(rgba16f, binding = 0) uniform image2D GBufferLightingImage;
+layout(binding = 1) uniform sampler2D FurTexture;
+
+void main() {
+	ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);   
+    ivec2 outputImageSize = imageSize(GBufferLightingImage);
+    vec2 uv_screenspace = vec2(pixelCoords) / vec2(outputImageSize);
+
+    vec4 src = texture(FurTexture, uv_screenspace);
+    vec4 dst  = imageLoad(GBufferLightingImage, pixelCoords);
+
+
+    float a = clamp(src.a * 8.0, 0.0, 1.0);
+
+    float alpha_thresh = (a > 0.2) ? a : 0.0;
+
+    float alpha_smooth = smoothstep(0.1, 0.5, a);
+
+    float alpha_exp = pow(a, 1.15);
+
+
+    float k = 2.0;
+    float alpha_invexp = 1.0 - exp(-a * k);
+
+    // pick one:
+    float alpha = a;
+
+    vec3 blended = mix(dst.rgb, src.rgb, alpha);
+    imageStore(GBufferLightingImage, pixelCoords, vec4(blended, 1.0));
+}

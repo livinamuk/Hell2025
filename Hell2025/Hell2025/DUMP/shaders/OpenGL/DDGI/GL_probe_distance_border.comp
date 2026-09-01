@@ -1,0 +1,57 @@
+#version 450
+#include "../../common/ddgi.glsl"
+#include "../../common/types.glsl"
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+restrict layout(std430, binding = 4) readonly buffer DDGIVolumeBuffer { DDGIVolume volume; };
+
+layout(rg16f, binding = 0) uniform image2DArray u_distanceAtlas;
+
+void main() {
+    uint pIdx = gl_GlobalInvocationID.x;
+    if (pIdx >= uint(volume.totalProbes)) return;
+
+    ivec3 gridCoord = DDGIGetProbeCoords(int(pIdx), volume);
+
+    // X and Z are the atlas plane, Y is the layer
+    int probeBaseX = gridCoord.x * 16;
+    int probeBaseY = gridCoord.z * 16;
+    int layer = gridCoord.y;
+
+    // Edges (Reflection mapping)
+    for (int i = 0; i < 14; i++) {
+        // Source indices
+        int src = 14 - i;
+        int dst = i + 1;
+
+        // Top border (y=0) pulls from Top interior (y=1) but flipped X
+        vec2 top = imageLoad(u_distanceAtlas, ivec3(probeBaseX + src, probeBaseY + 1, layer)).rg;
+        imageStore(u_distanceAtlas, ivec3(probeBaseX + dst, probeBaseY + 0, layer), vec4(top, 0.0, 1.0));
+
+        // Bottom border (y=15) pulls from Bottom interior (y=14) but flipped X
+        vec2 bottom = imageLoad(u_distanceAtlas, ivec3(probeBaseX + src, probeBaseY + 14, layer)).rg;
+        imageStore(u_distanceAtlas, ivec3(probeBaseX + dst, probeBaseY + 15, layer), vec4(bottom, 0.0, 1.0));
+
+        // Left border (x=0) pulls from Left interior (x=1) but flipped Y
+        vec2 left = imageLoad(u_distanceAtlas, ivec3(probeBaseX + 1, probeBaseY + src, layer)).rg;
+        imageStore(u_distanceAtlas, ivec3(probeBaseX + 0, probeBaseY + dst, layer), vec4(left, 0.0, 1.0));
+
+        // Right border (x=15) pulls from Right interior (x=14) but flipped Y
+        vec2 right = imageLoad(u_distanceAtlas, ivec3(probeBaseX + 14, probeBaseY + src, layer)).rg;
+        imageStore(u_distanceAtlas, ivec3(probeBaseX + 15, probeBaseY + dst, layer), vec4(right, 0.0, 1.0));
+    }
+
+    // Corners (Diagonal reflection)
+    vec2 c0 = imageLoad(u_distanceAtlas, ivec3(probeBaseX + 14, probeBaseY + 14, layer)).rg;
+    imageStore(u_distanceAtlas, ivec3(probeBaseX + 0, probeBaseY + 0, layer), vec4(c0, 0.0, 1.0));
+
+    vec2 c1 = imageLoad(u_distanceAtlas, ivec3(probeBaseX + 1, probeBaseY + 14, layer)).rg;
+    imageStore(u_distanceAtlas, ivec3(probeBaseX + 15, probeBaseY + 0, layer), vec4(c1, 0.0, 1.0));
+
+    vec2 c2 = imageLoad(u_distanceAtlas, ivec3(probeBaseX + 14, probeBaseY + 1, layer)).rg;
+    imageStore(u_distanceAtlas, ivec3(probeBaseX + 0, probeBaseY + 15, layer), vec4(c2, 0.0, 1.0));
+
+    vec2 c3 = imageLoad(u_distanceAtlas, ivec3(probeBaseX + 1, probeBaseY + 1, layer)).rg;
+    imageStore(u_distanceAtlas, ivec3(probeBaseX + 15, probeBaseY + 15, layer), vec4(c3, 0.0, 1.0));
+}

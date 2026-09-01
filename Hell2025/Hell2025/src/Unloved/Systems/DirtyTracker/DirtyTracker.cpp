@@ -18,6 +18,7 @@
 namespace Unloved::DirtyTracker {
 
     void CalculateDirtyDoorAABBs();
+    uint8_t CalculateDirtyPointShadowFaceMask(Light& light, const DirtyBounds& dirtyBounds);
     bool IntersectAABB(const RenderItem& renderItemA, const glm::vec3& boundsMinB, const glm::vec3& boundsMaxB);
     bool IntersectAABB(const glm::vec3& boundsMinA, const glm::vec3& boundsMaxA, const RenderItem& renderItemB);
     bool IntersectAABB(const glm::vec3& boundsMinA, const glm::vec3& boundsMaxA, const glm::vec3& boundsMinB, const glm::vec3& boundsMaxB);
@@ -35,11 +36,23 @@ namespace Unloved::DirtyTracker {
     std::vector<uint64_t> g_dirtyDoorIds;
     std::vector<uint64_t> g_staticDirtyLightIds;
     std::vector<uint64_t> g_compositeDirtyLightIds;
+    std::unordered_map<uint64_t, uint8_t> g_staticDirtyLightFaceMasks;
+    std::unordered_map<uint64_t, uint8_t> g_compositeDirtyLightFaceMasks;
     std::vector<DirtyBounds> g_dirtyBoundsSet;
 
     const std::vector<uint64_t>& GetDirtyDoorIds()           { return g_dirtyDoorIds; }
     const std::vector<uint64_t>& GetStaticDirtyLightIds()    { return g_staticDirtyLightIds; }
     const std::vector<uint64_t>& GetCompositeDirtyLightIds() { return g_compositeDirtyLightIds; }
+
+    uint8_t GetStaticDirtyLightFaceMask(uint64_t lightId) {
+        const auto found = g_staticDirtyLightFaceMasks.find(lightId);
+        return found != g_staticDirtyLightFaceMasks.end() ? found->second : uint8_t(0x3f);
+    }
+
+    uint8_t GetCompositeDirtyLightFaceMask(uint64_t lightId) {
+        const auto found = g_compositeDirtyLightFaceMasks.find(lightId);
+        return found != g_compositeDirtyLightFaceMasks.end() ? found->second : uint8_t(0x3f);
+    }
 
     std::vector<GPUAABB> g_dirtyDoorAABBs;
     std::unordered_map<uint64_t, AABB> g_previousDoorAABBs;
@@ -48,6 +61,8 @@ namespace Unloved::DirtyTracker {
         g_dirtyDoorIds.clear();
         g_staticDirtyLightIds.clear();
         g_compositeDirtyLightIds.clear();
+        g_staticDirtyLightFaceMasks.clear();
+        g_compositeDirtyLightFaceMasks.clear();
         g_dirtyBoundsSet.clear();
     }
 
@@ -87,14 +102,16 @@ namespace Unloved::DirtyTracker {
     }
 
     void UpdateDirtyLightIds() {
+        constexpr uint8_t ALL_POINT_SHADOW_FACES = 0x3f;
+
         for (Light& light : World::GetLights()) {
-            bool staticDirty = false;
-            bool compositeDirty = false;
+            uint8_t staticDirtyFaceMask = 0;
+            uint8_t compositeDirtyFaceMask = 0;
 
             if (light.IsForcedDirty()) {
                 light.ConsumeForcedDirtyFlag();
-                staticDirty = true;
-                compositeDirty = true;
+                staticDirtyFaceMask = ALL_POINT_SHADOW_FACES;
+                compositeDirtyFaceMask = ALL_POINT_SHADOW_FACES;
             }
             else {
                 for (const DirtyBounds& dirtyBounds : g_dirtyBoundsSet) {
@@ -103,23 +120,39 @@ namespace Unloved::DirtyTracker {
                     }
 
                     if (IntersectAABB(light.GetWorldBoundsMin(), light.GetWorldBoundsMax(), dirtyBounds.boundsMin, dirtyBounds.boundsMax)) {
-                        compositeDirty = true;
+                        const uint8_t dirtyFaceMask = CalculateDirtyPointShadowFaceMask(light, dirtyBounds);
+                        compositeDirtyFaceMask |= dirtyFaceMask;
 
                         if (dirtyBounds.type == DirtyBoundsType::STATIC) {
-                            staticDirty = true;
-                            break;
+                            staticDirtyFaceMask |= dirtyFaceMask;
                         }
                     }
                 }
             }
 
-            if (staticDirty) {
+            if (staticDirtyFaceMask != 0) {
                 g_staticDirtyLightIds.push_back(light.GetObjectId());
+                g_staticDirtyLightFaceMasks[light.GetObjectId()] = staticDirtyFaceMask;
             }
-            if (compositeDirty) {
+            if (compositeDirtyFaceMask != 0) {
                 g_compositeDirtyLightIds.push_back(light.GetObjectId());
+                g_compositeDirtyLightFaceMasks[light.GetObjectId()] = compositeDirtyFaceMask;
             }
         }
+    }
+
+    uint8_t CalculateDirtyPointShadowFaceMask(Light& light, const DirtyBounds& dirtyBounds) {
+        const AABB dirtyAABB(dirtyBounds.boundsMin, dirtyBounds.boundsMax);
+        uint8_t faceMask = 0;
+
+        for (uint32_t faceIndex = 0; faceIndex < 6; faceIndex++) {
+            Frustum* faceFrustum = light.GetFrustumByFaceIndex(faceIndex);
+            if (faceFrustum && faceFrustum->IntersectsAABBFast(dirtyAABB)) {
+                faceMask |= uint8_t(1u << faceIndex);
+            }
+        }
+
+        return faceMask;
     }
 
     void AddDirtyBounds(const DirtyBounds& dirtyBounds) {

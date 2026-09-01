@@ -1,0 +1,46 @@
+#version 460
+
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "VK_indirect_specular_amd_config.glsl"
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
+layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_R8, r8) uniform image2D storageImagesR8[];
+
+layout(set = 0, binding = DESC_IDX_SSBOS, std430) buffer AMDStorageBuffer { uint data[]; } amdStorageBuffers[];
+
+shared uint g_tileCount;
+
+void main() {
+    ivec2 dispatchThreadID = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 renderSize = textureSize(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
+
+    g_tileCount = 0u;
+
+    memoryBarrierShared();
+    barrier();
+
+    bool inBounds = all(lessThan(dispatchThreadID, renderSize));
+    if (inBounds) {
+        float roughness = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_MATERIAL_ROUGHNESS], samplers[VULKAN_SAMPLER_IDX_NEAREST]), dispatchThreadID, 0).r;
+        imageStore(storageImagesR8[VULKAN_STORAGE_IMAGE_R8_IDX_INDIRECT_SPECULAR_AMD_EXTRACTED_ROUGHNESS], dispatchThreadID, vec4(roughness, 0.0, 0.0, 0.0));
+
+        float depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), dispatchThreadID, 0).r;
+
+        if (roughness < VK_INDIRECT_SPECULAR_AMD_ROUGHNESS_THRESHOLD && depth > 0.0) {
+            atomicAdd(g_tileCount, 1u);
+        }
+    }
+
+    memoryBarrierShared();
+    barrier();
+
+    if (all(equal(gl_LocalInvocationID.xy, uvec2(0))) && g_tileCount > 0u) {
+        uint tileOffset = atomicAdd(amdStorageBuffers[VULKAN_SSBO_IDX_INDIRECT_SPECULAR_AMD_RAY_COUNTER].data[2], 1u);
+        uvec2 tileBase = gl_WorkGroupID.xy * 8u;
+
+        amdStorageBuffers[VULKAN_SSBO_IDX_INDIRECT_SPECULAR_AMD_DENOISER_TILE_LIST].data[tileOffset] = (tileBase.y << 16u) | tileBase.x;
+    }
+}

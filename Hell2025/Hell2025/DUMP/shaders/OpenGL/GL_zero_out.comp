@@ -1,0 +1,11 @@
+#version 430 core
+#include "../common/OpenGL/GL_binding_indices.glsl"
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = SSBO_IDX_ZERO_OUT_COUNTER) buffer AtomicCounter {
+    uint vertexCount;
+};
+
+void main() {   
+    vertexCount = 0;    
+}

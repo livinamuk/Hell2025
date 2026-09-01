@@ -12,20 +12,26 @@
 
 #include "Unloved/Config/Config.h"
 #include "Unloved/Debug/Debug.h"
-#include "Unloved/Editor/Editor.h"
+#include "Unloved/Debug/DebugDraw.h"
+#include "Unloved/EditorSession/EditorSession.h"
 #include "Unloved/Characters/Enemies/Kangaroo/Kangaroo.h"
 #include "Unloved/Characters/Enemies/Shark/Shark.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
+#include "Unloved/Objects/Traversal/Ladder.h"
+#include "Unloved/Objects/Traversal/LadderDismount.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/Render/API/OpenGL/GL_renderer.h"
 #include "Unloved/Systems/Openables/OpenableManager.h"
 #include "Unloved/ObjectId.h"
 #include "Unloved/World/World.h"
 
+#include <glm/geometric.hpp>
+#include <vector>
+
 namespace Unloved {
 
 void Player::UpdateUI(float deltaTime) {
-    if (Editor::IsOpen()) return;
+    if (EditorSession::IsActive()) return;
 
     Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(m_viewportIndex);
     if (!viewport->IsVisible()) return;
@@ -48,7 +54,7 @@ void Player::UpdateUI(float deltaTime) {
     // Set type writer position based on viewport coords
     int margin = 100;
     glm::ivec2 typeWriteLocation;
-    typeWriteLocation.x = viewport->GetLeftPixel() + margin;
+    typeWriteLocation.x = xLeft + margin;
     typeWriteLocation.y = ammoY + 40;
     m_typeWriter.SetLocation(typeWriteLocation);
 
@@ -110,7 +116,8 @@ void Player::UpdateUI(float deltaTime) {
 
 
     // HUD
-    if (IsAlive() && !IsInShop()) {
+    //if (IsAlive() && !IsInShop()) {
+    if (true) {
         // Cross hair texture
         std::string crosshairTexture = "CrosshairDot";
         if (m_interactFound) {
@@ -179,6 +186,158 @@ void Player::UpdateUI(float deltaTime) {
         }
 
 
+        if (Debug::GetDebugTextMode() == DebugTextMode::PER_PLAYER_INTERACT_INFO) {
+            std::string text;
+            text += "Ray hit found: " + Hell::String::FormatBool(m_interactFound) + "\n";
+
+            text += "\n";
+            text += "BVH Hit found: " + Hell::String::FormatBool(m_bvhRayResult.hitFound) + "\n";
+
+            if (m_bvhRayResult.hitFound) {
+                ObjectType interactObjectType = Unloved::GetObjectIdType(m_bvhRayResult.objectId);
+
+                text += "BVH Hit position: " + Hell::String::FormatVec3(m_bvhRayResult.hitPosition) + "\n";
+                text += "BVH Hit normal: " + Hell::String::FormatVec3(m_bvhRayResult.hitNormal) + "\n";
+                text += "BVH Hit object Id: " + std::to_string(m_bvhRayResult.objectId) + "\n";
+                text += "BVH Hit object type: " + Hell::Enum::ToString(interactObjectType) + "\n";
+            }
+
+            text += "\n";
+            text += "PhysX Hit found: " + Hell::String::FormatBool(m_physXRayResult.hitFound) + "\n";
+
+            if (m_physXRayResult.hitFound) {
+                ObjectType interactObjectType = Unloved::GetObjectIdType(m_physXRayResult.userData.objectId);
+
+                text += "PhysX Hit position: " + Hell::String::FormatVec3(m_physXRayResult.hitPosition) + "\n";
+                text += "PhysX Hit normal: " + Hell::String::FormatVec3(m_physXRayResult.hitNormal) + "\n";
+                text += "PhysX Hit object Id: " + std::to_string(m_physXRayResult.userData.objectId) + "\n";
+                text += "PhysX Hit object type: " + Hell::Enum::ToString(interactObjectType)+"\n";
+            }
+
+            UIBackEnd::BlitText(text, "StandardFont", xLeft, yTop, Alignment::TOP_LEFT, 2.0f);
+        }
+
+
+        if (Debug::GetDebugTextMode() == DebugTextMode::PER_PLAYER_WEAPON_INFO) {
+            WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
+            WeaponState* weaponstate = GetCurrentWeaponState();
+            const AmmoInfo* ammoInfo = GetCurrentAmmoInfo();
+            AmmoState* ammoState = GetCurrentAmmoState();
+            if (!weaponInfo || !weaponstate ||!ammoInfo || !ammoState) return;
+
+            std::string text;
+            text += "Weapon state name: " + weaponstate->name + "\n";
+            text += "Weapon: " + Hell::Enum::ToString(weaponInfo->weapon) + "\n";
+            text += "Ammo: " + Hell::Enum::ToString(weaponInfo->ammo) + "\n";
+            text += "Type: " + Hell::Enum::ToString(weaponInfo->type) + "\n";
+            text += "\n";
+            text += "Weapon action: " + Hell::Enum::ToString(m_weaponAction) + "\n";
+            text += "Ammo in mag: " + std::to_string(weaponstate->ammoInMag) + "\n";
+            text += "Ammo on hand: " + std::to_string(ammoState->ammoOnHand) + "\n";
+
+            UIBackEnd::BlitText(text, "StandardFont", xLeft, yTop, Alignment::TOP_LEFT, 2.0f);
+        }
+
+        if (Debug::GetDebugTextMode() == DebugTextMode::PER_PLAYER_LADDER_INFO) {
+            const glm::vec3 footPosition = GetFootPosition();
+            const float searchDistance = GetLadderSearchDistance();
+            const LadderCandidate candidate = FindLadderCandidate();
+
+            std::string text = "LADDER INFO\n";
+            text += "Movement Mode: " + Hell::Enum::ToString(m_movementMode) + "\n";
+            text += "World Ladders: " + std::to_string(World::GetLadders().size()) + "\n";
+            text += "World Dismount Points: " + std::to_string(World::GetLadderDismounts().size()) + "\n";
+            text += "Search Distance: " + Hell::String::FormatFloat(searchDistance) + "\n";
+            text += "Foot Position: " + Hell::String::FormatVec3(footPosition) + "\n";
+            text += "Active Ladder: ";
+            text += m_ladderMoveData.ladderId ? std::to_string(m_ladderMoveData.ladderId) : "NONE";
+            text += "\n";
+
+            if (m_movementMode == PlayerMovementMode::LADDER) {
+                text += "Ladder Velocity: " + Hell::String::FormatVec3(m_ladderMoveData.ladderVelocity) + "\n";
+                text += "Ladder Speed: " + Hell::String::FormatFloat(glm::length(m_ladderMoveData.ladderVelocity)) + "\n";
+                text += "Ladder T: " + Hell::String::FormatFloat(m_ladderMoveData.ladderParametricPosition) + "\n";
+                text += "Move Direction: " + Hell::String::FormatFloat(m_ladderMoveData.ladderMoveDirection) + "\n";
+                text += "Jump Held: " + Hell::String::FormatBool(PressingJump()) + "\n";
+
+                if (Ladder* ladder = World::GetLadderByObjectId(m_ladderMoveData.ladderId)) {
+                    const glm::vec3 ladderAxis = glm::normalize(ladder->GetTopPoint() - ladder->GetBottomPoint());
+                    text += "View/Axis Dot: " + Hell::String::FormatFloat(glm::dot(GetCameraForward(), ladderAxis)) + "\n";
+                    text += "Distance To Bottom: " + Hell::String::FormatFloat(glm::distance(footPosition, ladder->GetBottomPoint())) + "\n";
+                    text += "Distance To Top: " + Hell::String::FormatFloat(glm::distance(footPosition, ladder->GetTopPoint())) + "\n";
+                }
+            }
+
+            if (m_movementMode == PlayerMovementMode::LADDER_TRANSITION) {
+                text += "Transition Type: ";
+                text += m_ladderMoveData.mounting ? "MOUNT\n" : "DISMOUNT\n";
+                text += "Transition Time: " + Hell::String::FormatFloat(m_ladderMoveData.transitionElapsedTime) +
+                        " / " + Hell::String::FormatFloat(m_ladderMoveData.transitionDuration) + "\n";
+                text += "Transition Start: " + Hell::String::FormatVec3(m_ladderMoveData.transitionStartPosition) + "\n";
+                text += "Transition Goal: " + Hell::String::FormatVec3(m_ladderMoveData.transitionGoalPosition) + "\n";
+                text += "Destination Reserved: " + Hell::String::FormatBool(m_ladderMoveData.destinationReserved) + "\n";
+
+                DebugDraw::DrawLine(m_ladderMoveData.transitionStartPosition, m_ladderMoveData.transitionGoalPosition, RED);
+                DebugDraw::DrawPoint(m_ladderMoveData.transitionGoalPosition, RED);
+            }
+
+            if (m_movementMode == PlayerMovementMode::LADDER || m_movementMode == PlayerMovementMode::LADDER_TRANSITION) {
+                text += "Dismount Status: " + Hell::Enum::ToString(m_ladderMoveData.dismountStatus) + "\n";
+                text += "Associated Dismounts: " + std::to_string(m_ladderMoveData.associatedDismountCount) + "\n";
+                text += "Nearby Dismounts: " + std::to_string(m_ladderMoveData.nearbyDismountCount) + "\n";
+                text += "Dismount Candidate: ";
+                text += m_ladderMoveData.dismountCandidateId ? std::to_string(m_ladderMoveData.dismountCandidateId) : "NONE";
+                text += "\n";
+
+                if (m_ladderMoveData.dismountCandidateId) {
+                    text += "Dismount Distance: " + Hell::String::FormatFloat(m_ladderMoveData.dismountCandidateDistance) + "\n";
+                    text += "Dismount View Dot: " + Hell::String::FormatFloat(m_ladderMoveData.dismountCandidateViewDot) + "\n";
+
+                    if (LadderDismount* dismount = World::GetLadderDismountByObjectId(m_ladderMoveData.dismountCandidateId)) {
+                        DebugDraw::DrawLine(footPosition, dismount->GetPosition(), PINK);
+                        DebugDraw::DrawPoint(dismount->GetPosition(), PINK);
+                    }
+                }
+            }
+
+            DebugDraw::DrawSphere(footPosition, searchDistance, BLUE);
+
+            if (candidate.ladderId) {
+                text += "Candidate Ladder: " + std::to_string(candidate.ladderId) + "\n";
+                text += "Candidate Distance: " + Hell::String::FormatFloat(glm::distance(footPosition, candidate.closestPoint)) + "\n";
+                text += "Closest Point: " + Hell::String::FormatVec3(candidate.closestPoint) + "\n";
+                text += "Cone Mount Match: " + Hell::String::FormatBool(ShouldAutoMountLadderCone(candidate)) + "\n";
+                text += "Endpoint Mount Match: " + Hell::String::FormatBool(ShouldAutoMountLadderEndpoint(candidate)) + "\n";
+                text += "Mount Goal Clear: " + Hell::String::FormatBool(IsLadderTransitionGoalClear(candidate.closestPoint, candidate.ladderId)) + "\n";
+
+                if (Ladder* ladder = World::GetLadderByObjectId(candidate.ladderId)) {
+                    text += "Bottom Point: " + Hell::String::FormatVec3(ladder->GetBottomPoint()) + "\n";
+                    text += "Top Point: " + Hell::String::FormatVec3(ladder->GetTopPoint()) + "\n";
+
+                    DebugDraw::DrawLine(ladder->GetBottomPoint(), ladder->GetTopPoint(), GREEN);
+                    DebugDraw::DrawLine(footPosition, candidate.closestPoint, WHITE);
+                    DebugDraw::DrawPoint(ladder->GetBottomPoint(), GREEN);
+                    DebugDraw::DrawPoint(ladder->GetTopPoint(), GREEN);
+                    DebugDraw::DrawPoint(candidate.closestPoint, YELLOW);
+
+                    const std::vector<RenderItem>& renderItems = ladder->GetRenderItems();
+                    if (!renderItems.empty()) {
+                        AABB ladderBounds;
+                        for (const RenderItem& renderItem : renderItems) {
+                            ladderBounds.Grow(glm::vec3(renderItem.aabbMin));
+                            ladderBounds.Grow(glm::vec3(renderItem.aabbMax));
+                        }
+                        DebugDraw::DrawAABB(ladderBounds, YELLOW);
+                    }
+                }
+            }
+            else {
+                text += "Candidate Ladder: NONE\n";
+            }
+
+            UIBackEnd::BlitText(text, "StandardFont", xLeft, yTop, Alignment::TOP_LEFT, 2.0f);
+        }
+
         if (Debug::GetDebugTextMode() == DebugTextMode::PER_PLAYER || Debug::GetDebugRenderMode() == DebugRenderMode::BVH_CPU_PLAYER_RAYS) {
 
             std::string text = "";
@@ -188,7 +347,7 @@ void Player::UpdateUI(float deltaTime) {
 
             text += "\n";
 
-            AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
+            SkinnedGameObject* viewWeapon = GetViewWeaponSkinnedGameObject();
             SkinnedModel* model = viewWeapon->GetSkinnedModel();
 
 
@@ -205,10 +364,10 @@ void Player::UpdateUI(float deltaTime) {
 
             // Magazine matrices
             if (false) {
-                text += "Magazine Inverse Bind Transform:\n";
-                text += Hell::String::FormatMat4(viewWeapon->GetInverseBindTransformByBoneName("Magazine"), 10) + "\n\n";
+                text += "Magazine Local Bind Transform:\n";
+                text += Hell::String::FormatMat4(viewWeapon->GetLocalBindTransformByNodeName("Magazine"), 10) + "\n\n";
                 text += "Magazine Animated Transform:\n";
-                text += Hell::String::FormatMat4(viewWeapon->GetAnimatedTransformByBoneName("Magazine"), 10) + "\n\n";
+                text += Hell::String::FormatMat4(viewWeapon->GetNodeModelSpaceMatrix("Magazine"), 10) + "\n\n";
             }
 
             // Camera matrices
@@ -216,11 +375,11 @@ void Player::UpdateUI(float deltaTime) {
                 const ViewportData& viewportData = RenderDataManager::GetViewportData()[0];
 
                 text += "Root:\n";
-                text += Hell::String::FormatMat4(viewWeapon->GetInverseBindTransformByBoneName("root"), 10) + "\n\n";
-                text += "Camera Inverse Bind Transform:\n";
-                text += Hell::String::FormatMat4(viewWeapon->GetInverseBindTransformByBoneName("camera"), 10) + "\n\n";
+                text += Hell::String::FormatMat4(viewWeapon->GetLocalBindTransformByNodeName("root"), 10) + "\n\n";
+                text += "Camera Local Bind Transform:\n";
+                text += Hell::String::FormatMat4(viewWeapon->GetLocalBindTransformByNodeName("camera"), 10) + "\n\n";
                 text += "Camera Animated Transform:\n";
-                text += Hell::String::FormatMat4(viewWeapon->GetAnimatedTransformByBoneName("camera"), 10) + "\n\n";
+                text += Hell::String::FormatMat4(viewWeapon->GetNodeModelSpaceMatrix("camera"), 10) + "\n\n";
                 text += "View Matrix:\n";
                 text += Hell::String::FormatMat4(viewportData.view, 10) + "\n\n";
             }
@@ -367,7 +526,7 @@ void Player::UpdateUI(float deltaTime) {
             static int height = texture->GetHeight() * 2;
             glm::ivec2 location = glm::ivec2(centerX, centerY);
             glm::ivec2 size = glm::ivec2(width, height);
-            UIBackEnd::BlitTexture("PressStart", location, Alignment::CENTERED, WHITE, size, TextureFilter::LINEAR);
+            UIBackEnd::BlitTexture("PressStart", location, Alignment::CENTERED, RED, size, TextureFilter::LINEAR);
         }
     }
 

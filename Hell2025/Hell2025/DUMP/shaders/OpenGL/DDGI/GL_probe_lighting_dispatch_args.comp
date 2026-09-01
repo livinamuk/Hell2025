@@ -1,0 +1,17 @@
+#version 450
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+struct DispatchIndirectArgs {
+    uint num_groups_x;
+    uint num_groups_y;
+    uint num_groups_z;
+};
+
+layout(std430, binding = 4) readonly buffer ProbeIrradianceCounter { uint probeIrradianceCounter; };
+layout(std430, binding = 5) buffer ProbeDispatchArgs               { DispatchIndirectArgs args; };
+
+void main() {
+    args.num_groups_x = probeIrradianceCounter;
+    args.num_groups_y = 1u;
+    args.num_groups_z = 1u;
+}

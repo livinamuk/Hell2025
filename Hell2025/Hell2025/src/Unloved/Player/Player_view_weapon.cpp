@@ -7,29 +7,31 @@
 #include "Unloved/Render/RenderDataManager.h"
 
 #include "Unloved/Debug/Debug.h"
+#include "Unloved/Bible/Bible.h"
+#include "Unloved/Systems/Animator/Animator.h"
 
 namespace InputMulti = Hell::InputMulti;
 
 namespace Unloved {
 
 void Player::UpdateViewWeapon(float deltaTime) {
-    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
+    SkinnedGameObject* viewWeapon = GetViewWeaponSkinnedGameObject();
     if (!viewWeapon) return;
 
     SkinnedModel* skinnedModel = viewWeapon->GetSkinnedModel();
 
     glm::mat4 dmMaster = glm::mat4(1);
     glm::mat4 cameraMatrix = glm::mat4(1);
-    glm::mat4 cameraInverseBindTransform = glm::mat4(1);
+    glm::mat4 cameraLocalBindTransform = glm::mat4(1);
     glm::mat4 root = glm::mat4(1);
 
     for (int i = 0; i < skinnedModel->m_nodes.size(); i++) {
         if (skinnedModel->m_nodes[i].name == "camera") {
-            cameraInverseBindTransform = skinnedModel->m_nodes[i].inverseBindTransform;
+            cameraLocalBindTransform = skinnedModel->m_nodes[i].localBindTransform;
         }
     }
 
-    cameraInverseBindTransform = skinnedModel->GetInverseBindTransform("camera");
+    cameraLocalBindTransform = skinnedModel->GetLocalBindTransform("camera");
 
     // Weapon sway
     float xMax = 5.0;
@@ -44,7 +46,7 @@ void Player::UpdateViewWeapon(float deltaTime) {
     float movementX = xOffset * SWAY_AMOUNT;
     float movementY = -yOffset * SWAY_AMOUNT;
 
-    if (GetCurrentWeaponInfo()->itemInfoName == "AKS74U") {
+    if (GetCurrentWeaponInfo()->weapon == Bible::Weapon::AKS74U) {
         xMax = 10.0f;
     }
 
@@ -74,18 +76,19 @@ void Player::UpdateViewWeapon(float deltaTime) {
 
     // NEW_RIG_FILE
     // HACK because the old weapons are fucked for scale
-    if (GetCurrentWeaponInfo()->itemInfoName == "Knife" ||
-        GetCurrentWeaponInfo()->itemInfoName == "Tokarev" ||
-        GetCurrentWeaponInfo()->itemInfoName == "Glock" ||
-        GetCurrentWeaponInfo()->itemInfoName == "GoldenGlock" ||
-        GetCurrentWeaponInfo()->itemInfoName == "SPAS" ||
-        GetCurrentWeaponInfo()->itemInfoName == "P90" ||
-        GetCurrentWeaponInfo()->itemInfoName == "AKS74U"
+    if (GetCurrentWeaponInfo()->weapon == Bible::Weapon::KNIFE ||
+        GetCurrentWeaponInfo()->weapon == Bible::Weapon::TOKAREV ||
+        GetCurrentWeaponInfo()->weapon == Bible::Weapon::GLOCK ||
+        GetCurrentWeaponInfo()->weapon == Bible::Weapon::GOLDEN_GLOCK ||
+        GetCurrentWeaponInfo()->weapon == Bible::Weapon::SPAS ||
+        GetCurrentWeaponInfo()->weapon == Bible::Weapon::P90 ||
+        GetCurrentWeaponInfo()->weapon == Bible::Weapon::REMINGTON_870 ||
+        GetCurrentWeaponInfo()->weapon == Bible::Weapon::AKS74U
         ) {
         weaponScale *= 100.0;
     }
 
-    //if (Input::KeyPressed(HELL_KEY_E) && GetCurrentWeaponInfo()->itemInfoName == "P90") {
+    //if (Input::KeyPressed(HELL_KEY_E) && GetCurrentWeaponInfo()->weapon == Bible::Weapon::P90) {
     //    std::cout << "\nP90\n";
     //    SkinnedModel* skinnedModel = viewWeapon->GetSkinnedModel();
     //    Hell::MeshBuffer& meshBuffer = Hell::ResourceManager::GetMeshBuffer("AssetGeometry");
@@ -134,23 +137,23 @@ void Player::UpdateViewWeapon(float deltaTime) {
         m_weaponSwayY = 0.0f;
     }
 
-    viewWeapon->SetCameraMatrix(transform.to_mat4() * glm::inverse(cameraInverseBindTransform) * glm::inverse(dmMaster));
+    viewWeapon->SetCameraMatrix(transform.to_mat4() * glm::inverse(cameraLocalBindTransform) * glm::inverse(dmMaster));
     viewWeapon->EnableModelMatrixOverride();
 }
 
 void Player::CalculateMuzzleFlashSpawnPosition() {
-	AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
+	SkinnedGameObject* viewWeapon = GetViewWeaponSkinnedGameObject();
     WeaponInfo* weaponInfo = GetCurrentWeaponInfo();
 
 	if (!viewWeapon) return;
 	if (!weaponInfo) return;
 
 	const std::string& boneName = weaponInfo->muzzleFlashBoneName;
-    m_muzzleFlashSpawnPosition = viewWeapon->GetBoneWorldMatrix(boneName)[3];
+	m_muzzleFlashSpawnPosition = viewWeapon->GetNodeWorldPosition(boneName);
 }
 
 void Player::UpdateViewWeaponVisibility() {
-	AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
+	SkinnedGameObject* viewWeapon = GetViewWeaponSkinnedGameObject();
 	if (!viewWeapon) return;
 
 	bool shouldRenderViewWeapon = true;
@@ -165,14 +168,11 @@ void Player::UpdateViewWeaponVisibility() {
 	else {
 		viewWeapon->DisableRendering();
 	}
-
-	// Temporarily always render for all viewports
-	viewWeapon->SetExclusiveViewportIndex(-1);
 }
 
 
 void Player::SubmitP90MagsRenderItems() {
-	AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
+	SkinnedGameObject* viewWeapon = GetViewWeaponSkinnedGameObject();
 	if (!viewWeapon) return;
 
 	SkinnedModel* skinnedModel = viewWeapon->GetSkinnedModel();
@@ -209,12 +209,12 @@ void Player::SubmitP90MagsRenderItems() {
 		m_p90MagMeshNodes.SetBlendingModeByMeshName("P90_Magazine", BlendingMode::PLASTIC);
 
         // Update mesh world matrices and submit render items
-		glm::mat4 globalBlendedNodeTransform = viewWeapon->GetGlobalBlendedNodeTransfrom("Magazine");
+		glm::mat4 globalBlendedNodeTransform = viewWeapon->GetNodeModelSpaceMatrix("Magazine");
 		glm::mat4 boneOffset = skinnedModel->GetBoneOffset("Magazine");
 		glm::mat4 modelMatrix = viewWeapon->GetModelMatrix();
 		glm::mat4 finalMatrix = modelMatrix * globalBlendedNodeTransform * boneOffset;
 		m_p90MagMeshNodes.Update(finalMatrix);
-        RenderDataManager::SubmitMeshNodes(m_p90MagMeshNodes);
+		RenderDataManager::SubmitMeshNodes(m_p90MagMeshNodes, true);
 
         // Now do it all again for the second mag
         {
@@ -222,13 +222,13 @@ void Player::SubmitP90MagsRenderItems() {
 			offset.position = glm::vec3(0.0f, 0.0f, -1.000003f);
 			glm::mat4 offsetMatrix = offset.to_mat4();
 
-			glm::mat4 globalBlendedNodeTransform = viewWeapon->GetGlobalBlendedNodeTransfrom("Magazine2");
+			glm::mat4 globalBlendedNodeTransform = viewWeapon->GetNodeModelSpaceMatrix("Magazine2");
 			glm::mat4 boneOffset = skinnedModel->GetBoneOffset("Magazine2");
 			glm::mat4 modelMatrix = viewWeapon->GetModelMatrix();
 			glm::mat4 finalMatrix = modelMatrix * globalBlendedNodeTransform * boneOffset * offsetMatrix;
 
             m_p90MagMeshNodes.Update(finalMatrix);
-            RenderDataManager::SubmitMeshNodes(m_p90MagMeshNodes);
+            RenderDataManager::SubmitMeshNodes(m_p90MagMeshNodes, true);
         }
 
 		//RenderDataManager::SubmitRenderItems(m_p90MagMeshNodes.GetRenderItems());

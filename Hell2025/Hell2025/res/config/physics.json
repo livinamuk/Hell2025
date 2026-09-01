@@ -1,0 +1,14 @@
+{
+    "bulletImpactImpulse": 13.0,
+    "defaultMaterialDynamicFriction": 0.8500000238418579,
+    "defaultMaterialRestitution": 0.0,
+    "defaultMaterialStaticFriction": 7.000008583068848,
+    "gravityEnabled": true,
+    "meleeImpactImpulse": 30.0,
+    "positionIterations": 1,
+    "ragdollImpactRotationScale": 0.800000011920929,
+    "ragdollImpactTranslationScale": 8.0,
+    "shotgunPelletImpactImpulse": 6.0,
+    "substeps": 4,
+    "velocityIterations": 1
+}

@@ -30,14 +30,17 @@ namespace OpenGL::Renderer {
         OpenGL::ResourceManager::LoadShader("Grass", { "GL_grass.vert", "GL_grass.frag" });
         OpenGL::ResourceManager::LoadShader("GrassGeometryGeneration", { "GL_grass_geometry_generation.comp" });
         OpenGL::ResourceManager::LoadShader("GrassPositionGeneration", { "GL_grass_position_generation.comp" });
+        OpenGL::ResourceManager::LoadShader("NewGrass", { "GL_new_grass.vert", "GL_grass.frag" });
+        OpenGL::ResourceManager::LoadShader("NewGrassPositionGeneration", { "GL_new_grass_position_generation.comp" });
+        OpenGL::ResourceManager::LoadShader("NewGrassChunkCulling", { "GL_new_grass_chunk_culling.comp" });
+        OpenGL::ResourceManager::LoadShader("NewGrassCulling", { "GL_new_grass_culling.comp" });
+        OpenGL::ResourceManager::LoadShader("OcclusionHiZ", { "GL_occlusion_hiz.comp" });
         OpenGL::ResourceManager::LoadShader("GaussianBlurUtil", { "GL_gaussian_blur_util.comp" });
         OpenGL::ResourceManager::LoadShader("HairDepthPeel", { "GL_hair_depth_peel.vert", "GL_hair_depth_peel.frag" });
         OpenGL::ResourceManager::LoadShader("HairFinalComposite", { "GL_hair_final_composite.comp" });
         OpenGL::ResourceManager::LoadShader("HairLighting", { "GL_hair_lighting.vert", "GL_hair_lighting.frag" });
         OpenGL::ResourceManager::LoadShader("HeightMapColor", { "GL_heightmap_color.vert", "GL_heightmap_color.frag" });
-        OpenGL::ResourceManager::LoadShader("HeightMapPhysxTextureGeneration", { "GL_heightmap_physx_texture_generation.comp" });
         OpenGL::ResourceManager::LoadShader("HeightMapVertexGeneration", { "GL_heightmap_vertex_generation.comp" });
-        OpenGL::ResourceManager::LoadShader("HeightMapPaint", { "GL_heightmap_paint.comp" });
         OpenGL::ResourceManager::LoadShader("HeightMapBrushPreview", { "RE/GL_fullscreen_triangle.vert", "GL_heightmap_brush_preview.frag" });
         OpenGL::ResourceManager::LoadShader("LightCulling", { "GL_light_culling.comp" });
         OpenGL::ResourceManager::LoadShader("Lighting", { "GL_lighting.comp" });
@@ -78,14 +81,17 @@ namespace OpenGL::Renderer {
         OpenGL::ResourceManager::LoadShader("Blood", "BloodFluidDepth", { "GL_blood_fluid.vert", "GL_blood_fluid_depth.frag" });
         OpenGL::ResourceManager::LoadShader("Blood", "BloodFluidThickness", { "GL_blood_fluid.vert", "GL_blood_fluid_thickness.frag" });
         OpenGL::ResourceManager::LoadShader("Blood", "BloodFluidBlur", { "GL_blood_fluid_blur.comp" });
+        OpenGL::ResourceManager::LoadShader("Blood", "GenericBloodDecal", { "GL_generic_blood_decal.vert", "GL_generic_blood_decal.frag" });
         OpenGL::ResourceManager::LoadShader("Blood", "VatBlood", { "GL_vat_blood.vert", "GL_vat_blood.frag" });
+
+        // Physics
+        OpenGL::ResourceManager::LoadShader("PhysicsShapes", { "GL_physics_shapes.vert", "GL_physics_shapes.frag" });
 
         // Debug
         OpenGL::ResourceManager::LoadShader("Debug", "DebugHackAABB", { "GL_debug_hack_aabb.vert", "GL_debug_hack_aabb.frag" });
         OpenGL::ResourceManager::LoadShader("Debug", "DebugLightAABB", { "GL_debug_light_aabb.vert", "GL_debug_light_aabb.frag" });
         OpenGL::ResourceManager::LoadShader("Debug", "DebugPointCloud", { "GL_debug_point_cloud.vert", "GL_debug_point_cloud.frag" });
         OpenGL::ResourceManager::LoadShader("Debug", "DebugProbes", { "GL_debug_probes.vert", "GL_debug_probes.frag" });
-        OpenGL::ResourceManager::LoadShader("Debug", "DebugRagdoll", { "GL_debug_ragdoll.vert", "GL_debug_ragdoll.frag" });
         OpenGL::ResourceManager::LoadShader("Debug", "DebugSolidColor", { "GL_debug_solid_color.vert", "GL_debug_solid_color.frag" });
         OpenGL::ResourceManager::LoadShader("Debug", "DebugTextureBlit", { "GL_debug_texture_blit.vert", "GL_debug_texture_blit.frag" });
         OpenGL::ResourceManager::LoadShader("Debug", "DebugTextured", { "GL_debug_textured.vert", "GL_debug_textured.frag" });
@@ -143,6 +149,7 @@ namespace OpenGL::Renderer {
         OpenGL::ResourceManager::LoadShader("RE", "DepthPrePassAlphaDiscardRE", { "GL_depth_prepass_alpha_discard.vert", "GL_depth_prepass_alpha_discard.frag" });
         OpenGL::ResourceManager::LoadShader("RE", "GBuffer", { "GL_gbuffer_re.vert", "GL_gbuffer_re.frag" });
         OpenGL::ResourceManager::LoadShader("RE", "LightingDeferred", { "GL_fullscreen_triangle.vert", "GL_lighting_deferred.frag" });
+        OpenGL::ResourceManager::LoadShader("RE", "LightingDeferredViewWeapon", { "GL_fullscreen_triangle.vert", "GL_lighting_deferred.frag" }, { "VIEW_WEAPON" });
         OpenGL::ResourceManager::LoadShader("RE", "LightingDeferredEditorRenderMode", { "GL_fullscreen_triangle.vert", "GL_lighting_deferred_editor_render_mode.frag" });
 
         OpenGL::ResourceManager::LoadShader("RE", "HairLightingForward", { "GL_hair_lighting_forward.vert", "GL_hair_lighting_forward.frag" });

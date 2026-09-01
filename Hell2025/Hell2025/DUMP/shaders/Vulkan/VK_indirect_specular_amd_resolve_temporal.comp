@@ -1,0 +1,197 @@
+#version 460
+
+// Port of FidelityFX Reflection DNSR Resolve Temporal
+
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "VK_indirect_specular_amd_config.glsl"
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
+layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2D storageImagesRGBA16F[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_R16F, r16f) uniform image2D storageImagesR16F[];
+layout(set = 0, binding = DESC_IDX_SSBOS, std430) readonly buffer AMDStorageBuffer { uint data[]; } amdStorageBuffers[];
+
+const float DNSR_RADIANCE_THRESHOLD = 0.0001;
+const float DNSR_GAUSSIAN_K = 3.0;
+const float DNSR_GLOSSY_ROUGHNESS_THRESHOLD = VK_INDIRECT_SPECULAR_AMD_ROUGHNESS_THRESHOLD;
+const float DNSR_HISTORY_CLIP_WEIGHT = VK_INDIRECT_SPECULAR_AMD_TEMPORAL_STABILITY_FACTOR;
+const int DNSR_LOCAL_NEIGHBORHOOD_RADIUS = 4;
+
+shared uint g_dnsrShared0[16][16];
+shared uint g_dnsrShared1[16][16];
+
+bool IsPixelInBounds(ivec2 pixelCoord, ivec2 size) {
+    return all(greaterThanEqual(pixelCoord, ivec2(0))) && all(lessThan(pixelCoord, size));
+}
+
+uvec2 RemapLane8x8(uint lane) {
+    uint x = (((lane >> 2u) & 7u) & ~1u) | (lane & 1u);
+    uint y = (((lane >> 3u) & 7u) & ~3u) | ((lane >> 1u) & 3u);
+    return uvec2(x, y);
+}
+
+uvec2 RoundUp8(uvec2 value) {
+    uvec2 roundDown = value & ~uvec2(7u);
+    return uvec2(
+        roundDown.x == value.x ? value.x : value.x + 8u,
+        roundDown.y == value.y ? value.y : value.y + 8u);
+}
+
+vec3 LoadRadiance(ivec2 pixelCoord, ivec2 screenSize) {
+    if (!IsPixelInBounds(pixelCoord, screenSize)) return vec3(0.0);
+    return texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_PREFILTERED], samplers[VULKAN_SAMPLER_IDX_NEAREST]), pixelCoord, 0).rgb;
+}
+
+void StoreShared(ivec2 coord, vec3 radiance) {
+    g_dnsrShared0[coord.y][coord.x] = packHalf2x16(radiance.xy);
+    g_dnsrShared1[coord.y][coord.x] = packHalf2x16(radiance.zz);
+}
+
+vec3 LoadShared(ivec2 coord) {
+    return vec3(
+        unpackHalf2x16(g_dnsrShared0[coord.y][coord.x]),
+        unpackHalf2x16(g_dnsrShared1[coord.y][coord.x]).x);
+}
+
+void InitializeSharedNeighborhood(ivec2 dispatchThreadID, ivec2 groupThreadID, ivec2 screenSize) {
+    const ivec2 offsets[4] = ivec2[4](
+        ivec2(0, 0),
+        ivec2(8, 0),
+        ivec2(0, 8),
+        ivec2(8, 8));
+
+    ivec2 sampleBase = dispatchThreadID - ivec2(4);
+    vec3 radiance[4];
+    
+    for (int i = 0; i < 4; ++i) {
+        radiance[i] = LoadRadiance(sampleBase + offsets[i], screenSize);
+    }
+
+    for (int i = 0; i < 4; ++i) {
+        StoreShared(groupThreadID + offsets[i], radiance[i]);
+    }
+}
+
+float LocalNeighborhoodKernelWeight(float offset) {
+    const float radius = float(DNSR_LOCAL_NEIGHBORHOOD_RADIUS) + 1.0;
+    return exp(-DNSR_GAUSSIAN_K * (offset * offset) / (radius * radius));
+}
+
+struct Moments {
+    vec3 mean;
+    vec3 variance;
+};
+
+Moments EstimateLocalNeighborhood(ivec2 sharedCenter) {
+    Moments estimate;
+    estimate.mean = vec3(0.0);
+    estimate.variance = vec3(0.0);
+    
+    float accumulatedWeight = 0.0;
+
+    for (int y = -DNSR_LOCAL_NEIGHBORHOOD_RADIUS; y <= DNSR_LOCAL_NEIGHBORHOOD_RADIUS; ++y) {
+        for (int x = -DNSR_LOCAL_NEIGHBORHOOD_RADIUS; x <= DNSR_LOCAL_NEIGHBORHOOD_RADIUS; ++x) {
+            vec3 radiance = LoadShared(sharedCenter + ivec2(x, y));
+            float weight = LocalNeighborhoodKernelWeight(float(x)) * LocalNeighborhoodKernelWeight(float(y));
+            accumulatedWeight += weight;
+            estimate.mean += radiance * weight;
+            estimate.variance += radiance * radiance * weight;
+        }
+    }
+
+    estimate.mean /= accumulatedWeight;
+    estimate.variance /= accumulatedWeight;
+    estimate.variance = abs(estimate.variance - estimate.mean * estimate.mean);
+    
+    return estimate;
+}
+
+vec3 ClipAABB(vec3 aabbMin, vec3 aabbMax, vec3 previousSample) {
+    vec3 aabbCenter = 0.5 * (aabbMax + aabbMin);
+    vec3 extentClip = 0.5 * (aabbMax - aabbMin) + 0.001;
+    vec3 colorVector = previousSample - aabbCenter;
+    vec3 colorVectorClip = abs(colorVector / extentClip);
+    float maxAbsoluteUnit = max(max(colorVectorClip.x, colorVectorClip.y), colorVectorClip.z);
+    
+    return maxAbsoluteUnit > 1.0
+        ? aabbCenter + colorVector / maxAbsoluteUnit
+        : previousSample;
+}
+
+float Luminance(vec3 color) {
+    return max(dot(color, vec3(0.299, 0.587, 0.114)), 0.001);
+}
+
+float ComputeTemporalVariance(vec3 historyRadiance, vec3 radiance) {
+    float historyLuminance = Luminance(historyRadiance);
+    float currentLuminance = Luminance(radiance);
+    float difference = abs(historyLuminance - currentLuminance) / max(max(historyLuminance, currentLuminance), 0.5);
+    return difference * difference;
+}
+
+void main() {
+    uint packedCoords = amdStorageBuffers[VULKAN_SSBO_IDX_INDIRECT_SPECULAR_AMD_DENOISER_TILE_LIST].data[gl_WorkGroupID.x];
+    ivec2 tileBase = ivec2(int(packedCoords & 0xffffu), int((packedCoords >> 16u) & 0xffffu));
+    ivec2 dispatchThreadID = tileBase + ivec2(gl_LocalInvocationID.xy);
+    ivec2 dispatchGroupID = dispatchThreadID / 8;
+    uvec2 remappedGroupThreadID = RemapLane8x8(gl_LocalInvocationIndex);
+    dispatchThreadID = dispatchGroupID * 8 + ivec2(remappedGroupThreadID);
+    ivec2 groupThreadID = ivec2(remappedGroupThreadID);
+
+    ivec2 screenSize = textureSize(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_PREFILTERED], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
+    bool inBounds = IsPixelInBounds(dispatchThreadID, screenSize);
+
+    InitializeSharedNeighborhood(dispatchThreadID, groupThreadID, screenSize);
+
+    memoryBarrierShared();
+    barrier();
+
+    if (!inBounds) return;
+
+    ivec2 sharedCenter = groupThreadID + ivec2(4);
+    vec3 radiance = LoadShared(sharedCenter);
+    float radianceSum = radiance.x + radiance.y + radiance.z;
+
+    if (radianceSum < DNSR_RADIANCE_THRESHOLD) {
+        imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_INDIRECT_SPECULAR_AMD_TEMPORAL], dispatchThreadID, vec4(0.0));
+        imageStore(storageImagesR16F[VULKAN_STORAGE_IMAGE_R16F_IDX_INDIRECT_SPECULAR_AMD_VARIANCE], dispatchThreadID, vec4(0.0));
+        return;
+    }
+
+    vec3 newSignal = LoadShared(sharedCenter);
+    float roughness = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_EXTRACTED_ROUGHNESS], samplers[VULKAN_SAMPLER_IDX_NEAREST]), dispatchThreadID, 0).r;
+    float newVariance = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_PREFILTERED_VARIANCE], samplers[VULKAN_SAMPLER_IDX_NEAREST]), dispatchThreadID, 0).r;
+
+    if (roughness < DNSR_GLOSSY_ROUGHNESS_THRESHOLD) {
+        float sampleCount = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_SAMPLE_COUNT_HISTORY], samplers[VULKAN_SAMPLER_IDX_NEAREST]), dispatchThreadID, 0).r;
+        uvec2 roundedScreenSize = RoundUp8(uvec2(screenSize));
+        vec2 averageUV = (vec2(dispatchThreadID) + 0.5) / vec2(roundedScreenSize);
+        vec3 averageRadiance = textureLod(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_AVERAGE_HISTORY], samplers[VULKAN_SAMPLER_IDX_LINEAR]), averageUV, 0.0).rgb;
+        vec3 oldSignal = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_INDIRECT_SPECULAR_AMD_REPROJECTED], samplers[VULKAN_SAMPLER_IDX_NEAREST]), dispatchThreadID, 0).rgb;
+        Moments localNeighborhood = EstimateLocalNeighborhood(sharedCenter);
+        vec3 colorStandardDeviation = (sqrt(localNeighborhood.variance) + length(localNeighborhood.mean - averageRadiance)) * DNSR_HISTORY_CLIP_WEIGHT * 1.4;
+        localNeighborhood.mean = mix(localNeighborhood.mean, averageRadiance, 0.2);
+        vec3 radianceMin = localNeighborhood.mean - colorStandardDeviation;
+        vec3 radianceMax = localNeighborhood.mean + colorStandardDeviation;
+        vec3 clippedOldSignal = ClipAABB(radianceMin, radianceMax, oldSignal);
+        float accumulationSpeed = 1.0 / max(sampleCount, 1.0);
+        float historyWeight = 1.0 - accumulationSpeed;
+
+        newSignal = mix(newSignal, averageRadiance, 1.0 / max(sampleCount + 1.0, 1.0));
+        radianceMin = averageRadiance - colorStandardDeviation * vec3(1.0);
+        radianceMax = averageRadiance + colorStandardDeviation * vec3(1.0);
+        newSignal = ClipAABB(radianceMin, radianceMax, newSignal);
+        newSignal = mix(newSignal, clippedOldSignal, historyWeight);
+        newVariance = mix(ComputeTemporalVariance(newSignal, clippedOldSignal), newVariance, historyWeight);
+
+        if (any(isinf(newSignal)) || any(isnan(newSignal)) || isinf(newVariance) || isnan(newVariance)) {
+            newSignal = vec3(0.0);
+            newVariance = 0.0;
+        }
+    }
+
+    imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_INDIRECT_SPECULAR_AMD_TEMPORAL], dispatchThreadID, vec4(newSignal, newSignal.z));
+    imageStore(storageImagesR16F[VULKAN_STORAGE_IMAGE_R16F_IDX_INDIRECT_SPECULAR_AMD_VARIANCE], dispatchThreadID, vec4(newVariance, 0.0, 0.0, 0.0));
+}

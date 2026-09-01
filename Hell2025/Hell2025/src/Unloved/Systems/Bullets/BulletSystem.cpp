@@ -5,6 +5,7 @@
 #include "Hell/Time.h"
 
 #include "Unloved/Render/RenderDataManager.h"
+#include "Unloved/Config/PhysicsConfig.h"
 
 #include "Unloved/ObjectId.h"
 #include "Unloved/Characters/Enemies/Dobermann/Dobermann.h"
@@ -13,6 +14,7 @@
 #include "Unloved/Objects/Interior/Piano.h"
 #include "Unloved/Objects/Props/GenericObject.h"
 #include "Unloved/Objects/Props/PickUp.h"
+#include "Unloved/Objects/Renderables/SkinnedGameObject.h"
 #include "Unloved/Objects/Renderables/MeshNodes.h"
 #include "Unloved/Session/Session.h"
 #include "Unloved/Systems/Blood/BloodSystem.h"
@@ -22,6 +24,8 @@
 #include "Unloved/World/World.h"
 
 #include <iostream> // TODO: get me out of here
+#include <unordered_map>
+#include <unordered_set>
 
 namespace Input = Hell::Input;
 
@@ -31,6 +35,17 @@ namespace Unloved::BulletSystem {
     Hell::SlotMap<BulletTrail> g_bulletTrails;
     std::vector<BulletTrailParticle> g_bulletTrailParticles;
 
+    struct HitGroup {
+        std::unordered_set<uint64_t> objectIds;
+        std::unordered_set<uint64_t> physicsIds;
+        uint64_t lastTouchedUpdate = 0;
+    };
+
+    constexpr uint64_t HIT_GROUP_RETENTION_UPDATES = 120;
+    uint64_t g_nextHitGroupId = 1;
+    uint64_t g_updateCount = 0;
+    std::unordered_map<uint64_t, HitGroup> g_hitGroups;
+
     void UpdateBulletTrails(float deltaTime);
     void UpdateBulletTrailParticles(float deltaTime);
 
@@ -38,7 +53,41 @@ namespace Unloved::BulletSystem {
     void ProcessKangarooHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
     void ProcessPlayerHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
     void ProcessSharkHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
-    void ProcessStandaloneRagdollHit(uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
+    void ProcessStandaloneRagdollHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
+    void ApplyRagdollImpact(uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition, bool wakeIfDisabled);
+
+    void ProcessSkinnedObjectHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition);
+
+    bool RegisterHit(const Bullet& bullet, uint64_t objectId, uint64_t physicsId) {
+        const uint64_t hitGroupId = bullet.GetHitGroupId();
+        if (hitGroupId == 0) return true;
+
+        HitGroup& hitGroup = g_hitGroups[hitGroupId];
+        hitGroup.lastTouchedUpdate = g_updateCount;
+
+        if (objectId != 0) {
+            return hitGroup.objectIds.insert(objectId).second;
+        }
+        return hitGroup.physicsIds.insert(physicsId).second;
+    }
+
+    void RemoveExpiredHitGroups() {
+        for (auto it = g_hitGroups.begin(); it != g_hitGroups.end();) {
+            const bool expired = g_updateCount > it->second.lastTouchedUpdate + HIT_GROUP_RETENTION_UPDATES;
+            if (expired) {
+                it = g_hitGroups.erase(it);
+            }
+            else {
+                ++it;
+            }
+        }
+    }
+
+    uint64_t CreateHitGroup() {
+        const uint64_t hitGroupId = g_nextHitGroupId++;
+        if (g_nextHitGroupId == 0) g_nextHitGroupId = 1;
+        return hitGroupId;
+    }
 
     void AddBullet(BulletCreateInfo createInfo, uint64_t parentBulletTrailId) {
         g_bullets.push_back(Bullet(createInfo, parentBulletTrailId));
@@ -72,6 +121,9 @@ namespace Unloved::BulletSystem {
     }
 
     void Update() {
+        ++g_updateCount;
+        RemoveExpiredHitGroups();
+
         std::vector<Bullet>& bullets = GetBullets();
         std::vector<Bullet> newBullets;
         bool glassWasHit = false;
@@ -147,6 +199,8 @@ namespace Unloved::BulletSystem {
             // Hit found?
             if (hitFound) {
 
+                if (!RegisterHit(bullet, objectId, physicsId)) continue;
+
                 ObjectType hitObjectType = Unloved::GetObjectIdType(objectId);
                 Hell::Physics::PhysicsObjectType physicsObjectType = Hell::Physics::GetPhysicsObjectType(physicsId);
 
@@ -154,36 +208,43 @@ namespace Unloved::BulletSystem {
                 glm::vec3 vatForward = glm::normalize(hitNormal * glm::vec3(1.0f, 0.0f, 1.0f));
                 BloodSystem::SpawnVatBlood(hitPosition, vatForward, 0.05f, objectId);
 
-                // std::cout << "\n";
-                // std::cout << "Hit found " << Unloved::Session::GetSessionTime() << "\n";
-                // std::cout << " ObjectId          " << objectId << "\n";
-                // std::cout << " PhysicsId         " << physicsId << "\n";
-                // std::cout << " ObjectType        " << Hell::Enum::ToString(hitObjectType) << "\n";
-                // std::cout << " PhysicsObjectType " << Hell::Enum::ToString(physicsObjectType) << "\n";
+
+
+
+                //std::cout << "\n";
+                //std::cout << "Hit found " << Unloved::Session::GetSessionTime() << "\n";
+                //std::cout << " ObjectId          " << objectId << "\n";
+                //std::cout << " PhysicsId         " << physicsId << "\n";
+                //std::cout << " ObjectType        " << Hell::Enum::ToString(hitObjectType) << "\n";
+                //std::cout << " PhysicsObjectType " << Hell::Enum::ToString(physicsObjectType) << "\n";
+
+
+
+
+
 
                 if (hitObjectType == ObjectType::DOBERMANN)          ProcessDobermannHit(objectId, physicsId, bullet, hitPosition);
                 if (hitObjectType == ObjectType::KANGAROO)           ProcessKangarooHit(objectId, physicsId, bullet, hitPosition);
-                if (hitObjectType == ObjectType::PLAYER)             ProcessPlayerHit(objectId, physicsId, bullet, hitPosition);
-                if (hitObjectType == ObjectType::RAGDOLL_STANDALONE) ProcessStandaloneRagdollHit(physicsId, bullet, hitPosition);
+                if (hitObjectType == ObjectType::PLAYER)             ProcessPlayerHit(objectId, physicsId, bullet, hitPosition); // TODO: redundant, see ProcessSkinnedObjectHit
+                if (hitObjectType == ObjectType::RAGDOLL_STANDALONE) ProcessStandaloneRagdollHit(objectId, physicsId, bullet, hitPosition);
                 if (hitObjectType == ObjectType::SHARK)              ProcessSharkHit(objectId, physicsId, bullet, hitPosition);
 
-                const glm::vec3 impactVelocityChange = bullet.GetDirection() * bullet.GetImpactVelocityChange();
-                const glm::vec3 impactAngularVelocityChange = bullet.GetDirection() * bullet.GetImpactAngularVelocityChange();
+                if (hitObjectType == ObjectType::SKINNED_GAME_OBJECT) ProcessSkinnedObjectHit(objectId, physicsId, bullet, hitPosition);
+
+
+                const glm::vec3 impactImpulse = bullet.GetDirection() * bullet.GetImpactImpulse();
                 if (physicsObjectType == Hell::Physics::PhysicsObjectType::RIGID_DYNAMIC) {
-                    Hell::Physics::AddVelocityChangeToRigidDynamic(physicsId, impactVelocityChange);
-                    Hell::Physics::AddAngularVelocityChangeAtPositionToRigidDynamic(physicsId, impactAngularVelocityChange, hitPosition);
+                    Hell::Physics::AddImpulseAtPositionToRigidDynamic(physicsId, impactImpulse, hitPosition);
                 }
                 // This is probably sketchy...
                 else if (hitObjectType == ObjectType::PICK_UP) {
                     if (PickUp* pickUp = Unloved::World::GetPickUpByObjectId(objectId)) {
-                        pickUp->GetMeshNodes().AddVelocityChangeToPhysics(impactVelocityChange);
-                        pickUp->GetMeshNodes().AddAngularVelocityChangeAtPositionToPhysics(impactAngularVelocityChange, hitPosition);
+                        pickUp->GetMeshNodes().AddImpulseAtPositionToPhysics(impactImpulse, hitPosition);
                     }
                 }
                 else if (hitObjectType == ObjectType::GENERIC_OBJECT) {
                     if (GenericObject* object = Unloved::World::GetGenericObjectById(objectId)) {
-                        object->GetMeshNodes().AddVelocityChangeToPhysics(impactVelocityChange);
-                        object->GetMeshNodes().AddAngularVelocityChangeAtPositionToPhysics(impactAngularVelocityChange, hitPosition);
+                        object->GetMeshNodes().AddImpulseAtPositionToPhysics(impactImpulse, hitPosition);
                     }
                 }
 
@@ -330,6 +391,19 @@ namespace Unloved::BulletSystem {
         g_bullets.clear();
         g_bulletTrails.clear();
         g_bulletTrailParticles.clear();
+        g_hitGroups.clear();
+        g_nextHitGroupId = 1;
+        g_updateCount = 0;
+    }
+
+    // Ragdoll impact
+
+    void ApplyRagdollImpact(uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition, bool wakeIfDisabled) {
+        const Config::Physics::Settings& physicsSettings = Config::Physics::GetSettings();
+
+        const glm::vec3 impactImpulse = bullet.GetDirection() * bullet.GetImpactImpulse();
+        Hell::Physics::AddImpulseToRagdoll(physicsId, impactImpulse * physicsSettings.ragdollImpactTranslationScale, wakeIfDisabled);
+        Hell::Physics::AddImpulseAtPositionToRagdoll(physicsId, impactImpulse * physicsSettings.ragdollImpactRotationScale, hitPosition, wakeIfDisabled);
     }
 
     // Dobermann hit
@@ -343,8 +417,7 @@ namespace Unloved::BulletSystem {
 
         // Apply forces if dead
         if (dobermann->IsDead()) {
-            Hell::Physics::AddForceToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactVelocityChange(), false);
-            Hell::Physics::AddAngularVelocityChangeAtPositionToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactAngularVelocityChange(), hitPosition, false);
+            ApplyRagdollImpact(physicsId, bullet, hitPosition, false);
         }
 
         BloodSystemOLD::AddBloodVAT(hitPosition, -bullet.GetDirection());
@@ -362,8 +435,7 @@ namespace Unloved::BulletSystem {
 
         // Apply forces if dead
         if (kangaroo->IsDead()) {
-            Hell::Physics::AddForceToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactVelocityChange(), false);
-            Hell::Physics::AddAngularVelocityChangeAtPositionToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactAngularVelocityChange(), hitPosition, false);
+            ApplyRagdollImpact(physicsId, bullet, hitPosition, false);
         }
 
         BloodSystemOLD::AddBloodVAT(hitPosition, -bullet.GetDirection());
@@ -371,6 +443,49 @@ namespace Unloved::BulletSystem {
     }
 
     // Player hit
+
+
+
+    void ProcessSkinnedObjectHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition) {
+
+        for (int i = 0; i < 4; i++) {
+            Player* player = Session::GetLocalPlayerByViewportIndex(i);
+            if (!player) continue;
+
+            Ragdoll* ragdoll = player->GetRagdoll();
+            if (!ragdoll) continue;
+
+
+            AnimatedHumanoid& animatedHumanoid = player->GetAnimatedHumanoid();
+
+            if (objectId == animatedHumanoid.GetBodySkinnedGameObjectId()) {
+
+
+                // Head shot
+                if (ragdoll->GetBoneNameByPhysicsId(physicsId) == "head") {
+                    player->Kill(true);
+                    std::cout << "[Player head shot]\n";
+                }
+                // body shot
+                else {
+                    player->GiveDamage(bullet.GetDamage(), bullet.GetOwnerObjectId());
+                    std::cout << "[Player body shot]\n";
+                }
+
+                // Apply forces if dead
+                if (player->IsDead()) {
+                    ApplyRagdollImpact(physicsId, bullet, hitPosition, false);
+                }
+
+                GameAudio::TryPlayFleshImpactAudio();
+                BloodSystemOLD::AddBloodVAT(hitPosition, -bullet.GetDirection());
+
+            }
+        }
+
+
+    }
+
 
     void ProcessPlayerHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition) {
         Unloved::Player* player = Unloved::Session::GetPlayerById(objectId);
@@ -392,8 +507,7 @@ namespace Unloved::BulletSystem {
 
         // Apply forces if dead
         if (player->IsDead()) {
-            Hell::Physics::AddForceToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactVelocityChange(), false);
-            Hell::Physics::AddAngularVelocityChangeAtPositionToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactAngularVelocityChange(), hitPosition, false);
+            ApplyRagdollImpact(physicsId, bullet, hitPosition, false);
         }
 
         GameAudio::TryPlayFleshImpactAudio();
@@ -411,8 +525,7 @@ namespace Unloved::BulletSystem {
 
         // Apply forces if dead
         if (shark->IsDead()) {
-            Hell::Physics::AddForceToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactVelocityChange(), false);
-            Hell::Physics::AddAngularVelocityChangeAtPositionToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactAngularVelocityChange(), hitPosition, false);
+            ApplyRagdollImpact(physicsId, bullet, hitPosition, false);
         }
 
         BloodSystemOLD::AddBloodVAT(hitPosition, -bullet.GetDirection());
@@ -421,11 +534,17 @@ namespace Unloved::BulletSystem {
 
     // Standalone Ragdoll hit
 
-    void ProcessStandaloneRagdollHit(uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition) {
+    void ProcessStandaloneRagdollHit(uint64_t objectId, uint64_t physicsId, const Bullet& bullet, const glm::vec3& hitPosition) {
+        for (SkinnedGameObject& skinnedGameObject : World::GetSkinnedGameObjects()) {
+            if (skinnedGameObject.GetOwnerObjectId() != objectId) continue;
+
+            skinnedGameObject.SetAnimationModeToRagdoll();
+            break;
+        }
+
         GameAudio::TryPlayFleshImpactAudio();
         BloodSystemOLD::AddBloodVAT(hitPosition, bullet.GetDirection());
 
-        Hell::Physics::AddForceToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactVelocityChange(), true);
-        Hell::Physics::AddAngularVelocityChangeAtPositionToRagdoll(physicsId, bullet.GetDirection() * bullet.GetImpactAngularVelocityChange(), hitPosition, true);
+        ApplyRagdollImpact(physicsId, bullet, hitPosition, true);
     }
 }

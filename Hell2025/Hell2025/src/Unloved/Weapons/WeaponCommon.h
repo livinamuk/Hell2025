@@ -1,9 +1,11 @@
 #pragma once
 
+#include "Unloved/Bible/Bible_enums.h"
 #include "Unloved/Common/Constants.h"
 
 #include <glm/glm.hpp>
 
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -11,51 +13,32 @@
 namespace Unloved {
 
 enum class WeaponType {
+    UNDEFINED,
     MELEE,
     PISTOL,
     SHOTGUN,
-    AUTOMATIC,
-    UNDEFINED
-};
-
-struct AnimationNames {
-    std::string idle;
-    std::string walk;
-    std::string reload;
-    std::string draw;
-    std::string drawFirst;
-    std::string dryFire;
-    std::string toggleAutoShotgun;
-    std::vector<std::string> adsFire;
-    std::vector<std::string> fire;
-    std::vector<std::string> reloadempty;
-    std::string adsIn;
-    std::string adsOut;
-    std::string adsIdle;
-    std::string adsWalk;
-    std::string melee;
-    std::string revolverReloadBegin;
-    std::string revolverReloadLoop;
-    std::string revolverReloadEnd;
-    std::string shotgunReloadStart;
-    std::string shotgunReloadEnd;
-    std::string shotgunReloadEndPump;
-    std::string shotgunReloadOneShell;
-    std::string shotgunReloadTwoShells;
-    std::string shotgunFireNoPump;
-    std::string shotgunDrawPump;
-    std::string shotgunUnloadStart;
-    std::string shotgunUnloadEnd;
-    std::string shotgunUnloadOneShell;
-    std::string shotgunUnloadTwoShells;
+    AUTOMATIC
 };
 
 struct AnimationCancelFrames {
     int fire = 0;
+    int fireAutoShotgun = 0;
+    int dryFire = 0;
     int reload = 0;
     int reloadFromEmpty = 0;
     int draw = 0;
     int adsFire = 0;
+    int secondaryMelee = 0;
+};
+
+struct MeleeAttackInfo {
+    Bible::AnimationSlot animationSlot = Bible::AnimationSlot::MELEE;
+    uint32_t startFrame = 0;
+    uint32_t endFrame = 0;
+    uint32_t damage = 0;
+    float range = 1.5f;
+    float width = 0.5f;
+    float height = 0.2f;
 };
 
 struct AnimationSpeeds {
@@ -73,10 +56,6 @@ struct AnimationSpeeds {
     float shotgunReloadOneShell = 1.0f;
     float shotgunReloadTwoShells = 1.0f;
     float shotgunFireNoPump = 1.0f;
-    float shotgunUnloadStart = 1.0f;
-    float shotgunUnloadEnd = 1.0f;
-    float shotgunUnloadOneShell = 1.0f;
-    float shotgunUnloadTwoShells = 1.0f;
     float adsIn = 1.0f;
     float adsOut = 1.0f;
     float adsFire = 1.0;
@@ -95,19 +74,18 @@ struct AudioFiles {
 };
 
 struct WeaponInfo {
-    std::string ammoInfoName = UNDEFINED_STRING;
-    std::string itemInfoName = UNDEFINED_STRING;
-    std::string modelName = UNDEFINED_STRING;
+    Bible::Weapon weapon = Bible::Weapon::UNDEFINED;
+    Bible::Ammo ammo = Bible::Ammo::UNDEFINED;
+    Bible::SkinnedModelPreset viewSkinnedModelPreset = Bible::SkinnedModelPreset::UNDEFINED;
+    Bible::SkinnedModelPreset characterSkinnedModelPreset = Bible::SkinnedModelPreset::UNDEFINED;
     std::string muzzleFlashBoneName = UNDEFINED_STRING;
     std::string casingEjectionBoneName = UNDEFINED_STRING;
     std::string pistolSlideBoneName = UNDEFINED_STRING;
-    AnimationNames animationNames;
+    Bible::AnimationProfile viewWeaponAnimationProfile = Bible::AnimationProfile::UNDEFINED;
     AnimationSpeeds animationSpeeds;
     AudioFiles audioFiles;
     WeaponType type;
-    std::unordered_map<const char*, const char*> meshMaterials;
-    std::unordered_map<unsigned int, const char*> meshMaterialsByIndex;
-    std::vector<const char*> hiddenMeshAtStart;
+    std::vector<MeleeAttackInfo> meleeAttacks;
     int damage = 0;
     int magSize = 0;
     AnimationCancelFrames animationCancelFrames;
@@ -144,10 +122,6 @@ struct WeaponAttachmentInfo {
 };
 
 struct AmmoInfo {
-    const char* name = UNDEFINED_STRING;
-    const char* convexMeshModelName = UNDEFINED_STRING;
-    const char* modelName = UNDEFINED_STRING;
-    const char* materialName = UNDEFINED_STRING;
     const char* casingModelName = UNDEFINED_STRING;
     const char* casingMaterialName = UNDEFINED_STRING;
     int pickupAmount = 0;
@@ -172,7 +146,7 @@ struct WeaponState {
 };
 
 struct AmmoState {
-    std::string name = "UNDEFINED_STRING";
+    Bible::Ammo ammo = Bible::Ammo::UNDEFINED;
     int ammoOnHand = 0;
 };
 

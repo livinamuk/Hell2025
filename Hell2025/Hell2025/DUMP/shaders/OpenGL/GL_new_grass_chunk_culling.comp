@@ -1,0 +1,134 @@
+#version 460 core
+#include "../common/OpenGL/GL_binding_indices.glsl"
+#include "../common/types.glsl"
+#include "../common/viewport.glsl"
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 4) uniform sampler2D u_occlusionHiZTexture;
+
+uniform int u_viewportIndex;
+uniform int u_visibleChunkCount;
+uniform int u_enableOcclusionCulling;
+uniform ivec2 u_depthSize;
+
+struct ChunkMetadata {
+    ivec2 chunkCoord;
+    uint pointCount;
+    uint unused;
+    vec4 boundsMin;
+    vec4 boundsMax;
+};
+
+readonly layout(std430, binding = SSBO_IDX_NEW_GRASS_CHUNK_METADATA) buffer GrassChunkMetadata {
+    ChunkMetadata chunkMetadata[];
+};
+
+readonly layout(std430, binding = SSBO_IDX_NEW_GRASS_VISIBLE_CHUNKS) buffer VisibleGrassChunks {
+    uint visibleChunkSlots[];
+};
+
+writeonly layout(std430, binding = SSBO_IDX_NEW_GRASS_CHUNK_VISIBILITY) buffer GrassChunkVisibility {
+    uint chunkVisibility[];
+};
+
+readonly layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) buffer ViewportDataBuffer {
+    ViewportData viewportDataArr[];
+};
+
+vec3 BoundsCorner(uint cornerIndex, vec3 boundsMin, vec3 boundsMax) {
+    return vec3(
+        (cornerIndex & 1u) != 0u ? boundsMax.x : boundsMin.x,
+        (cornerIndex & 2u) != 0u ? boundsMax.y : boundsMin.y,
+        (cornerIndex & 4u) != 0u ? boundsMax.z : boundsMin.z);
+}
+
+bool ChunkSurvivesOcclusionTest(ChunkMetadata metadata) {
+    const ViewportData viewport = viewportDataArr[u_viewportIndex];
+    vec2 viewportUvMin = vec2(1.0);
+    vec2 viewportUvMax = vec2(0.0);
+    float nearestChunkDepth = 0.0;
+
+    // If the volume reaches or crosses the camera/near plane, a projected
+    // rectangle is not a safe representation of it, so retain the chunk.
+    for (uint cornerIndex = 0u; cornerIndex < 8u; cornerIndex++) {
+        const vec3 corner = BoundsCorner(cornerIndex, metadata.boundsMin.xyz, metadata.boundsMax.xyz);
+        const vec4 clipPosition = viewport.jitteredProjectionViewReverseZ * vec4(corner, 1.0);
+        if (clipPosition.w <= 0.0) return true;
+
+        const float reverseDepth = clipPosition.z / clipPosition.w;
+        if (reverseDepth < 0.0 || reverseDepth > 1.0) return true;
+
+        const vec2 viewportUv = ViewportUVFromClipPosition(clipPosition);
+        viewportUvMin = min(viewportUvMin, viewportUv);
+        viewportUvMax = max(viewportUvMax, viewportUv);
+        nearestChunkDepth = max(nearestChunkDepth, reverseDepth);
+    }
+
+    if (any(lessThan(viewportUvMax, vec2(0.0))) || any(greaterThan(viewportUvMin, vec2(1.0)))) {
+        return true;
+    }
+
+    // Two full-resolution pixels absorb projection jitter and raster edge
+    // disagreement. The world-space metadata bounds already contain the
+    // complete generated blade envelope.
+    const vec2 viewportPixelMargin = vec2(2.0) / vec2(viewport.width, viewport.height);
+    viewportUvMin = clamp(viewportUvMin - viewportPixelMargin, vec2(0.0), vec2(1.0));
+    viewportUvMax = clamp(viewportUvMax + viewportPixelMargin, vec2(0.0), vec2(1.0));
+
+    const vec2 screenMin =
+        vec2(viewport.xOffset, viewport.yOffset) + viewportUvMin * vec2(viewport.width, viewport.height);
+    const vec2 screenMax =
+        vec2(viewport.xOffset, viewport.yOffset) + viewportUvMax * vec2(viewport.width, viewport.height);
+
+    const ivec2 hiZBaseSize = textureSize(u_occlusionHiZTexture, 0);
+    if (any(lessThanEqual(hiZBaseSize, ivec2(0))) || any(lessThanEqual(u_depthSize, ivec2(0)))) return true;
+
+    // Mip zero is the 2x2 reduction of full-resolution scene depth.
+    const ivec2 basePixelMin = clamp(ivec2(floor(screenMin * 0.5)), ivec2(0), hiZBaseSize - 1);
+    const ivec2 basePixelMax = clamp(ivec2(floor(screenMax * 0.5)), ivec2(0), hiZBaseSize - 1);
+    const ivec2 baseExtent = max(basePixelMax - basePixelMin + 1, ivec2(1));
+
+    const int mipCount = textureQueryLevels(u_occlusionHiZTexture);
+    const int selectedMip = clamp(findMSB(uint(max(baseExtent.x, baseExtent.y))), 0, mipCount - 1);
+    const float mipScale = exp2(float(selectedMip));
+    const ivec2 mipSize = textureSize(u_occlusionHiZTexture, selectedMip);
+    const ivec2 mipPixelMin = clamp(ivec2(floor(vec2(basePixelMin) / mipScale)), ivec2(0), mipSize - 1);
+    const ivec2 mipPixelMax = clamp(ivec2(floor(vec2(basePixelMax) / mipScale)), ivec2(0), mipSize - 1);
+
+    // At the selected mip the projected rectangle overlaps at most a small
+    // handful of cells. Taking the minimum of every overlapped cell remains
+    // conservative even when their footprints extend beyond the chunk.
+    float farthestOccluderDepth = 1.0;
+    for (int y = 0; y < 4; y++) {
+        const int sampleY = mipPixelMin.y + y;
+        if (sampleY > mipPixelMax.y) continue;
+
+        for (int x = 0; x < 4; x++) {
+            const int sampleX = mipPixelMin.x + x;
+            if (sampleX > mipPixelMax.x) continue;
+            farthestOccluderDepth = min(
+                farthestOccluderDepth,
+                texelFetch(u_occlusionHiZTexture, ivec2(sampleX, sampleY), selectedMip).r);
+        }
+    }
+
+    // Reverse-Z: a larger value is nearer. Only reject when even the
+    // farthest occluder lies safely in front of the nearest point of the
+    // expanded grass volume.
+    const float depthBias = max(1e-6, nearestChunkDepth * 0.01);
+    return farthestOccluderDepth <= nearestChunkDepth + depthBias;
+}
+
+void main() {
+    const uint candidateIndex = gl_GlobalInvocationID.x;
+    if (candidateIndex >= uint(u_visibleChunkCount)) return;
+
+    if (u_enableOcclusionCulling == 0) {
+        chunkVisibility[candidateIndex] = 1u;
+        return;
+    }
+
+    const uint slotIndex = visibleChunkSlots[candidateIndex];
+    chunkVisibility[candidateIndex] = ChunkSurvivesOcclusionTest(chunkMetadata[slotIndex]) ? 1u : 0u;
+}

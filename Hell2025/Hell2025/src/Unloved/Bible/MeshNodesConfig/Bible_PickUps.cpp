@@ -1,18 +1,12 @@
 #include "Unloved/Bible/Bible.h"
+#include "Hell/Common/Enum.h"
 #include "Hell/Logging.h"
 
-namespace Bible {
-    using namespace Unloved;
-
-
-    // This whole file is pretty messy now that you merged all the inventory item/pickup item stuff
-    // This whole file is pretty messy now that you merged all the inventory item/pickup item stuff
-    // This whole file is pretty messy now that you merged all the inventory item/pickup item stuff
-
-    void ConfigureMeshNodesByItemName(uint64_t id, const std::string& itemName, MeshNodes* meshNodes, bool createPhysicsObjects) {
-        ItemInfo* inventoryItemInfo = Bible::GetItemInfoByName(itemName);
+namespace Unloved::Bible {
+    void ConfigureMeshNodesByItem(uint64_t id, Item item, MeshNodes* meshNodes, bool createPhysicsObjects) {
+        ItemInfo* inventoryItemInfo = GetItemInfo(item);
         if (!inventoryItemInfo) {
-            Logging::Error() << "Bible::ConfigureMeshNodesByitemName(..) failed: '" << itemName << "' InventoryItemInfo not found in Bible\n";
+            Logging::Error() << "Bible::ConfigureMeshNodesByItem(..) failed: '" << Hell::Enum::ToString(item) << "' ItemInfo not found in Bible\n";
             return;
         }
 
@@ -24,7 +18,7 @@ namespace Bible {
         pickUpFilterData.collidesWith = CollisionGroup::ENVIROMENT_OBSTACLE;
 
         // AKS74U
-        if (itemName == "AKS74U") {
+        if (item == Item::AKS74U) {
             MeshNodeCreateInfo& receiver = meshNodeCreateInfoSet.emplace_back();
             receiver.meshName = "AKS74UReceiver";
             receiver.materialName = "AKS74U_1";
@@ -33,7 +27,7 @@ namespace Bible {
                 receiver.rigidDynamic.kinematic = false;
                 receiver.rigidDynamic.offsetTransform = Transform();
                 receiver.rigidDynamic.filterData = pickUpFilterData;
-                receiver.rigidDynamic.mass = Bible::GetItemMass(itemName);
+                receiver.rigidDynamic.mass = inventoryItemInfo->GetMass();
                 receiver.rigidDynamic.shapeType = inventoryItemInfo->GetPhysicsShapeType();
                 receiver.rigidDynamic.convexMeshModelName = inventoryItemInfo->GetCollisionModelName();
             }
@@ -63,7 +57,7 @@ namespace Bible {
         }
 
         // Black Skull
-        if (itemName == "BlackSkull") {
+        if (item == Item::BLACK_SKULL) {
             MeshNodeCreateInfo& blackSkull = meshNodeCreateInfoSet.emplace_back();
             blackSkull.meshName = "BlackSkull";
             blackSkull.materialName = "BlackSkull";
@@ -72,7 +66,7 @@ namespace Bible {
                 blackSkull.rigidDynamic.kinematic = false;
                 blackSkull.rigidDynamic.offsetTransform = Transform();
                 blackSkull.rigidDynamic.filterData = pickUpFilterData;
-                blackSkull.rigidDynamic.mass = Bible::GetItemMass(itemName);
+                blackSkull.rigidDynamic.mass = inventoryItemInfo->GetMass();
                 blackSkull.rigidDynamic.shapeType = inventoryItemInfo->GetPhysicsShapeType();
                 blackSkull.rigidDynamic.convexMeshModelName = inventoryItemInfo->GetCollisionModelName();
             }
@@ -83,7 +77,7 @@ namespace Bible {
 
 
         // Glock
-        if (itemName == "Glock") {
+        if (item == Item::GLOCK) {
             MeshNodeCreateInfo& glock = meshNodeCreateInfoSet.emplace_back();
             glock.meshName = "Glock";
             glock.materialName = "Glock";
@@ -92,7 +86,7 @@ namespace Bible {
                 glock.rigidDynamic.kinematic = false;
                 glock.rigidDynamic.offsetTransform = Transform();
                 glock.rigidDynamic.filterData = pickUpFilterData;
-                glock.rigidDynamic.mass = Bible::GetItemMass(itemName);
+                glock.rigidDynamic.mass = inventoryItemInfo->GetMass();
                 glock.rigidDynamic.shapeType = inventoryItemInfo->GetPhysicsShapeType();
                 glock.rigidDynamic.convexMeshModelName = inventoryItemInfo->GetCollisionModelName();
             }
@@ -102,7 +96,7 @@ namespace Bible {
         }
 
         // Knife
-        if (itemName == "Knife") {
+        if (item == Item::KNIFE) {
             MeshNodeCreateInfo& knife = meshNodeCreateInfoSet.emplace_back();
             knife.meshName = "Knife";
             knife.materialName = "Knife";
@@ -111,7 +105,7 @@ namespace Bible {
                 knife.rigidDynamic.kinematic = false;
                 knife.rigidDynamic.offsetTransform = Transform();
                 knife.rigidDynamic.filterData = pickUpFilterData;
-                knife.rigidDynamic.mass = Bible::GetItemMass(itemName);
+                knife.rigidDynamic.mass = inventoryItemInfo->GetMass();
                 knife.rigidDynamic.shapeType = inventoryItemInfo->GetPhysicsShapeType();
                 knife.rigidDynamic.convexMeshModelName = inventoryItemInfo->GetCollisionModelName();
             }
@@ -121,7 +115,7 @@ namespace Bible {
         }
 
         // Golden Glock
-        if (itemName == "GoldenGlock") {
+        if (item == Item::GOLDEN_GLOCK) {
             MeshNodeCreateInfo& glock = meshNodeCreateInfoSet.emplace_back();
             glock.meshName = "GoldenGlock";
             glock.materialName = "GlockGold";
@@ -130,7 +124,7 @@ namespace Bible {
                 glock.rigidDynamic.kinematic = false;
                 glock.rigidDynamic.offsetTransform = Transform();
                 glock.rigidDynamic.filterData = pickUpFilterData;
-                glock.rigidDynamic.mass = Bible::GetItemMass(itemName);
+                glock.rigidDynamic.mass = inventoryItemInfo->GetMass();
                 glock.rigidDynamic.shapeType = inventoryItemInfo->GetPhysicsShapeType();
                 glock.rigidDynamic.convexMeshModelName = inventoryItemInfo->GetCollisionModelName();
             }
@@ -140,7 +134,7 @@ namespace Bible {
         }
 
         // Remington 870
-        if (itemName == "Remington870") {
+        if (item == Item::REMINGTON_870) {
             MeshNodeCreateInfo& shotgun = meshNodeCreateInfoSet.emplace_back();
             shotgun.meshName = "Remington870";
             shotgun.materialName = "Shotgun";
@@ -149,7 +143,7 @@ namespace Bible {
                 shotgun.rigidDynamic.kinematic = false;
                 shotgun.rigidDynamic.offsetTransform = Transform();
                 shotgun.rigidDynamic.filterData = pickUpFilterData;
-                shotgun.rigidDynamic.mass = Bible::GetItemMass(itemName);
+                shotgun.rigidDynamic.mass = inventoryItemInfo->GetMass();
                 shotgun.rigidDynamic.shapeType = inventoryItemInfo->GetPhysicsShapeType();
                 shotgun.rigidDynamic.convexMeshModelName = inventoryItemInfo->GetCollisionModelName();
             }
@@ -159,7 +153,7 @@ namespace Bible {
         }
 
         // Small Key
-        if (itemName == "SmallKey") {
+        if (item == Item::SMALL_KEY) {
             MeshNodeCreateInfo& smallKey = meshNodeCreateInfoSet.emplace_back();
             smallKey.meshName = "SmallKey";
             smallKey.materialName = "SmallKey";
@@ -168,7 +162,7 @@ namespace Bible {
                 smallKey.rigidDynamic.kinematic = false;
                 smallKey.rigidDynamic.offsetTransform = Transform();
                 smallKey.rigidDynamic.filterData = pickUpFilterData;
-                smallKey.rigidDynamic.mass = Bible::GetItemMass(itemName);
+                smallKey.rigidDynamic.mass = inventoryItemInfo->GetMass();
                 smallKey.rigidDynamic.shapeType = inventoryItemInfo->GetPhysicsShapeType();
                 smallKey.rigidDynamic.convexMeshModelName = inventoryItemInfo->GetCollisionModelName();
             }
@@ -178,7 +172,7 @@ namespace Bible {
         }
 
         // Small Key Silver
-        if (itemName == "SmallKeySilver") {
+        if (item == Item::SMALL_KEY_SILVER) {
             MeshNodeCreateInfo& smallKey = meshNodeCreateInfoSet.emplace_back();
             smallKey.meshName = "SmallKey";
             smallKey.materialName = "SmallKeySilver";
@@ -187,7 +181,7 @@ namespace Bible {
                 smallKey.rigidDynamic.kinematic = false;
                 smallKey.rigidDynamic.offsetTransform = Transform();
                 smallKey.rigidDynamic.filterData = pickUpFilterData;
-                smallKey.rigidDynamic.mass = Bible::GetItemMass(itemName);
+                smallKey.rigidDynamic.mass = inventoryItemInfo->GetMass();
                 smallKey.rigidDynamic.shapeType = inventoryItemInfo->GetPhysicsShapeType();
                 smallKey.rigidDynamic.convexMeshModelName = inventoryItemInfo->GetCollisionModelName();
             }
@@ -197,7 +191,7 @@ namespace Bible {
         }
 
         // SPAS
-        if (itemName == "SPAS") {
+        if (item == Item::SPAS) {
             MeshNodeCreateInfo& main = meshNodeCreateInfoSet.emplace_back();
             main.meshName = "SPAS12_Main";
             main.materialName = "SPAS2_Main";
@@ -206,7 +200,7 @@ namespace Bible {
                 main.rigidDynamic.kinematic = false;
                 main.rigidDynamic.offsetTransform = Transform();
                 main.rigidDynamic.filterData = pickUpFilterData;
-                main.rigidDynamic.mass = Bible::GetItemMass(itemName);
+                main.rigidDynamic.mass = inventoryItemInfo->GetMass();
                 main.rigidDynamic.shapeType = inventoryItemInfo->GetPhysicsShapeType();
                 main.rigidDynamic.convexMeshModelName = inventoryItemInfo->GetCollisionModelName();
             }
@@ -224,7 +218,7 @@ namespace Bible {
         }
 
         // Shotty Buckshot Box
-        if (itemName == "12GaugeBuckShot") {
+        if (item == Item::SHOTGUN_SHELLS) {
             MeshNodeCreateInfo& ammo = meshNodeCreateInfoSet.emplace_back();
             ammo.meshName = "Ammo_ShotgunBox";
             ammo.materialName = "Shotgun_AmmoBox";
@@ -233,25 +227,7 @@ namespace Bible {
                 ammo.rigidDynamic.kinematic = false;
                 ammo.rigidDynamic.offsetTransform = Transform();
                 ammo.rigidDynamic.filterData = pickUpFilterData;
-                ammo.rigidDynamic.mass = Bible::GetItemMass(itemName);
-                ammo.rigidDynamic.shapeType = inventoryItemInfo->GetPhysicsShapeType();
-            }
-
-            meshNodes->Init(id, inventoryItemInfo->GetModelName(), meshNodeCreateInfoSet);
-            return;
-        }
-
-        // Shotty Slug Box
-        if (itemName == "12GaugeBuckShot") {
-            MeshNodeCreateInfo& ammo = meshNodeCreateInfoSet.emplace_back();
-            ammo.meshName = "Ammo_ShotgunBox";
-            ammo.materialName = "Shotgun_AmmoBoxSlug";
-            if (createPhysicsObjects) {
-                ammo.rigidDynamic.createObject = true;
-                ammo.rigidDynamic.kinematic = false;
-                ammo.rigidDynamic.offsetTransform = Transform();
-                ammo.rigidDynamic.filterData = pickUpFilterData;
-                ammo.rigidDynamic.mass = Bible::GetItemMass(itemName);
+                ammo.rigidDynamic.mass = inventoryItemInfo->GetMass();
                 ammo.rigidDynamic.shapeType = inventoryItemInfo->GetPhysicsShapeType();
             }
 
@@ -260,7 +236,7 @@ namespace Bible {
         }
 
         // Tokarev
-        if (itemName == "Tokarev") {
+        if (item == Item::TOKAREV) {
             MeshNodeCreateInfo& body = meshNodeCreateInfoSet.emplace_back();
             body.meshName = "TokarevBody";
             body.materialName = "Tokarev";
@@ -269,7 +245,7 @@ namespace Bible {
                 body.rigidDynamic.kinematic = false;
                 body.rigidDynamic.offsetTransform = Transform();
                 body.rigidDynamic.filterData = pickUpFilterData;
-                body.rigidDynamic.mass = Bible::GetItemMass(itemName);
+                body.rigidDynamic.mass = inventoryItemInfo->GetMass();
                 body.rigidDynamic.shapeType = inventoryItemInfo->GetPhysicsShapeType();
                 body.rigidDynamic.convexMeshModelName = inventoryItemInfo->GetCollisionModelName();
             }
@@ -284,7 +260,7 @@ namespace Bible {
 
 
 		// Pills
-		if (itemName == "Pills") {
+		if (item == Item::PILLS) {
 			MeshNodeCreateInfo& cover = meshNodeCreateInfoSet.emplace_back();
             cover.meshName = "Cover";
             cover.materialName = "Pills";
@@ -298,7 +274,7 @@ namespace Bible {
 				pills.rigidDynamic.kinematic = false;
 				pills.rigidDynamic.offsetTransform = Transform();
 				pills.rigidDynamic.filterData = pickUpFilterData;
-				pills.rigidDynamic.mass = Bible::GetItemMass(itemName);
+				pills.rigidDynamic.mass = inventoryItemInfo->GetMass();
 				pills.rigidDynamic.shapeType = inventoryItemInfo->GetPhysicsShapeType();
 				pills.rigidDynamic.convexMeshModelName = inventoryItemInfo->GetCollisionModelName();
 			}
@@ -309,7 +285,7 @@ namespace Bible {
 
 
 		// P90
-		if (itemName == "P90") {
+		if (item == Item::P90) {
 			MeshNodeCreateInfo& main = meshNodeCreateInfoSet.emplace_back();
 			main.meshName = "Main";
 			main.materialName = "P90_Main";
@@ -319,7 +295,7 @@ namespace Bible {
 				main.rigidDynamic.kinematic = false;
 				main.rigidDynamic.offsetTransform = Transform();
 				main.rigidDynamic.filterData = pickUpFilterData;
-				main.rigidDynamic.mass = Bible::GetItemMass(itemName);
+				main.rigidDynamic.mass = inventoryItemInfo->GetMass();
 				main.rigidDynamic.shapeType = inventoryItemInfo->GetPhysicsShapeType();
 				main.rigidDynamic.convexMeshModelName = inventoryItemInfo->GetCollisionModelName();
 			}
@@ -351,6 +327,6 @@ namespace Bible {
 		}
 
 
-        Logging::Error() << "Bible::ConfigureMeshNodesByitemName(..) failed: '" << itemName << "' not implemented\n";
+        Logging::Error() << "Bible::ConfigureMeshNodesByItem(..) failed: '" << Hell::Enum::ToString(item) << "' not implemented\n";
     }
 }

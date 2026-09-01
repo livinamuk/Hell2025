@@ -75,6 +75,7 @@ namespace Unloved::EditorSession {
         GUTTER,
         RIDGE_CAPPING,
         ROOFING_IRON,
+        SNAKE,
         SHARK,
         STAIRCASE,
         WALL_INTERIOR,
@@ -82,6 +83,7 @@ namespace Unloved::EditorSession {
         WINDOW,
         WORLD_PLANE_CEILING,
         WORLD_PLANE_FLOOR,
+        LADDER_DISMOUNT,
         UNDEFINED
     };
 

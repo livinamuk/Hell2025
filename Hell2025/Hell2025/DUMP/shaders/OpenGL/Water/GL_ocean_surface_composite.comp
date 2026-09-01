@@ -1,0 +1,60 @@
+#version 430
+#include "../../common/OpenGL/GL_binding_indices.glsl"
+#include "../../common/constants.glsl"
+#include "../../common/util.glsl"
+#include "../../common/viewport.glsl"
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout (rgba16f, binding = 0) uniform image2D LightingImage; // output
+layout (r8ui, binding = 1) readonly uniform uimage2D u_oceanMaskImage;
+layout (binding = 2) uniform sampler2D WaterColorTexture;
+layout (binding = 3) uniform sampler2D waterDUDVTexture;
+layout (binding = 4) uniform sampler2D DownSampledFinalLightingTexture;
+
+layout(std430, binding = SSBO_IDX_RENDERER_DATA) readonly restrict buffer rendererDataBuffer { RendererData rendererData; };
+layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) readonly restrict buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+
+uniform float u_time;
+
+void main() {
+	ivec2 px = ivec2(gl_GlobalInvocationID.xy);   
+    ivec2 outputImageSize = imageSize(LightingImage);
+
+    // Don't process out of bounds pixels
+    if (px.x >= outputImageSize.x || px.y >= outputImageSize.y) return;
+    
+    // Early out if the pixel is not the ocean surface
+    uint oceanMask = imageLoad(u_oceanMaskImage, px).r;
+    if (oceanMask != 1u) return;
+    
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    vec2 screenUV = (vec2(px) + 0.5) / vec2(outputImageSize);
+
+    
+    vec3 waterColor = texelFetch(WaterColorTexture, px, 0).rgb;
+
+    // Get world ray
+    ivec4 viewportRect = ivec4(viewportDataArr[viewportIndex].xOffset, viewportDataArr[viewportIndex].yOffset, viewportDataArr[viewportIndex].width, viewportDataArr[viewportIndex].height);
+    mat4 inverseProjectionView = viewportDataArr[viewportIndex].inverseJitteredProjectionViewReverseZ;
+    vec3 viewPos = viewportDataArr[viewportIndex].viewPos.xyz;
+    vec3 rayDir = WorldRayFromPixel(px, outputImageSize, viewportRect, viewPos, inverseProjectionView);
+
+    // Cast ray at water plane
+    vec3 rayOrigin = viewPos;
+    float planeHeight = rendererData.oceanOriginY + rendererData.oceanSurfaceCompositePlaneHeightOffset;
+    float t = (planeHeight - rayOrigin.y) / rayDir.y; // distance to ray hit
+
+    vec3 waterWorldPos = rayOrigin + rayDir * t;
+    vec2 uv_waterSurface = vec2(waterWorldPos.x, waterWorldPos.z) * rendererData.oceanSurfaceCompositeDistortionTiling;
+    float offsetX = mod(u_time * rendererData.oceanSurfaceCompositeDistortionSpeed, 1.0);
+    vec2 uv_dudv = vec2(uv_waterSurface + vec2(offsetX, 0));
+    vec2 distortion = texture(waterDUDVTexture, uv_dudv).rg * 2 - 1;
+    vec2 uv_refraction = screenUV + (distortion * rendererData.oceanSurfaceCompositeDistortionStrength);
+    uv_refraction = clamp(uv_refraction, 0, 1);
+ 
+    vec3 refractedColor = texture(DownSampledFinalLightingTexture, uv_refraction).rgb;
+    vec3 finalColor = (refractedColor * rendererData.oceanUnderwaterTint.rgb * rendererData.oceanSurfaceCompositeRefractionTintStrength) + waterColor;
+
+    imageStore(LightingImage, px, vec4(vec3(finalColor), 1.0));
+}

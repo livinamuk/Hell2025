@@ -1,0 +1,1163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="EditAndContinue|x64">
+      <Configuration>EditAndContinue</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{7B450427-C720-4B08-B545-47EC61219762}</ProjectGuid>
+    <RootNamespace>Hell2025</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Hell2025</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='EditAndContinue|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <EnableASAN>false</EnableASAN>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <EnableASAN>false</EnableASAN>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='EditAndContinue|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)\$(ProjectName)\Build\Debug\</OutDir>
+    <IntDir>$(SolutionDir)\$(ProjectName)\Build\Intermediate\Debug\</IntDir>
+    <CopyLocalDeploymentContent>false</CopyLocalDeploymentContent>
+    <TargetName>Unloved</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='EditAndContinue|x64'">
+    <OutDir>$(SolutionDir)\$(ProjectName)\Build\Profiling\</OutDir>
+    <IntDir>$(SolutionDir)\$(ProjectName)\Build\Intermediate\Profiling\</IntDir>
+    <CopyLocalDeploymentContent>false</CopyLocalDeploymentContent>
+    <TargetName>Hell2025</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)\$(ProjectName)\Build\Release\</OutDir>
+    <IntDir>$(SolutionDir)\$(ProjectName)\Build\Intermediate\Release\</IntDir>
+    <CopyLocalDeploymentContent>false</CopyLocalDeploymentContent>
+    <TargetName>Hell2025</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir);src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\lodepng\include;vendor\bvh\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/external:I"vendor\physx\include" /external:I"vendor\physx\include\physx" %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>vendor\assimp\lib;vendor\GLFW\lib\Release;vendor\compressonator\lib;vendor\fmod\lib;vendor\Vulkan;vendor\physx\lib\debug;vendor\openmesh\lib;vendor\SDL3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;fmod_vc.lib;assimp-vc143-mt.lib;Compressonator_MD_DLL.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXFoundation_64.lib;PhysXTask_static_64.lib;PhysXPvdSDK_static_64.lib;PVDRuntime_64.lib;PhysXCharacterKinematic_static_64.lib;vulkan-1.lib;shaderc_combined.lib;liblz4_static.lib;OpenMeshCore.lib;OpenMeshTools.lib;SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <TreatLinkerWarningAsErrors>false</TreatLinkerWarningAsErrors>
+      <AdditionalOptions>/PROFILE  /IGNORE:4099 %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(ProjectDir)vendor\dll\fmod.dll" "$(TargetDir)fmod.dll"
+copy /Y "$(ProjectDir)vendor\dll\assimp-vc143-mt.dll" "$(TargetDir)assimp-vc143-mt.dll"
+copy /Y "$(ProjectDir)vendor\dll\fmod.dll" "$(TargetDir)fmod.dll"
+copy /Y "$(ProjectDir)vendor\dll\Compressonator_MD_DLL.dll" "$(TargetDir)Compressonator_MD_DLL.dll"
+xcopy "$(ProjectDir)res\shaders" "$(TargetDir)res\shaders" /e /y /i /r
+
+copy /Y "$(ProjectDir)vendor\dll_debug\PhysX_64.dll" "$(TargetDir)PhysX_64.dll"
+copy /Y "$(ProjectDir)vendor\dll_debug\PhysXCommon_64.dll" "$(TargetDir)PhysXCommon_64.dll"
+copy /Y "$(ProjectDir)vendor\dll_debug\PhysXCooking_64.dll" "$(TargetDir)PhysXCooking_64.dll"
+copy /Y "$(ProjectDir)vendor\dll_debug\PhysXFoundation_64.dll" "$(TargetDir)PhysXFoundation_64.dll"
+copy /Y "$(ProjectDir)vendor\dll_debug\PVDRuntime_64.dll" "$(TargetDir)PVDRuntime_64.dll"
+xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='EditAndContinue|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;TRACY_ENABLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir);vendor\earcut\include;vendor\clipper\include;src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\lodepng\include;vendor\bvh\include;vendor\fluidsynth\include;vendor\midifile\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <Optimization>MaxSpeed</Optimization>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <AdditionalOptions>/external:I"vendor\physx\include" /external:I"vendor\physx\include\physx" %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
+      <OptimizeReferences>false</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>vendor\assimp\lib;vendor\GLFW\lib\Release;vendor\compressonator\lib;vendor\fmod\lib;vendor\Vulkan;vendor\physx\lib\release;vendor\fluidsynth\lib;vendor\openmesh\lib;vendor\SDL3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;Compressonator_MD.lib;CMP_Framework_MD.lib;assimp-vc143-mt.lib;fmod_vc.lib;vulkan-1.lib;shaderc_combined.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXFoundation_64.lib;PhysXTask_static_64.lib;PhysXPvdSDK_static_64.lib;PVDRuntime_64.lib;PhysXExtensions_static_64.lib;PhysXCharacterKinematic_static_64.lib;fluidsynth-3.lib;dinput8.lib;dxguid.lib;OpenMeshCore.lib;OpenMeshTools.lib;SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <TreatLinkerWarningAsErrors>false</TreatLinkerWarningAsErrors>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <Profile>false</Profile>
+      <AdditionalOptions>/IGNORE:4099 %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(ProjectDir)vendor\DLLs\fmod.dll" "$(TargetDir)fmod.dll"
+copy /Y "$(ProjectDir)vendor\DLLs\assimp-vc143-mt.dll" "$(TargetDir)assimp-vc143-mt.dll"
+xcopy "$(ProjectDir)res\shaders" "$(TargetDir)res\shaders" /e /y /i /r
+
+copy /Y "$(ProjectDir)vendor\DLLs\PhysX_64.dll" "$(TargetDir)PhysX_64.dll"
+copy /Y "$(ProjectDir)vendor\DLLs\PhysXCommon_64.dll" "$(TargetDir)PhysXCommon_64.dll"
+copy /Y "$(ProjectDir)vendor\DLLs\PhysXCooking_64.dll" "$(TargetDir)PhysXCooking_64.dll"
+copy /Y "$(ProjectDir)vendor\DLLs\PhysXFoundation_64.dll" "$(TargetDir)PhysXFoundation_64.dll"
+copy /Y "$(ProjectDir)vendor\DLLs\PVDRuntime_64.dll" "$(TargetDir)PVDRuntime_64.dll"
+xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;TRACY_ENABLE;GLM_FORCE_DEPTH_ZERO_TO_ONE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir);vendor\earcut\include;vendor\clipper\include;src;src\Legacy;vendor\compressonator\include\;vendor\gli\include;src\Legacy\Common;vendor\glad\include;vendor\GLFW\include;vendor\glm;vendor\stb_image;vendor\assimp\include;vendor;vendor\fmod\include;vendor\tinyexr;vendor\Vulkan\include;vendor\VulkanMemoryAllocator\include;vendor\nlohmann_json\include;vendor\lodepng\include;vendor\bvh\include;vendor\fluidsynth\include;vendor\midifile\include;vendor\openmesh\include;vendor\magic_enum\include;vendor\SDL3\include;vendor\tinyies\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MaxSpeed</Optimization>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/external:I"vendor\physx\include" /external:I"vendor\physx\include\physx" %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
+      <OptimizeReferences>false</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>vendor\assimp\lib;vendor\GLFW\lib\Release;vendor\compressonator\lib;vendor\fmod\lib;vendor\Vulkan;vendor\physx\lib\release;vendor\fluidsynth\lib;vendor\openmesh\lib;vendor\SDL3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;Compressonator_MD.lib;CMP_Framework_MD.lib;assimp-vc143-mt.lib;fmod_vc.lib;vulkan-1.lib;shaderc_combined.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXFoundation_64.lib;PhysXTask_static_64.lib;PhysXPvdSDK_static_64.lib;PVDRuntime_64.lib;PhysXExtensions_static_64.lib;PhysXCharacterKinematic_static_64.lib;fluidsynth-3.lib;dinput8.lib;dxguid.lib;OpenMeshCore.lib;OpenMeshTools.lib;SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <TreatLinkerWarningAsErrors>false</TreatLinkerWarningAsErrors>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <Profile>true</Profile>
+      <AdditionalOptions>/IGNORE:4099 %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(ProjectDir)vendor\DLLs\fmod.dll" "$(TargetDir)fmod.dll"
+copy /Y "$(ProjectDir)vendor\DLLs\assimp-vc143-mt.dll" "$(TargetDir)assimp-vc143-mt.dll"
+xcopy "$(ProjectDir)res\shaders" "$(TargetDir)res\shaders" /e /y /i /r
+
+copy /Y "$(ProjectDir)vendor\DLLs\PhysX_64.dll" "$(TargetDir)PhysX_64.dll"
+copy /Y "$(ProjectDir)vendor\DLLs\PhysXCommon_64.dll" "$(TargetDir)PhysXCommon_64.dll"
+copy /Y "$(ProjectDir)vendor\DLLs\PhysXCooking_64.dll" "$(TargetDir)PhysXCooking_64.dll"
+copy /Y "$(ProjectDir)vendor\DLLs\PhysXFoundation_64.dll" "$(TargetDir)PhysXFoundation_64.dll"
+copy /Y "$(ProjectDir)vendor\DLLs\PVDRuntime_64.dll" "$(TargetDir)PVDRuntime_64.dll"
+xcopy /Y /I "$(ProjectDir)vendor\DLLs\*.dll" "$(TargetDir)"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Hell\AssetLoader\PointAnimations.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\VATLoader.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\Animation.cpp" />
+    <ClCompile Include="src\Hell\Serialization\JsonSerialization.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\GL_back_end.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\GL_commands.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\GL_resource_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\GL_texture_uploader.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\GL_util.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\GL_rasterizer_state_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\VK_back_end.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\VK_texture_uploader.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_command_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_deletion_queue.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_device_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_instance_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_memory_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_raytracing_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_resource_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_swapchain_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Managers\vk_sync_manager.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_acceleration_structure.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_allocated_image.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_buffer.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_cube_map_array.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_cubemap.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_descriptor_set.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_generic_mesh.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_mesh_buffer.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_pipeline.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_raytracing_pipeline.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_sampler.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_shader.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_timer.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\vk_texture.cpp" />
+    <ClCompile Include="src\Hell\Profiling\CPUProfiler.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\vk_tools.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\vk_types.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\PointAnimation.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\VAT.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_editor.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_game.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_generic_animated_object.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_config.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_physics.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_renderer.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_scratch.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_text.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_ocean.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_profiling.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Menu\Debug_menu_play.cpp" />
+    <ClCompile Include="src\Unloved\LazyKeyPresses.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Exterior\Jetty.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\PlanarObjectRebuild.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Renderables\PointAnimationInstance.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Renderables\VATInstance.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_animation.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_blit_road.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_compute_ftt.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_compute_skinning.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_compute_light_aabb.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_down_sample_final_image.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_gaussian_blur.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_tile_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Create\GL_create_framebuffers.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Create\GL_create_shaders.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Create\GL_create_ssbos.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Create\GL_create_texture_arrays.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_fire_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_VAT_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\Shared\GL_physics_shapes_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer_debug.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Update\GL_update_ssbos.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\IndirectSpecular\VK_indirect_specular_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_hiz_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_ddgi_raytrace_scene_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\DDGI\VK_ddgi_point_cloud_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_hair_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_emissive_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_debug_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_lighting_forward_blended_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_post_processing_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_skybox_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_sprite_sheet_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_tile_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\RayTracing\VK_acceleration_structure_utils.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\RayTracing\VK_raytracing_scene.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\RayTracing\VK_transient_blas_builder.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Update\VK_update_raytracing.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_lighting_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\LoadingScreen\Passes\VK_loading_screen_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\VK_render_game.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\LoadingScreen\VK_render_loading_screen.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_compute_red_test_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_compute_skinning_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_material_resolve_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_point_light_shadow_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Game\Passes\VK_visibility_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Shared\Passes\VK_present_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Frames\Shared\Passes\VK_ui_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Create\VK_create_descriptor_sets.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Create\VK_create_frame_data.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Create\VK_create_push_constants.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Create\VK_create_samplers.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Create\VK_create_shaders.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Create\VK_create_skybox.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Create\VK_create_pipelines.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Create\VK_create_render_targets.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_blit.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_draw.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Update\VK_update_buffers.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Update\VK_update_descriptors.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_render_state_commands.cpp" />
+    <ClCompile Include="src\Hell\Render\API\Vulkan\Types\VK_render_state.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\Create\VK_create_render_states.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\Vulkan\VK_renderer.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\GL_support.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\GL_renderer_util.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\ComputePasses\GL_ddgi.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\GL_game_old_deferred.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\GL_game_re_style.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_christmas_lights.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_depth_peeled_transparency.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_fog_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_examine_item_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_blood_decals_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_decal_painting_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_fur_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_glass_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_metalballs_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\Shared\GL_ocean_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_plastic_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_post_processing.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_screenspace_reflections.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_vat_blood_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_winston_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_hair_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_material_resolve_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_particle_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_post_processing_re.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\REStyle\GL_visilibty_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_debug_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_editor_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_emissive_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_geometry_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_grass_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\Shared\GL_occlusion_hiz_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_hair_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_heightmap_passes.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_lighting_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\LoadingScreen\Passes\GL_loading_screen_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_outline_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_shadow_map_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_skybox_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_spritesheet_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Frames\Game\Passes\OldDeferred\GL_UI_pass.cpp" />
+    <ClCompile Include="src\Unloved\Render\API\OpenGL\Utility\GL_misc_utility.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_cubemapView.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_cubemap_frame_buffer.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_framebuffer.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_generic_mesh.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_mesh_buffer_old.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_shader.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_shadow_cube_map_array.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_shadow_map.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_shadow_map_array.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_ssbo.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_texture.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_texture_3d.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_texture_array.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_timer.cpp" />
+    <ClCompile Include="src\Hell\Audio\Synth.cpp" />
+    <ClCompile Include="src\Hell\Backend\BackEnd.cpp" />
+    <ClCompile Include="src\Hell\Backend\Integration\GLFW.cpp" />
+    <ClCompile Include="src\Hell\Backend\Integration\SDL.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Bible_text.cpp" />
+    <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\Bible_AnimatedMeshNodes.cpp" />
+    <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\Bible_WeaponMeshNodes.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Misc\CashRewards.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Items\Bible_items.cpp" />
+    <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\Bible_PickUps.cpp" />
+    <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\Bible_Doors.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Info\Bible_WeaponAttachmentInfo.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Info\Bible_WeaponInfo.cpp" />
+    <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\GenericObjects\Bathroom.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Info\Bible_AmmoInfo.cpp" />
+    <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\GenericObjects\Christmas.cpp" />
+    <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\GenericObjects\Drawers.cpp" />
+    <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\GenericObjects\Furniture.cpp" />
+    <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\GenericObjects\Plants.cpp" />
+    <ClCompile Include="src\Unloved\Bible\MeshNodesConfig\GenericObjects\TestModels.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Info\Bible_inventoryItemInfo.cpp" />
+    <ClCompile Include="src\Hell\BVH\BVH.cpp" />
+    <ClCompile Include="src\Hell\BVH\Types\MeshBvh.cpp" />
+    <ClCompile Include="src\Hell\BVH\Types\SceneBvh.cpp" />
+    <ClCompile Include="src\Unloved\Camera\Frustum.cpp" />
+    <ClCompile Include="src\Unloved\Config\Config.cpp" />
+    <ClCompile Include="src\Unloved\Config\FlashlightConfig.cpp" />
+    <ClCompile Include="src\Unloved\Config\PhysicsConfig.cpp" />
+    <ClCompile Include="src\Hell\Audio\Audio.cpp" />
+    <ClCompile Include="src\Unloved\Session\Session.cpp" />
+    <ClCompile Include="src\Unloved\Session\Session_players.cpp" />
+    <ClCompile Include="src\Unloved\Session\Session_spawns.cpp" />
+    <ClCompile Include="src\Unloved\Session\Session_update.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Blood\BloodSystem.cpp" />
+    <ClCompile Include="src\Unloved\Systems\FeatureTest\FeatureTest.cpp">
+      <ObjectFileName>$(IntDir)Unloved_Systems_FeatureTest.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="src\Unloved\Systems\House\HouseClipping.cpp" />
+    <ClCompile Include="src\Unloved\Systems\House\HouseGeometryBuilder.cpp" />
+    <ClCompile Include="src\Unloved\Systems\P90Mag\P90MagManager.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Particles\ParticleManager.cpp" />
+    <ClCompile Include="src\Unloved\Debug\DebugDraw.cpp" />
+    <ClCompile Include="src\Hell\AssetCompiler\AssetCompiler.cpp" />
+    <ClCompile Include="src\Hell\AssetCompiler\AssimpImporter.cpp" />
+    <ClCompile Include="src\Hell\AssetCompiler\ObjExporter.cpp" />
+    <ClCompile Include="src\Hell\AssetFormats\HeightMapFormat.cpp" />
+    <ClCompile Include="src\Hell\AssetFormats\ModelBvhFormat.cpp" />
+    <ClCompile Include="src\Hell\AssetFormats\ModelFormat.cpp" />
+    <ClCompile Include="src\Hell\AssetFormats\SkinnedModelFormat.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\AnimationLoader.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\AssetLoader.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\BoneMaskLoader.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\IESLoader.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\MidiFileLoader.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\RagdollAssetLoader.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\LegacyRag\LegacyRagdollImporter.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\LegacyRag\LegacyRagReader.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\SpriteSheetLoader.cpp" />
+    <ClCompile Include="src\Hell\AssetLoader\SoundFontLoader.cpp" />
+    <ClCompile Include="src\Hell\File\File.cpp" />
+    <ClCompile Include="src\Hell\MemoryTracker\MemoryTracker.cpp" />
+    <ClCompile Include="src\Unloved\ObjectId\ObjectId.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\MaterialBuilder.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\ResourceID.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Bible.cpp" />
+    <ClCompile Include="src\Unloved\Systems\CoarseWorldBVH\CoarseWorldBVHGeometry.cpp" />
+    <ClCompile Include="src\Unloved\Systems\DDGI\DDGIManager.cpp" />
+    <ClCompile Include="src\Unloved\Systems\DDGI\DDGIVolume.cpp" />
+    <ClCompile Include="src\Unloved\Systems\DDGI\PointCloud.cpp" />
+    <ClCompile Include="src\Unloved\Systems\CoarseWorldBVH\CoarseWorldBVH.cpp" />
+    <ClCompile Include="src\Unloved\Systems\DirtyTracker\DirtyTracker.cpp" />
+    <ClCompile Include="src\Hell\Logging\Logging.cpp" />
+    <ClCompile Include="src\Hell\ImageTools\ImageCompressor.cpp" />
+    <ClCompile Include="src\Hell\ImageTools\ImageLoader.cpp" />
+    <ClCompile Include="src\Hell\ImageTools\ImageUtil.cpp" />
+    <ClCompile Include="src\Hell\ImageTools\ImageWriter.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\ResourceManager.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\TextureUploader.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Mirrors\MirrorManager.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Openables\OpenableManager.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\PlacementTools.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\ObjectNames.cpp" />
+    <ClCompile Include="src\Hell\Math\LineMath.cpp" />
+    <ClCompile Include="src\Hell\Math\OBB.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_items.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_ladder.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_update.cpp" />
+    <ClCompile Include="src\Unloved\Render\Renderer_settings.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\MeshBuffer.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\MidiFile.cpp">
+      <ObjectFileName>$(IntDir)Hell_MidiFile.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="src\Hell\ResourceManagement\Types\SoundFont.cpp" />
+    <ClCompile Include="src\Hell\Math\Matrix.cpp" />
+    <ClCompile Include="src\Hell\Math\Transform.cpp" />
+    <ClCompile Include="src\Unloved\Debug\FeatureTest.cpp" />
+    <ClCompile Include="src\Unloved\Characters\CharacterSpine.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Dobermann\Dobermann.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Kangaroo\Kangaroo_animation_state_machine.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Kangaroo\Kangaroo_audio.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Kangaroo\Kangaroo_debug_draw.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Kangaroo\Kangaroo_pathfinding.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Kangaroo\Kangaroo_update.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Shark\Shark_debug.cpp" />
+    <ClCompile Include="src\Unloved\Inventory\Inventory.cpp" />
+    <ClCompile Include="src\Unloved\Inventory\Inventory_render_submit.cpp" />
+    <ClCompile Include="src\Unloved\Inventory\inventory_update.cpp" />
+    <ClCompile Include="src\Unloved\Systems\HeightMap\HeightMap.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Map\MapManager.cpp" />
+    <ClCompile Include="src\Hell\Physics\Ragdoll\RagdollJoint.cpp" />
+    <ClCompile Include="src\Hell\Physics\Ragdoll\RagdollMass.cpp" />
+    <ClCompile Include="src\Hell\Physics\Ragdoll\RagdollShapeMesh.cpp" />
+    <ClCompile Include="src\Hell\Physics\Ragdoll\Ragdoll.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Openables\Openable.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Bullets\BulletTrail.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Effects\Decal.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Traversal\Ladder.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Traversal\LadderDismount.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Traversal\Staircase.cpp" />
+    <ClCompile Include="src\Unloved\Systems\ShadowMaps\ShadowMapManager.cpp" />
+    <ClCompile Include="src\Unloved\Systems\TypeWriter\TypeWriter.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\DeadLock.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\Fireplace.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\TrimSet.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Mirrors\Mirror.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Exterior\Fence.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Exterior\PowerPoleSet.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Spawns\SpawnPoint.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Spawns\HouseLocation.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Exterior\Wire.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\House.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\HouseData.cpp" />
+    <ClCompile Include="src\Unloved\Maps\Map.cpp" />
+    <ClCompile Include="src\Unloved\Maps\MapData.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Pathfinding\AStarMap.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Kangaroo\Kanagaroo_movement.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Kangaroo\Kangaroo.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Kangaroo\Kangaroo_Util.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Shark\Shark_Animation.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Shark\Shark_Hunting.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Shark\Shark_Movement.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Shark\Shark_Update.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Pathfinding\AStar.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Pathfinding\MinHeap.cpp" />
+    <ClCompile Include="src\Unloved\Systems\NavMesh\NavMesh.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Pathfinding\Pathfinding.cpp" />
+    <ClCompile Include="src\Hell\Physics\Physics_ignore_lists.cpp" />
+    <ClCompile Include="src\Hell\Physics\Types\CharacterController.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_character_model.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_ragdoll.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_weapon_attachments.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Animation\Bible_AnimationCatalog.cpp" />
+    <ClCompile Include="src\Unloved\Bible\Animation\Bible_HumanoidAnimator.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Animator\Animator.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Animator\HumanoidAnimator.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Animator\AnimationPlayback.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Animator\AnimatorInstance.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Animator\AnimationLayer.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Animator\SkeletonCache.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Animator\Skeleton.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Props\Christmas\ChristmasLights.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Props\Christmas\ChristmasTree.cpp" />
+    <ClCompile Include="src\Unloved\Systems\BloodOLD\BloodSystemOLD.cpp" />
+    <ClCompile Include="src\Unloved\Systems\BloodOLD\BloodScreenSpaceDecal.cpp" />
+    <ClCompile Include="src\Unloved\Systems\BloodOLD\BloodVAT.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Mermaids\Mermaid\Mermaid.cpp" />
+    <ClCompile Include="src\Unloved\Characters\Enemies\Shark\Shark.cpp" />
+    <ClCompile Include="src\Unloved\Maps\MapFile.cpp" />
+    <ClCompile Include="src\Legacy\File\JSON.cpp" />
+    <ClCompile Include="src\Hell\Math\AABB.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Ocean\Ocean.cpp" />
+    <ClCompile Include="src\Hell\Physics\Types\D6Joint.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_piano.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Exterior\Road.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Props\GenericBouncable.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\WeatherBoards.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Props\GenericStatic.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Props\GenericObject.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Props\GenericAnimatedObject.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Interior\Piano.cpp">
+      <ObjectFileName>$(IntDir)Legacy_Piano.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="src\Unloved\Objects\Interior\PictureFrame.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\DoorChain.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Renderables\AnimatedMeshNodes.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_mesh_buffer.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\IESProfile.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\Mesh.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Renderables\MeshBufferOLD.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Renderables\MeshNodes.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\Model.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\Trim.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\WallSegment.cpp" />
+    <ClCompile Include="src\Hell\Physics\PhysicsDebug.cpp" />
+    <ClCompile Include="src\Hell\Physics\Physics_heightfields.cpp" />
+    <ClCompile Include="src\Hell\Physics\Types\RigidDynamic.cpp" />
+    <ClCompile Include="src\Hell\Physics\Types\HeightField.cpp" />
+    <ClCompile Include="src\Hell\Physics\Types\RigidStatic.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_interact.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_util.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\TextureArray.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\Door.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\WorldPlane.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\PlanarQuadObject.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\PointPairObject.cpp" />
+    <ClCompile Include="src\Unloved\Common\PlanarQuad.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Props\PickUp.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Exterior\Tree.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\Wall.cpp" />
+    <ClCompile Include="src\Unloved\Objects\House\Window.cpp" />
+    <ClCompile Include="src\Hell\Physics\Physics.cpp" />
+    <ClCompile Include="src\Hell\Physics\PhysicsContactQuery.cpp" />
+    <ClCompile Include="src\Hell\Physics\PhysicsIds.cpp" />
+    <ClCompile Include="src\Hell\Physics\PhysicsIdWrappers.cpp" />
+    <ClCompile Include="src\Hell\Physics\PhysicsOverlapQuery.cpp" />
+    <ClCompile Include="src\Hell\Physics\PhysicsRayQuery.cpp" />
+    <ClCompile Include="src\Hell\Physics\PhysicsResourceManagement.cpp" />
+    <ClCompile Include="src\Hell\Physics\PhysicsUpdate.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_audio.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_character_controller.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_flashlight.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_spritesheets.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_weapon_logic_gun.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_weapon_logic_melee.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_weapon_logic_shotgun.cpp" />
+    <ClCompile Include="src\Hell\Physics\PhysicsUtil.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Exterior\GrassMesh.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\SpriteSheetTexture.cpp" />
+    <ClCompile Include="src\Hell\Render\API\OpenGL\Types\GL_texture_readback.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Props\BulletCasing.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Lighting\Light.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Lighting\SpotLight.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Renderables\SpriteSheetObject.cpp" />
+    <ClCompile Include="src\Hell\Input\InputMulti.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player.cpp" />
+    <ClCompile Include="src\Unloved\Debug\Debug.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\EditorInspector.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Inspector\EditorInspectorAssets.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Inspector\EditorInspectorGeometry.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\UI\EditorDialogs.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\HeightMap\EditorHeightMap.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\EditorHierarchy.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\UI\EditorInputElements.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\EditorObjectOptions.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\EditorToolbar.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\EditorPlacement.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Interaction\EditorPointSequences.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\EditorSession.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\UI\EditorLayout.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\EditorMenuBar.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Interaction\EditorSelection.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\UI\EditorUI.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Core\EditorViewports.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Interaction\EditorVisibility.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Core\EditorWorkspace.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\BoneMask\EditorBoneMask.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Ragdoll\EditorRagdoll.cpp" />
+    <ClCompile Include="src\Unloved\EditorSession\Gizmo\Gizmo.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_camera.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_Input.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_movement.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_ui.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_view_weapon.cpp" />
+    <ClCompile Include="src\Unloved\Player\Player_weapon_logic.cpp" />
+    <ClCompile Include="src\Unloved\Render\RenderDataManager.cpp" />
+    <ClCompile Include="src\Unloved\Render\Renderer.cpp" />
+    <ClCompile Include="src\Unloved\Camera\Camera.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\SkinnedModel.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Renderables\SkinnedGameObject.cpp" />
+    <ClCompile Include="src\Unloved\Objects\Props\GameObject.cpp" />
+    <ClCompile Include="src\Hell\Input\Input.cpp" />
+    <ClCompile Include="src\Hell\Time\Time.cpp" />
+    <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Bullets\BulletSystem.cpp" />
+    <ClCompile Include="src\Unloved\Systems\GameAudio\GameAudio.cpp" />
+    <ClCompile Include="src\Unloved\Systems\Systems.cpp" />
+    <ClCompile Include="src\Unloved\Unloved.cpp" />
+    <ClCompile Include="src\Unloved\World\World.cpp">
+      <ObjectFileName>$(IntDir)Unloved_World.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="src\Unloved\World\World_environment.cpp" />
+    <ClCompile Include="src\Unloved\World\World_objects.cpp" />
+    <ClCompile Include="src\Unloved\World\World_create_info_collection.cpp" />
+    <ClCompile Include="src\Unloved\World\World_loading.cpp" />
+    <ClCompile Include="src\Unloved\World\World_render_submit.cpp" />
+    <ClCompile Include="src\Unloved\World\World_update.cpp" />
+    <ClCompile Include="src\Unloved\Systems\PianoPlayback\PianoPlaybackManager.cpp" />
+    <ClCompile Include="src\Unloved\Render\RendererUtil.cpp" />
+    <ClCompile Include="src\Unloved\Viewport\Viewport.cpp" />
+    <ClCompile Include="src\Hell\UI\FontSpriteSheet.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\GenericMesh.cpp" />
+    <ClCompile Include="src\Hell\UI\TextBlitter.cpp" />
+    <ClCompile Include="src\Hell\ResourceManagement\Types\Texture.cpp" />
+    <ClCompile Include="src\Hell\UI\UIBackEnd.cpp" />
+    <ClCompile Include="src\Hell\Geometry\Geometry.cpp" />
+    <ClCompile Include="src\Hell\Geometry\PrimitiveMesh.cpp" />
+    <ClCompile Include="src\Unloved\Viewport\ViewportManager.cpp" />
+    <ClCompile Include="src\Unloved\Systems\House\BlockingVolume.cpp" />
+    <ClCompile Include="src\Unloved\Systems\House\ClippingVolume.cpp" />
+    <ClCompile Include="src\Unloved\Systems\House\HouseBuilder.cpp" />
+    <ClCompile Include="src\Unloved\Systems\House\HouseManager.cpp" />
+    <ClCompile Include="src\Legacy\World\LegacyWorld.cpp" />
+    <ClCompile Include="src\Unloved\Systems\WorldBVH\WorldBVH.cpp" />
+    <ClCompile Include="vendor\clipper\src\clipper.engine.cpp" />
+    <ClCompile Include="vendor\clipper\src\clipper.offset.cpp" />
+    <ClCompile Include="vendor\clipper\src\clipper.rectclip.cpp" />
+    <ClCompile Include="vendor\glad\src\gl.c" />
+    <ClCompile Include="vendor\lodepng\include\lodepng\lodepng.cpp" />
+    <ClCompile Include="vendor\midifile\src\Binasc.cpp" />
+    <ClCompile Include="vendor\midifile\src\MidiEvent.cpp" />
+    <ClCompile Include="vendor\midifile\src\MidiEventList.cpp" />
+    <ClCompile Include="vendor\midifile\src\SmfMidiFile.cpp" />
+    <ClCompile Include="vendor\midifile\src\MidiMessage.cpp" />
+    <ClCompile Include="vendor\midifile\src\Options.cpp" />
+    <ClCompile Include="vendor\stb_image\stb_image.cpp" />
+    <ClCompile Include="vendor\tinyexr\tinyexr.cpp" />
+    <ClCompile Include="vendor\Vulkan\Include\Volk\volk.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\shaders\common\distance_fog.glsl" />
+    <None Include="res\shaders\common\ddgi_upsample.glsl" />
+    <None Include="res\shaders\common\intersect.glsl" />
+    <None Include="res\shaders\common\ocean.glsl" />
+    <None Include="res\shaders\common\ocean_fft.glsl" />
+    <None Include="res\shaders\common\OpenGL\binding_indices.glsl" />
+    <None Include="res\shaders\common\Vulkan\ddgi_upsample.glsl" />
+    <None Include="res\shaders\common\Vulkan\ray_query.glsl" />
+    <None Include="res\shaders\common\flags.glsl" />
+    <None Include="res\shaders\common\viewport.glsl" />
+    <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.frag" />
+    <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.geom" />
+    <None Include="res\shaders\OpenGL\10.shadow_mapping_depth.vert" />
+    <None Include="res\shaders\OpenGL\GL_blood_decals_new.frag" />
+    <None Include="res\shaders\OpenGL\GL_blood_decals_new.vert" />
+    <None Include="res\shaders\OpenGL\GL_decal_test.frag" />
+    <None Include="res\shaders\OpenGL\GL_decal_test.vert" />
+    <None Include="res\shaders\OpenGL\RE\GL_lighting_deferred_editor_render_mode.frag" />
+    <None Include="res\shaders\Vulkan\VK_compute_skinning.comp" />
+    <None Include="res\shaders\Vulkan\VK_compute_red_test.comp" />
+    <None Include="res\shaders\Vulkan\VK_ddgi_raytrace_scene.comp" />
+    <None Include="res\shaders\Vulkan\VK_ddgi_point_cloud_basecolor.comp" />
+    <None Include="res\shaders\Vulkan\VK_ddgi_point_cloud_lighting.comp" />
+    <None Include="res\shaders\Vulkan\VK_ddgi_point_cloud_debug.vert" />
+    <None Include="res\shaders\Vulkan\VK_ddgi_probe_debug.vert" />
+    <None Include="res\shaders\Vulkan\VK_ddgi_probe_irradiance_texture.comp" />
+    <None Include="res\shaders\Vulkan\VK_debug_tile_view.comp" />
+    <None Include="res\shaders\Vulkan\VK_debug_vertex.frag" />
+    <None Include="res\shaders\Vulkan\VK_debug_vertex_2D.vert" />
+    <None Include="res\shaders\Vulkan\VK_debug_vertex_3D.vert" />
+    <None Include="res\shaders\Vulkan\VK_emissive_bloom_composite.comp" />
+    <None Include="res\shaders\Vulkan\VK_emissive_bloom_filter.comp" />
+    <None Include="res\shaders\Vulkan\VK_emissive_forward.frag" />
+    <None Include="res\shaders\Vulkan\VK_emissive_forward.vert" />
+    <None Include="res\shaders\Vulkan\VK_fullscreen_triangle.vert" />
+    <None Include="res\shaders\Vulkan\VK_indirect_specular_amd_config.glsl" />
+    <None Include="res\shaders\Vulkan\VK_material_resolve.frag" />
+    <None Include="res\shaders\Vulkan\VK_post_processing.comp" />
+    <None Include="res\shaders\Vulkan\VK_present.frag" />
+    <None Include="res\shaders\Vulkan\VK_skybox.frag" />
+    <None Include="res\shaders\Vulkan\VK_solid_color.frag" />
+    <None Include="res\shaders\Vulkan\VK_tile_light_culling.comp" />
+    <None Include="res\shaders\Vulkan\VK_tile_world_bounds.comp" />
+    <None Include="res\shaders\Vulkan\VK_visibility_alpha_discard.frag" />
+    <None Include="res\shaders\Vulkan\VK_visibility.frag" />
+    <None Include="res\shaders\Vulkan\VK_visibility.vert" />
+    <None Include="res\shaders\Vulkan\VK_lighting_forward.vert" />
+    <None Include="res\shaders\Vulkan\VK_lighting_forward.frag" />
+    <None Include="res\shaders\Vulkan\VK_sprite_sheet.vert" />
+    <None Include="res\shaders\Vulkan\VK_sprite_sheet.frag" />
+    <None Include="res\shaders\Vulkan\VK_debug_view.frag" />
+    <None Include="res\shaders\Vulkan\VK_visibility_skinned.vert" />
+    <None Include="res\shaders\OpenGL\GL_blood_screenspace_decals.frag" />
+    <None Include="res\shaders\OpenGL\GL_blood_screenspace_decals.vert" />
+    <None Include="res\shaders\OpenGL\GL_probe_relocation.comp" />
+    <None Include="res\shaders\OpenGL\gl_height-map_image_generation.comp" />
+    <None Include="res\shaders\OpenGL\GL_metaballs.comp" />
+    <None Include="res\shaders\OpenGL\GL_ocean_composite.comp" />
+    <None Include="res\shaders\OpenGL\GL_shadow_map_flashlight.frag" />
+    <None Include="res\shaders\OpenGL\GL_spirtesheet.frag" />
+    <None Include="res\shaders\OpenGL\GL_spirtesheet.vert" />
+    <None Include="res\shaders\OpenGL\RE\GL_bubbles_new.frag" />
+    <None Include="res\shaders\OpenGL\RE\GL_bubbles_new.vert" />
+    <None Include="res\shaders\OpenGL\Water\GL_ocean_compute_underwater_flags.comp" />
+    <None Include="res\shaders\terrain.frag" />
+    <None Include="res\shaders\terrain.vert" />
+    <None Include="res\shaders\skybox.frag" />
+    <None Include="res\shaders\skybox.vert" />
+    <None Include="src\Hell\Python\AnimationBatchExport.py" />
+    <None Include="src\Hell\Python\BlenderModelExport.py" />
+    <None Include="src\Hell\Python\BlenderModelExportV2.py" />
+    <None Include="src\Hell\Python\BlenderModelExportV2_indentity_transforms.py" />
+    <None Include="src\Hell\Python\BlenderModelExportV3.py" />
+    <None Include="src\Hell\Python\BlenderSkinnedModelExport WIP.py" />
+    <None Include="src\Hell\Python\BlenderUVWorldSpaceProjection.py" />
+    <None Include="src\Hell\Python\VATJsonExport.py" />
+    <None Include="src\Hell\Python\VATPoints.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Work\GLRaytracing\BVH\src\OpenGL\Types\GL_timer.h" />
+    <ClInclude Include="res\shaders\common\reconstruction.glsl" />
+    <ClInclude Include="res\shaders\OpenGL\RE\test.h" />
+    <ClInclude Include="src\Hell\Common\Color.h" />
+    <ClInclude Include="src\Hell\Input.h" />
+    <ClInclude Include="src\Hell\Math\LocalFrame.h" />
+    <ClInclude Include="src\Hell\Physics.h" />
+    <ClInclude Include="src\Hell\Physics\PhysicsTypes.h" />
+    <ClInclude Include="src\Hell\Physics\PhysicsDebug.h" />
+    <ClInclude Include="src\Hell\Physics\PhysicsContactQuery.h" />
+    <ClInclude Include="src\Hell\Physics\PhysicsIds.h" />
+    <ClInclude Include="src\Hell\Physics\PhysicsIdWrappers.h" />
+    <ClInclude Include="src\Hell\Physics\PhysicsOverlapQuery.h" />
+    <ClInclude Include="src\Hell\Physics\PhysicsRayQuery.h" />
+    <ClInclude Include="src\Hell\Physics\PhysicsResourceManagement.h" />
+    <ClInclude Include="src\Hell\Physics\PhysicsUtil.h" />
+    <ClInclude Include="src\Hell\Render\DrawCommandTypes.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\Animation.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\BoneMask.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\PointAnimation.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\VAT.h" />
+    <ClInclude Include="src\Hell\Serialization\Json.h" />
+    <ClInclude Include="src\Unloved\Common\Constants.h" />
+    <ClInclude Include="src\Unloved\Common\Enums.h" />
+    <ClInclude Include="src\Unloved\Common\PlanarQuad.h" />
+    <ClInclude Include="src\Unloved\Common\SequencePoint.h" />
+    <ClInclude Include="src\Unloved\Common\Types.h" />
+    <ClInclude Include="src\Unloved\Debug\DebugTypes.h" />
+    <ClInclude Include="src\Unloved\Debug\Scratch.h" />
+    <ClInclude Include="src\Unloved\Debug\Menu\Debug_menu.h" />
+    <ClInclude Include="src\Unloved\Objects\Exterior\Jetty.h" />
+    <ClInclude Include="src\Unloved\Objects\ObjectEnums.h" />
+    <ClInclude Include="src\Unloved\Objects\Renderables\BoneSegment.h" />
+    <ClInclude Include="src\Unloved\Objects\Renderables\PointAnimationInstance.h" />
+    <ClInclude Include="src\Unloved\Objects\Renderables\VATInstance.h" />
+    <ClInclude Include="src\Unloved\Physics\PhysicsEnums.h" />
+    <ClInclude Include="src\Unloved\ProgramState.h" />
+    <ClInclude Include="src\Unloved\Render\RendererEnums.h" />
+    <ClInclude Include="src\Hell\Render\RendererTypes.h" />
+    <ClInclude Include="src\Hell\Transform.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\GL_commands.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_attachments.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\GL_rasterizer_state_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\GL_resource_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_shadow_map_array.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_texture_3d.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\GL_texture_uploader.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_timer.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\VK_back_end.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\VK_texture_uploader.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_command_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_deletion_queue.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_device_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_instance_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_memory_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_raytracing_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_resource_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_swapchain_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Managers\vk_sync_manager.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_acceleration_structure.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_allocated_buffer.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_allocated_image.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_buffer.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_cube_map_array.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_cubemap.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_descriptor_set.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_generic_mesh.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_mesh_buffer.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_pipeline.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_raytracing_pipeline.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_sampler.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_shader.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_timer.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\vk_texture.h" />
+    <ClInclude Include="src\Hell\Profiling\CPUProfiler.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\vk_common.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\vk_tools.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\vk_types.h" />
+    <ClInclude Include="src\Hell\Backend\Integration\SDL.h" />
+    <ClInclude Include="src\Unloved\Player\PlayerTypes.h" />
+    <ClInclude Include="src\Unloved\Render\DrawCommandSets.h" />
+    <ClInclude Include="src\Unloved\Render\RendererConstants.h" />
+    <ClInclude Include="src\Unloved\Render\RendererTypes.h" />
+    <ClInclude Include="src\Unloved\Render\Renderer_settings.h" />
+    <ClInclude Include="src\Unloved\Session\Session.h" />
+    <ClInclude Include="src\Unloved\Session\Session_types.h" />
+    <ClInclude Include="src\Unloved\Systems\Blood\BloodSystem.h" />
+    <ClInclude Include="src\Unloved\Systems\FeatureTest\FeatureTest.h" />
+    <ClInclude Include="src\Unloved\Systems\House\HouseClipping.h" />
+    <ClInclude Include="src\Unloved\Systems\House\HouseGeometryBuilder.h" />
+    <ClInclude Include="src\Unloved\Systems\P90Mag\P90MagManager.h" />
+    <ClInclude Include="src\Unloved\Systems\Particles\ParticleManager.h" />
+    <ClInclude Include="src\Unloved\Debug\DebugDraw.h" />
+    <ClInclude Include="src\Unloved\Debug\FeatureTest.h" />
+    <ClInclude Include="src\Unloved\Systems\CoarseWorldBVH\CoarseWorldBVHGeometry.h" />
+    <ClInclude Include="src\Unloved\Systems\DDGI\DDGIManager.h" />
+    <ClInclude Include="src\Unloved\Systems\DDGI\DDGITypes.h" />
+    <ClInclude Include="src\Unloved\Systems\DDGI\DDGIVolume.h" />
+    <ClInclude Include="src\Unloved\Systems\DDGI\PointCloud.h" />
+    <ClInclude Include="src\Unloved\Systems\CoarseWorldBVH\CoarseWorldBVH.h" />
+    <ClInclude Include="src\Unloved\Systems\DirtyTracker\DirtyTracker.h" />
+    <ClInclude Include="src\Hell\AssetCompiler\AssetCompiler.h" />
+    <ClInclude Include="src\Hell\AssetCompiler\AssimpImporter.h" />
+    <ClInclude Include="src\Hell\AssetCompiler\ObjExporter.h" />
+    <ClInclude Include="src\Hell\AssetFormats\AssetData.h" />
+    <ClInclude Include="src\Hell\AssetFormats\AssetFormatHeaders.h" />
+    <ClInclude Include="src\Hell\AssetFormats\AssetFormats.h" />
+    <ClInclude Include="src\Hell\AssetLoader\AssetLoader.h" />
+    <ClInclude Include="src\Hell\AssetLoader\LegacyRag\LegacyRagdollImporter.h" />
+    <ClInclude Include="src\Hell\AssetLoader\LegacyRag\LegacyRagReader.h" />
+    <ClInclude Include="src\Hell\BVH\Types.h" />
+    <ClInclude Include="src\Hell\BVH\Types\MeshBvh.h" />
+    <ClInclude Include="src\Hell\BVH\Types\SceneBvh.h" />
+    <ClInclude Include="src\Hell\BVH\BVH.h" />
+    <ClInclude Include="src\Hell\File.h" />
+    <ClInclude Include="src\Hell\File\File.h" />
+    <ClInclude Include="src\Hell\File\FileInfo.h" />
+    <ClInclude Include="src\Hell\Math\VecXZ.h" />
+    <ClInclude Include="src\Hell\MemoryTracker\MemoryTracker.h" />
+    <ClInclude Include="src\Hell\Render\TextureTypes.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\MaterialBuilder.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\ResourceManager.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\Material.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\TextureUploader.h" />
+    <ClInclude Include="src\Unloved\Bible\Info\ItemInfo.h" />
+    <ClInclude Include="src\Hell\Math\GLM.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\GL_back_end.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\GL_support.h" />
+    <ClInclude Include="src\Unloved\Render\API\OpenGL\GL_renderer.h" />
+    <ClInclude Include="src\Unloved\Render\API\Vulkan\VK_descriptor_indices.h" />
+    <ClInclude Include="src\Unloved\Render\API\Vulkan\VK_draw.h" />
+    <ClInclude Include="src\Unloved\Render\API\Vulkan\VK_frame_data.h" />
+    <ClInclude Include="src\Unloved\Render\API\Vulkan\VK_push_constants.h" />
+    <ClInclude Include="src\Unloved\Render\API\Vulkan\RayTracing\VK_acceleration_structure_utils.h" />
+    <ClInclude Include="src\Unloved\Render\API\Vulkan\RayTracing\VK_raytracing_scene.h" />
+    <ClInclude Include="src\Unloved\Render\API\Vulkan\RayTracing\VK_transient_blas_builder.h" />
+    <ClInclude Include="src\Hell\Render\API\Vulkan\Types\VK_render_state.h" />
+    <ClInclude Include="src\Unloved\Render\API\Vulkan\VK_renderer_internal.h" />
+    <ClInclude Include="src\Unloved\Render\API\Vulkan\VK_renderer.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\GL_util.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_cubemapView.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_mesh_buffer_old.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_indirectBuffer.hpp" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_generic_mesh.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_frameBuffer.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_pbo.hpp" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_rasterizer_state.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_shader.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_shadow_cube_map_array.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_shadow_map.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_ssbo.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_texture.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_texture_array.h" />
+    <ClInclude Include="src\Hell\Audio\Synth.h" />
+    <ClInclude Include="src\Hell\Backend\BackEnd.h" />
+    <ClInclude Include="src\Hell\Backend\Integration\GLFW.h" />
+    <ClInclude Include="src\Unloved\Systems\Bullets\BulletSystem.h" />
+    <ClInclude Include="src\Unloved\Systems\Bullets\BulletTypes.h" />
+    <ClInclude Include="src\Unloved\Systems\GameAudio\GameAudio.h" />
+    <ClInclude Include="src\Unloved\Systems\ShadowMaps\ShadowMapManager.h" />
+    <ClInclude Include="src\Unloved\Systems\Systems.h" />
+    <ClInclude Include="src\Unloved\Unloved.h" />
+    <ClInclude Include="src\Unloved\World\World.h" />
+    <ClInclude Include="src\Unloved\Systems\PianoPlayback\PianoPlaybackManager.h" />
+    <ClInclude Include="src\Unloved\Camera\Frustum.h" />
+    <ClInclude Include="src\Unloved\Common\CreateInfo.h" />
+    <ClInclude Include="src\Hell\Common.h" />
+    <ClInclude Include="src\Hell\Common\Constants.h" />
+    <ClInclude Include="src\Legacy\Common\HellFunctionTypes.h" />
+    <ClInclude Include="src\Unloved\Config\Config.h" />
+    <ClInclude Include="src\Unloved\Config\FlashlightConfig.h" />
+    <ClInclude Include="src\Unloved\Config\PhysicsConfig.h" />
+    <ClInclude Include="src\Hell\Audio.h" />
+    <ClInclude Include="src\Hell\Audio\Audio.h" />
+    <ClInclude Include="src\Hell\Debug\DebugDraw.h" />
+    <ClInclude Include="src\Hell\Time.h" />
+    <ClInclude Include="src\Hell\Time\Time.h" />
+    <ClInclude Include="src\Unloved\ObjectId.h" />
+    <ClInclude Include="src\Unloved\ObjectId\ObjectId.h" />
+    <ClInclude Include="src\Unloved\ObjectId\ObjectId_types.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\ResourceID.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\ResourceType.h" />
+    <ClInclude Include="src\Unloved\Bible\Bible.h" />
+    <ClInclude Include="src\Hell\Logging\Logging.h" />
+    <ClInclude Include="src\Hell\Logging.h" />
+    <ClInclude Include="src\Unloved\Systems\Mirrors\MirrorManager.h" />
+    <ClInclude Include="src\Unloved\Systems\Openables\Openable_types.h" />
+    <ClInclude Include="src\Unloved\Systems\Openables\OpenableManager.h" />
+    <ClInclude Include="src\Hell\Geometry\Geometry.h" />
+    <ClInclude Include="src\Hell\Geometry\PrimitiveMesh.h" />
+    <ClInclude Include="src\Hell\Math\Math.h" />
+    <ClInclude Include="src\Hell\Math\Easing.h" />
+    <ClInclude Include="src\Hell\Math\Matrix.h" />
+    <ClInclude Include="src\Hell\Math\Transform.h" />
+    <ClInclude Include="src\Hell\Math\OBB.h" />
+    <ClInclude Include="src\Hell\Math\Ray.h" />
+    <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollUtil.h" />
+    <ClInclude Include="src\Unloved\Characters\CharacterSpine.h" />
+    <ClInclude Include="src\Unloved\Characters\Enemies\Dobermann\Dobermann.h" />
+    <ClInclude Include="src\Unloved\Inventory\Inventory.h" />
+    <ClInclude Include="src\Unloved\Systems\HeightMap\HeightMap.h" />
+    <ClInclude Include="src\Unloved\Systems\Map\MapManager.h" />
+    <ClInclude Include="src\Unloved\Systems\Pathfinding\AStarMap.h" />
+    <ClInclude Include="src\Unloved\Characters\Enemies\Kangaroo\Kangaroo.h" />
+    <ClInclude Include="src\Unloved\Systems\Pathfinding\AStar.h" />
+    <ClInclude Include="src\Unloved\Systems\Pathfinding\Cell.h" />
+    <ClInclude Include="src\Unloved\Systems\Pathfinding\MinHeap.h" />
+    <ClInclude Include="src\Unloved\Systems\NavMesh\NavMesh.h" />
+    <ClInclude Include="src\Unloved\Systems\Pathfinding\Pathfinding.h" />
+    <ClInclude Include="src\Hell\Physics\Types\CharacterController.h" />
+    <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollAsset.h" />
+    <ClInclude Include="src\Hell\Physics\Ragdoll\Ragdoll.h" />
+    <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollJoint.h" />
+    <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollMass.h" />
+    <ClInclude Include="src\Hell\Physics\Ragdoll\RagdollShapeMesh.h" />
+    <ClInclude Include="src\Unloved\Animation\AnimationTypes.h" />
+    <ClInclude Include="src\Unloved\Systems\Animator\Animator.h" />
+    <ClInclude Include="src\Unloved\Systems\Animator\HumanoidAnimator.h" />
+    <ClInclude Include="src\Unloved\Systems\Animator\AnimationPlayback.h" />
+    <ClInclude Include="src\Unloved\Systems\Animator\AnimatorInstance.h" />
+    <ClInclude Include="src\Unloved\Systems\Animator\AnimationLayer.h" />
+    <ClInclude Include="src\Unloved\Systems\Animator\SkeletonCache.h" />
+    <ClInclude Include="src\Unloved\Systems\Animator\Skeleton.h" />
+    <ClInclude Include="src\Unloved\Objects\Props\Christmas\ChristmasLights.h" />
+    <ClInclude Include="src\Unloved\Objects\Props\Christmas\ChristmasTree.h" />
+    <ClInclude Include="src\Hell\Containers\SlotMap.h" />
+    <ClInclude Include="src\Unloved\Systems\Bullets\BulletTrail.h" />
+    <ClInclude Include="src\Unloved\Objects\Effects\Decal.h" />
+    <ClInclude Include="src\Unloved\Objects\Traversal\Ladder.h" />
+    <ClInclude Include="src\Unloved\Objects\Traversal\LadderDismount.h" />
+    <ClInclude Include="src\Unloved\Objects\Traversal\Staircase.h" />
+    <ClInclude Include="src\Legacy\Types\Game\Stairs.h" />
+    <ClInclude Include="src\Unloved\Systems\TypeWriter\TypeWriter.h" />
+    <ClInclude Include="src\Unloved\Objects\House\DeadLock.h" />
+    <ClInclude Include="src\Unloved\Objects\House\Fireplace.h" />
+    <ClInclude Include="src\Unloved\Objects\House\TrimSet.h" />
+    <ClInclude Include="src\Unloved\Systems\Mirrors\Mirror.h" />
+    <ClInclude Include="src\Unloved\Systems\BloodOLD\BloodSystemOLD.h" />
+    <ClInclude Include="src\Unloved\Systems\BloodOLD\Blood_types.h" />
+    <ClInclude Include="src\Unloved\Systems\BloodOLD\BloodScreenSpaceDecal.h" />
+    <ClInclude Include="src\Unloved\Systems\BloodOLD\BloodVAT.h" />
+    <ClInclude Include="src\Unloved\Characters\Mermaids\Mermaid\Mermaid.h" />
+    <ClInclude Include="src\Unloved\Characters\Enemies\Shark\Shark.h" />
+    <ClInclude Include="src\Unloved\Systems\Openables\Openable.h" />
+    <ClInclude Include="src\Hell\Math\LineMath.h" />
+    <ClInclude Include="src\Legacy\File\JSON.h" />
+    <ClInclude Include="src\Hell\Math\AABB.h" />
+    <ClInclude Include="src\Unloved\Systems\Ocean\Ocean.h" />
+    <ClInclude Include="src\Hell\Physics\CollisionReports.h" />
+    <ClInclude Include="src\Hell\Physics\Types\D6Joint.h" />
+    <ClInclude Include="src\Unloved\Objects\Exterior\Fence.h" />
+    <ClInclude Include="src\Unloved\Objects\Exterior\PowerPoleSet.h" />
+    <ClInclude Include="src\Unloved\Objects\Exterior\Road.h" />
+    <ClInclude Include="src\Unloved\Objects\Spawns\SpawnPoint.h" />
+    <ClInclude Include="src\Unloved\Objects\Spawns\HouseLocation.h" />
+    <ClInclude Include="src\Unloved\Objects\Props\GenericBouncable.h" />
+    <ClInclude Include="src\Unloved\Objects\Exterior\Wire.h" />
+    <ClInclude Include="src\Unloved\Objects\House\House.h" />
+    <ClInclude Include="src\Unloved\Objects\House\HouseData.h" />
+    <ClInclude Include="src\Unloved\Objects\House\WeatherBoards.h" />
+    <ClInclude Include="src\Unloved\Objects\Props\GenericStatic.h" />
+    <ClInclude Include="src\Unloved\Objects\Props\GenericObject.h" />
+    <ClInclude Include="src\Unloved\Objects\Props\GenericAnimatedObject.h" />
+    <ClInclude Include="src\Unloved\Maps\Map.h" />
+    <ClInclude Include="src\Unloved\Maps\MapData.h" />
+    <ClInclude Include="src\Unloved\Objects\Interior\Piano.h" />
+    <ClInclude Include="src\Unloved\Objects\Interior\PictureFrame.h" />
+    <ClInclude Include="src\Unloved\Objects\House\DoorChain.h" />
+    <ClInclude Include="src\Unloved\Objects\Renderables\AnimatedMeshNodes.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_mesh_buffer.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\IESProfile.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\Mesh.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\MeshBuffer.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\MidiFile.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\SoundFont.h" />
+    <ClInclude Include="src\Unloved\Objects\Renderables\MeshNodes.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\Model.h" />
+    <ClInclude Include="src\Unloved\Objects\House\Trim.h" />
+    <ClInclude Include="src\Unloved\Objects\House\WallSegment.h" />
+    <ClInclude Include="src\Hell\Physics\Types\HeightField.h" />
+    <ClInclude Include="src\Hell\Physics\Types\RigidDynamic.h" />
+    <ClInclude Include="src\Hell\Physics\Types\RigidStatic.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\TextureArray.h" />
+    <ClInclude Include="src\Unloved\Systems\Bullets\Bullet.h" />
+    <ClInclude Include="src\Unloved\Objects\House\Door.h" />
+    <ClInclude Include="src\Unloved\Objects\House\WorldPlane.h" />
+    <ClInclude Include="src\Unloved\Objects\House\PlanarQuadObject.h" />
+    <ClInclude Include="src\Unloved\Objects\House\PointPairObject.h" />
+    <ClInclude Include="src\Unloved\Objects\Props\PickUp.h" />
+    <ClInclude Include="src\Unloved\Objects\Exterior\Tree.h" />
+    <ClInclude Include="src\Unloved\Objects\House\Wall.h" />
+    <ClInclude Include="src\Unloved\Objects\House\Window.h" />
+    <ClInclude Include="src\Hell\Render\VertexAttributes.h" />
+    <ClInclude Include="src\Legacy\Types\Game\Map.h" />
+    <ClInclude Include="src\Hell\Physics\Physics.h" />
+    <ClInclude Include="src\Unloved\Objects\Exterior\GrassMesh.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\SpriteSheetTexture.h" />
+    <ClInclude Include="src\Hell\Render\API\OpenGL\Types\GL_texture_readback.h" />
+    <ClInclude Include="src\Unloved\Objects\Props\BulletCasing.h" />
+    <ClInclude Include="src\Unloved\Objects\Lighting\Light.h" />
+    <ClInclude Include="src\Unloved\Objects\Lighting\SpotLight.h" />
+    <ClInclude Include="src\Unloved\Objects\Renderables\SpriteSheetObject.h" />
+    <ClInclude Include="src\Unloved\Weapons\WeaponCommon.h" />
+    <ClInclude Include="src\Hell\Input\InputMulti.h" />
+    <ClInclude Include="src\Unloved\Player\Player.h" />
+    <ClInclude Include="src\Unloved\Debug\Debug.h" />
+    <ClInclude Include="src\Unloved\EditorSession\UI\EditorDialogs.h" />
+    <ClInclude Include="src\Unloved\EditorSession\EditorHierarchy.h" />
+    <ClInclude Include="src\Unloved\EditorSession\UI\EditorInputElements.h" />
+    <ClInclude Include="src\Unloved\EditorSession\HeightMap\EditorHeightMap.h" />
+    <ClInclude Include="src\Unloved\EditorSession\EditorObjectOptions.h" />
+    <ClInclude Include="src\Unloved\EditorSession\EditorInspector.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Inspector\EditorInspectorInternal.h" />
+    <ClInclude Include="src\Unloved\EditorSession\EditorToolbar.h" />
+    <ClInclude Include="src\Unloved\EditorSession\EditorPlacement.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Interaction\EditorPointSequences.h" />
+    <ClInclude Include="src\Unloved\EditorSession\EditorSession.h" />
+    <ClInclude Include="src\Unloved\EditorSession\UI\EditorLayout.h" />
+    <ClInclude Include="src\Unloved\EditorSession\EditorMenuBar.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Interaction\EditorSelection.h" />
+    <ClInclude Include="src\Unloved\EditorSession\EditorSessionTypes.h" />
+    <ClInclude Include="src\Unloved\EditorSession\UI\EditorStyle.h" />
+    <ClInclude Include="src\Unloved\EditorSession\UI\EditorUI.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Core\EditorViewports.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Interaction\EditorVisibility.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Core\EditorWorkspace.h" />
+    <ClInclude Include="src\Unloved\EditorSession\BoneMask\EditorBoneMask.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Ragdoll\EditorRagdoll.h" />
+    <ClInclude Include="src\Unloved\EditorSession\PlacementTools.h" />
+    <ClInclude Include="src\Unloved\EditorSession\ObjectNames.h" />
+    <ClInclude Include="src\Unloved\EditorSession\Gizmo\Gizmo.h" />
+    <ClInclude Include="src\Unloved\Maps\MapFile.h" />
+    <ClInclude Include="src\Unloved\Maps\MapFileFormat.h" />
+    <ClInclude Include="src\Unloved\Render\RenderDataManager.h" />
+    <ClInclude Include="src\Unloved\Render\Renderer.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\SkinnedModel.h" />
+    <ClInclude Include="src\Legacy\Timer.hpp" />
+    <ClInclude Include="src\Unloved\Camera\Camera.h" />
+    <ClInclude Include="src\Unloved\Objects\Renderables\SkinnedGameObject.h" />
+    <ClInclude Include="src\Unloved\Objects\Props\GameObject.h" />
+    <ClInclude Include="src\Hell\Common\Enums.h" />
+    <ClInclude Include="src\Hell\Math\Primtives.h" />
+    <ClInclude Include="src\Hell\Input\Input.h" />
+    <ClInclude Include="src\Hell\Input\keycodes.h" />
+    <ClInclude Include="src\Legacy\learnopengl\animation.h" />
+    <ClInclude Include="src\Legacy\learnopengl\animator.h" />
+    <ClInclude Include="src\Legacy\learnopengl\animdata.h" />
+    <ClInclude Include="src\Legacy\learnopengl\assimp_glm_helpers.h" />
+    <ClInclude Include="src\Legacy\learnopengl\bone.h" />
+    <ClInclude Include="src\Legacy\learnopengl\camera.h" />
+    <ClInclude Include="src\Legacy\learnopengl\entity.h" />
+    <ClInclude Include="src\Legacy\learnopengl\mesh.h" />
+    <ClInclude Include="src\Legacy\learnopengl\model.h" />
+    <ClInclude Include="src\Legacy\learnopengl\model_animation.h" />
+    <ClInclude Include="src\Unloved\Viewport\Viewport.h" />
+    <ClInclude Include="src\Hell\UI\FontSpriteSheet.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\GenericMesh.h" />
+    <ClInclude Include="src\Hell\UI\TextBlitter.h" />
+    <ClInclude Include="src\Hell\ImageTools\DDS.h" />
+    <ClInclude Include="src\Unloved\Objects\Renderables\MeshBufferOLD.h" />
+    <ClInclude Include="src\Hell\ImageTools\ImageTools.h" />
+    <ClInclude Include="src\Hell\UI\UIBackEnd.h" />
+    <ClInclude Include="src\Hell\UI\UITypes.h" />
+    <ClInclude Include="src\Hell\ResourceManagement\Types\Texture.h" />
+    <ClInclude Include="src\Unloved\Render\RendererUtil.h" />
+    <ClInclude Include="src\Unloved\Viewport\ViewportManager.h" />
+    <ClInclude Include="src\Unloved\Systems\House\BlockingVolume.h" />
+    <ClInclude Include="src\Unloved\Systems\House\ClippingVolume.h" />
+    <ClInclude Include="src\Unloved\Systems\House\HouseBuilder.h" />
+    <ClInclude Include="src\Unloved\Systems\House\HouseManager.h" />
+    <ClInclude Include="src\Unloved\Systems\WorldBVH\WorldBVH.h" />
+    <ClInclude Include="src\Legacy\World\LegacyWorld.h" />
+    <ClInclude Include="vendor\magic_enum\MagicEnum.hpp" />
+    <ClInclude Include="vendor\stb_image\stb_image.h" />
+    <ClInclude Include="vendor\stb_image\stb_image_write.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="src\Unloved\Notes.txt" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

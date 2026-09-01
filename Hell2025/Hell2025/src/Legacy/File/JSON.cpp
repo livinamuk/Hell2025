@@ -4,8 +4,16 @@
 #include "Hell/Common/Constants.h"
 #include "Hell/Common/Enum.h"
 #include "Hell/ResourceManagement/ResourceManager.h"
+#include "Unloved/Bible/Bible.h"
 
 namespace nlohmann {
+    void to_json(nlohmann::json& j, const EditableAxisSpan& editableAxisSpan) {
+        j = nlohmann::json{
+            {"Minimum", editableAxisSpan.minimum},
+            {"Maximum", editableAxisSpan.maximum},
+        };
+    }
+
     void to_json(nlohmann::json& j, const Unloved::SequencePoint& sequencePoint) {
         j = nlohmann::json{
             {"Position", sequencePoint.position},
@@ -94,8 +102,6 @@ namespace nlohmann {
             {"Rotation", createInfo.rotation},
             {"Scale", createInfo.scale},
             {"Type", Hell::Enum::ToString(createInfo.type)},
-            {"AnimationName", createInfo.animationName},
-            {"AnimationSpeed", createInfo.animationSpeed},
             {"EditorName", createInfo.editorName}
         };
     }
@@ -149,11 +155,27 @@ namespace nlohmann {
         };
     }
 
+    void to_json(nlohmann::json& j, const KangarooCreateInfo& createInfo) {
+        j = nlohmann::json{
+            {"Position", createInfo.position},
+            {"Rotation", createInfo.rotation},
+            {"EditorName", createInfo.editorName}
+        };
+    }
+
     void to_json(nlohmann::json& j, const LadderCreateInfo& createInfo) {
         j = nlohmann::json{
             {"Position", createInfo.position},
             {"Rotation", createInfo.rotation},
+            {"EditableAxisSpan", createInfo.editableAxisSpan},
             {"StepCount", createInfo.stepCount},
+            {"EditorName", createInfo.editorName}
+        };
+    }
+
+    void to_json(nlohmann::json& j, const LadderDismountCreateInfo& createInfo) {
+        j = nlohmann::json{
+            {"Position", createInfo.position},
             {"EditorName", createInfo.editorName}
         };
     }
@@ -179,6 +201,8 @@ namespace nlohmann {
         j = nlohmann::json{
             {"Position", createInfo.position},
             {"Rotation", createInfo.rotation},
+            {"ShopTeleportPosition", createInfo.shopTeleportPosition},
+            {"ShopTeleportEuler", createInfo.shopTeleportEuler},
             {"EditorName", createInfo.editorName}
         };
     }
@@ -229,8 +253,7 @@ namespace nlohmann {
             {"SaveToFile", createInfo.saveToFile},
             {"Respawn", createInfo.respawn},
             {"DisablePhysicsAtSpawn", createInfo.disablePhysicsAtSpawn},
-            {"Name", createInfo.name},
-            {"Type", Hell::Enum::ToString(createInfo.type)},
+            {"Item", Hell::Enum::ToString(createInfo.item)},
             {"EditorName", createInfo.editorName}
         };
     }
@@ -341,6 +364,11 @@ namespace nlohmann {
         info.sprialTopCenter = j.value("SprialTopCenter", glm::vec3(0.0f));
     }
 
+    void from_json(const nlohmann::json& j, EditableAxisSpan& editableAxisSpan) {
+        editableAxisSpan.minimum = j.value("Minimum", -1.0f);
+        editableAxisSpan.maximum = j.value("Maximum", 1.0f);
+    }
+
     void from_json(const nlohmann::json& j, Unloved::SequencePoint& sequencePoint) {
         sequencePoint.position = j.value("Position", glm::vec3(0.0f));
         sequencePoint.normal = j.value("Normal", glm::vec3(0.0f, 1.0f, 0.0f));
@@ -414,8 +442,6 @@ namespace nlohmann {
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
         info.scale = j.value("Scale", 1.0f);
         info.type = Hell::Enum::FromString(j.value("Type", UNDEFINED_STRING), GenericAnimatedObjectType::UNDEFINED);
-        info.animationName = j.value("AnimationName", std::string());
-        info.animationSpeed = j.value("AnimationSpeed", 1.0f);
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
@@ -433,6 +459,12 @@ namespace nlohmann {
         info.scale = j.value("Scale", glm::vec3(1.0f));
         info.boardCount = j.value("BoardCount", 10);
         info.poleSpacing = j.value("PoleSpacing", 1.0f);
+        info.editorName = j.value("EditorName", UNDEFINED_STRING);
+    }
+
+    void from_json(const nlohmann::json& j, KangarooCreateInfo& info) {
+        info.position = j.value("Position", glm::vec3(0.0f));
+        info.rotation = j.value("Rotation", glm::vec3(0.0f));
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
@@ -490,7 +522,13 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, LadderCreateInfo& info) {
         info.position = j.value("Position", glm::vec3(0.0f));
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
+        info.editableAxisSpan = j.value("EditableAxisSpan", EditableAxisSpan{});
         info.stepCount = j.value("StepCount", 1);
+        info.editorName = j.value("EditorName", UNDEFINED_STRING);
+    }
+
+    void from_json(const nlohmann::json& j, LadderDismountCreateInfo& info) {
+        info.position = j.value("Position", glm::vec3(0.0f));
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
@@ -512,6 +550,8 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, MermaidCreateInfo& info) {
         info.position = j.value("Position", glm::vec3(0.0f));
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
+        info.shopTeleportPosition = j.value("ShopTeleportPosition", info.position + glm::vec3(0.0f, 1.65f, 0.0f));
+        info.shopTeleportEuler = j.value("ShopTeleportEuler", glm::vec3(-0.08f, -1.65f, 0.0f));
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
@@ -525,11 +565,11 @@ namespace nlohmann {
     void from_json(const nlohmann::json& j, PickUpCreateInfo& info) {
         info.position = j.value("Position", glm::vec3(0.0f));
         info.rotation = j.value("Rotation", glm::vec3(0.0f));
-        info.type = Hell::Enum::FromString(j.value("Type", "UNDEFINED_STRING"), ItemType::UNDEFINED);
+        info.item = Hell::Enum::FromString(j.value("Item", UNDEFINED_STRING), Unloved::Bible::Item::UNDEFINED);
+        if (info.item == Unloved::Bible::Item::UNDEFINED) info.item = Unloved::Bible::GetItemByName(j.value("Name", UNDEFINED_STRING));
         info.respawn = j.value("Respawn", true);
         info.saveToFile = j.value("SaveToFile", true);
         info.disablePhysicsAtSpawn = j.value("DisablePhysicsAtSpawn", true);
-        info.name = j.value("Name", UNDEFINED_STRING);
         info.editorName = j.value("EditorName", UNDEFINED_STRING);
     }
 
@@ -645,8 +685,10 @@ namespace JSON {
         createInfoCollection.genericAnimatedObjects = json.value("GenericAnimatedObjects", std::vector<GenericAnimatedObjectCreateInfo>{});
         createInfoCollection.genericObjects = json.value("Drawers", std::vector<GenericObjectCreateInfo>{});
         createInfoCollection.jetties = json.value("Jetties", std::vector<JettyCreateInfo>{});
+        createInfoCollection.kangaroos = json.value("Kangaroos", std::vector<KangarooCreateInfo>{});
         createInfoCollection.worldPlanes = json.value("Planes", std::vector<WorldPlaneCreateInfo>{});
         createInfoCollection.ladders = json.value("Ladders", std::vector<LadderCreateInfo>{});
+        createInfoCollection.ladderDismounts = json.value("LadderDismounts", std::vector<LadderDismountCreateInfo>{});
         createInfoCollection.lights = json.value("Lights", std::vector<LightCreateInfo>{});
         createInfoCollection.mermaids = json.value("Mermaids", std::vector<MermaidCreateInfo>{});
         createInfoCollection.pianos = json.value("Pianos", std::vector<PianoCreateInfo>{});
@@ -677,8 +719,10 @@ namespace JSON {
         json["Fences"] = createInfoCollection.fences;
         json["Fireplaces"] = createInfoCollection.fireplaces;
         json["Ladders"] = createInfoCollection.ladders;
+        json["LadderDismounts"] = createInfoCollection.ladderDismounts;
         json["Lights"] = createInfoCollection.lights;
         json["Jetties"] = createInfoCollection.jetties;
+        json["Kangaroos"] = createInfoCollection.kangaroos;
         json["Mermaids"] = createInfoCollection.mermaids;
         json["Pianos"] = createInfoCollection.pianos;
         json["PickUps"] = createInfoCollection.pickUps;

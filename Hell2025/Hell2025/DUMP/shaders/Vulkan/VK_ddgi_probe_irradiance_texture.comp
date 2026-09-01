@@ -1,0 +1,169 @@
+#version 460
+#extension GL_EXT_buffer_reference2 : require
+#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+#include "../common/constants.glsl"
+#include "../common/ddgi.glsl"
+#include "../common/normal_encoding.glsl"
+#include "../common/reconstruction.glsl"
+#include "../common/util.glsl"
+#include "../common/viewport.glsl"
+#include "../common/Vulkan/VK_binding_indices.glsl"
+#include "../common/Vulkan/VK_push_constants.glsl"
+
+layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 1) in;
+
+layout(set = 0, binding = DESC_IDX_SAMPLERS) uniform sampler samplers[];
+layout(set = 0, binding = DESC_IDX_TEXTURES) uniform texture2D textures[];
+layout(set = 0, binding = DESC_IDX_TEXTURE_ARRAYS_RG16F) uniform texture2DArray textureArraysRG16F[];
+layout(set = 0, binding = DESC_IDX_TEXTURE_ARRAYS_RGBA16F) uniform texture2DArray textureArraysRGBA16F[];
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2D storageImagesRGBA16F[];
+
+layout(push_constant, scalar) uniform PushConstants {
+    PushConstantsDDGIProbeIrradianceTexture data;
+} pc;
+
+layout(buffer_reference, scalar) readonly buffer ProbeStatesBuffer { ProbeState probeStates[]; };
+const float RTXGI_2PI = 6.2831853071795864;
+const float encodingGamma = 5.0;
+
+DDGIVolume GetVolume() {
+    DDGIVolume volume;
+    volume.origin = pc.data.volumeOrigin;
+    volume.probeSpacing = pc.data.probeSpacing;
+    volume.probeCounts = pc.data.probeCounts;
+    volume.totalProbes = int(pc.data.totalProbes);
+    volume.worldBoundsMin = pc.data.worldBoundsMin;
+    volume.worldBoundsMax = pc.data.worldBoundsMax;
+    volume.probeOffset = pc.data.probeOffset;
+    return volume;
+}
+
+uint GetGlobalProbeIndex(DDGIVolume volume, int probeIndex) {
+    return volume.probeOffset + uint(probeIndex);
+}
+
+vec3 SampleIrradianceAtlas(vec3 worldPosition, vec3 normal, vec3 cameraPos) {
+    DDGIVolume volume = GetVolume();
+    if (any(lessThan(worldPosition, volume.worldBoundsMin)) || any(greaterThan(worldPosition, volume.worldBoundsMax))) {
+        return vec3(0.0);
+    }
+
+    ProbeStatesBuffer probeStates = ProbeStatesBuffer(pc.data.probeStatesDeviceAddress);
+    vec3 direction = normal;
+    vec3 irradiance = vec3(0.0);
+    float accumulatedWeights = 0.0;
+
+    vec3 surfaceBias = DDGIGetSurfaceBias(worldPosition, normal, cameraPos);
+    vec3 biasedWorldPosition = worldPosition + surfaceBias;
+
+    ivec3 baseProbeCoords = DDGIGetBaseProbeGridCoords(biasedWorldPosition, volume);
+    vec3 baseProbeWorldPosition = DDGIGetProbeBaseWorldPosition(baseProbeCoords, volume);
+    vec3 gridSpaceDistance = biasedWorldPosition - baseProbeWorldPosition;
+    vec3 alpha = clamp(gridSpaceDistance / volume.probeSpacing, vec3(0.0), vec3(1.0));
+
+    for (int probeIndex = 0; probeIndex < 8; probeIndex++) {
+        ivec3 adjacentProbeOffset = ivec3(probeIndex, probeIndex >> 1, probeIndex >> 2) & ivec3(1);
+        ivec3 adjacentProbeCoords = clamp(baseProbeCoords + adjacentProbeOffset, ivec3(0), volume.probeCounts - ivec3(1));
+        int adjacentProbeIndex = DDGIGetProbeIndex(adjacentProbeCoords, volume.probeCounts);
+        uint globalProbeIndex = GetGlobalProbeIndex(volume, adjacentProbeIndex);
+
+        if (!probeStates.probeStates[globalProbeIndex].isActive) continue;
+
+        vec3 adjacentProbeWorldPosition = DDGIGetProbeWorldPosition(adjacentProbeCoords, volume, probeStates.probeStates[globalProbeIndex]);
+        vec3 worldPosToAdjProbe = normalize(adjacentProbeWorldPosition - worldPosition);
+        vec3 biasedPosToAdjProbe = normalize(adjacentProbeWorldPosition - biasedWorldPosition);
+        float biasedPosToAdjProbeDist = length(adjacentProbeWorldPosition - biasedWorldPosition);
+
+        vec3 trilinear = max(vec3(0.001), mix(1.0 - alpha, alpha, vec3(adjacentProbeOffset)));
+        float trilinearWeight = trilinear.x * trilinear.y * trilinear.z;
+
+        float weight = 1.0;
+        float wrapShading = (dot(worldPosToAdjProbe, direction) + 1.0) * 0.5;
+        weight *= (wrapShading * wrapShading) + 0.2;
+
+        vec2 octantCoordsDist = DDGIGetOctahedralCoordinates(-biasedPosToAdjProbe);
+        vec3 probeTextureUVDist = DDGIGetProbeUV(adjacentProbeIndex, octantCoordsDist, 14, volume);
+        vec2 filteredDistance = 2.0 * texture(sampler2DArray(textureArraysRG16F[pc.data.probeAtlasImageIndex], samplers[VULKAN_SAMPLER_IDX_LINEAR]), probeTextureUVDist).rg;
+
+        float variance = abs((filteredDistance.x * filteredDistance.x) - filteredDistance.y);
+        float chebyshevWeight = 1.0;
+        if (biasedPosToAdjProbeDist > filteredDistance.x) {
+            float v = biasedPosToAdjProbeDist - filteredDistance.x;
+            chebyshevWeight = variance / (variance + (v * v) + 1e-5);
+            chebyshevWeight = max(chebyshevWeight * chebyshevWeight * chebyshevWeight, 0.0);
+        }
+
+        weight *= max(0.05, chebyshevWeight);
+        weight = max(0.000001, weight);
+
+        const float crushThreshold = 0.2;
+        if (weight < crushThreshold) {
+            weight *= (weight * weight) * (1.0 / (crushThreshold * crushThreshold));
+        }
+
+        weight *= trilinearWeight;
+        if (weight < 0.001) continue;
+
+        vec2 octantCoordsIrrad = DDGIGetOctahedralCoordinates(normal);
+        vec3 probeTextureUVIrrad = DDGIGetProbeUV(adjacentProbeIndex, octantCoordsIrrad, 6, volume);
+        vec3 probeIrradiance = texture(sampler2DArray(textureArraysRGBA16F[pc.data.probeAtlasImageIndex], samplers[VULKAN_SAMPLER_IDX_LINEAR]), probeTextureUVIrrad).rgb;
+        probeIrradiance = pow(max(vec3(0.0), probeIrradiance), vec3(encodingGamma * 0.5));
+
+        irradiance += weight * probeIrradiance;
+        accumulatedWeights += weight;
+    }
+
+    if (accumulatedWeights == 0.0) return vec3(0.0);
+
+    irradiance /= accumulatedWeights;
+    irradiance *= irradiance;
+    irradiance *= RTXGI_2PI;
+    return irradiance;
+}
+
+void main() {
+    ivec2 px = ivec2(gl_GlobalInvocationID.xy);
+    uint outputImageIndex = pc.data.indirectDiffuseStorageImageIndex;
+    uint outputSurfaceImageIndex = pc.data.indirectDiffuseSurfaceStorageImageIndex;
+    ivec2 outputImageSize = imageSize(storageImagesRGBA16F[outputImageIndex]);
+
+    if (px.x >= outputImageSize.x || px.y >= outputImageSize.y) return;
+
+    ivec2 gBufferSize = textureSize(sampler2D(textures[VULKAN_TEXTURE_IDX_NORMAL_XY_ROUGHNESS_MISC], samplers[VULKAN_SAMPLER_IDX_NEAREST]), 0);
+
+    RendererData rendererData = pc.data.frame.rendererDataBuffer.rendererData;
+    ViewportDataBuffer viewportDataBuffer = pc.data.frame.viewportDataBuffer;
+    vec2 screenUV = ScreenUVFromPixel(px, outputImageSize);
+    ivec2 inputCoords = clamp(ivec2(screenUV * vec2(gBufferSize)), ivec2(0), gBufferSize - ivec2(1));
+    uint viewportIndex = ViewportIndexFromPixel(inputCoords, gBufferSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataBuffer.viewportData[viewportIndex].xOffset, viewportDataBuffer.viewportData[viewportIndex].yOffset, viewportDataBuffer.viewportData[viewportIndex].width, viewportDataBuffer.viewportData[viewportIndex].height);
+    mat4 inverseProjectionView = viewportDataBuffer.viewportData[viewportIndex].inverseProjectionViewReverseZ;
+    vec3 viewPos = viewportDataBuffer.viewportData[viewportIndex].viewPos.xyz;
+
+    vec3 normal = DecodeOct(texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_NORMAL_XY_ROUGHNESS_MISC], samplers[VULKAN_SAMPLER_IDX_NEAREST]), inputCoords, 0).rg);
+    float normalLengthSq = dot(normal, normal);
+    if (normalLengthSq < 0.0001) {
+        imageStore(storageImagesRGBA16F[outputImageIndex], px, vec4(0.0));
+        imageStore(storageImagesRGBA16F[outputSurfaceImageIndex], px, vec4(0.0));
+        return;
+    }
+
+    normal *= inversesqrt(normalLengthSq);
+
+    float depth = texelFetch(sampler2D(textures[VULKAN_TEXTURE_IDX_GBUFFER_DEPTH], samplers[VULKAN_SAMPLER_IDX_NEAREST]), inputCoords, 0).r;
+    vec2 viewportUV = ViewportUVFromPixel(inputCoords, gBufferSize, viewportRect);
+    vec3 worldPos = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
+
+    DDGIVolume volume = GetVolume();
+    if (any(lessThan(worldPos, volume.worldBoundsMin)) || any(greaterThan(worldPos, volume.worldBoundsMax))) {
+        return;
+    }
+
+    vec3 finalIrradiance = SampleIrradianceAtlas(worldPos, normal, viewPos) * rendererData.irradianceDampening;
+
+    imageStore(storageImagesRGBA16F[outputImageIndex], px, vec4(finalIrradiance, 1.0));
+    imageStore(storageImagesRGBA16F[outputSurfaceImageIndex], px, vec4(normal, distance(worldPos, viewPos)));
+}

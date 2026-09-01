@@ -1,0 +1,32 @@
+{
+    "bladeHeight": 0.299999862909317,
+    "bladeWidth": 0.004999998956918716,
+    "color1": [
+        0.5349999070167542,
+        0.5499998927116394,
+        0.11999999731779099
+    ],
+    "color1DarknessFactor": 0.880000114440918,
+    "color2": [
+        0.7962744235992432,
+        0.7893137335777283,
+        0.0
+    ],
+    "color2DarknessFactor": 0.40000057220458984,
+    "cullExponent": 2.0000057220458984,
+    "curveAmount": 0.06999998539686203,
+    "diffuseWrap": 0.3499999940395355,
+    "maxCullDistance": 20.0,
+    "minCullDistance": 5.0,
+    "noiseMixMultiplier": 0.48999983072280884,
+    "noiseSquareMultiplier": 1.0500000715255737,
+    "normalBlendEndDistance": 10.0,
+    "normalBlendStartDistance": 5.0,
+    "normalUpBlend": 0.7399996519088745,
+    "roughness": 0.5999998450279236,
+    "segmentCount": 3,
+    "spacing": 0.018518518656492233,
+    "specularStrength": 0.3999999165534973,
+    "subSurfaceFactor": 0.6099998354911804,
+    "transmissionPower": 4.0
+}

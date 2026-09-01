@@ -3,7 +3,7 @@
 #include "Hell/Input.h"
 #include "Hell/Math/Math.h"
 
-#include "Unloved/Editor/Editor.h"
+#include "Unloved/EditorSession/EditorSession.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
 #include "Unloved/Session/Session.h" // for total time
 #include "Unloved/World/World.h"
@@ -15,31 +15,51 @@ namespace Input = Hell::Input;
 
 namespace Unloved {
 
-void Player::UpdateMovement(float deltaTime) {
-
-    // Hack to move camera height debug keys faster when pressing SHIFT and the logic to do so
-    float speedBoost = Input::KeyDown(GLFW_KEY_LEFT_SHIFT) ? 1.5f : 1.0f;
-    float heightSpeed = 3.0f;
-    //if (Input::KeyDown(HELL_KEY_EQUAL)) {
-    //    m_position.y += deltaTime * heightSpeed * speedBoost;
-    //}
-    //if (Input::KeyDown(GLFW_KEY_MINUS)) {
-    //    m_position.y -= deltaTime * heightSpeed * speedBoost;
-    //}
-
-    if (Editor::IsClosed() && m_controlEnabled) {
-        if (World::HasOcean() && GetCameraPosition().y < Ocean::GetWaterHeightAtPlayer(m_viewportIndex) + 0.1f) {
-            UpdateSwimmingMovement(deltaTime);
-            //std::cout << " swimming\n";
-        }
-        else {
-            UpdateWalkingMovement(deltaTime);
-            //std::cout << " walking\n";
-        }
+void Player::UpdateMovementMode() {
+    if (m_movementMode == PlayerMovementMode::LADDER_TRANSITION) {
+        return;
     }
-    UpdateLadderMovement(deltaTime);
 
-    // Character controller AABB
+    if (m_movementMode == PlayerMovementMode::LADDER) {
+        if (World::GetLadderByObjectId(m_ladderMoveData.ladderId)) {
+            return;
+        }
+        m_ladderMoveData = {};
+        m_movementMode = PlayerMovementMode::NONE;
+    }
+
+    if (!m_controlEnabled || EditorSession::IsActive()) {
+        m_movementMode = PlayerMovementMode::NONE;
+        return;
+    }
+
+    if (TryAutoMountLadder()) {
+        if (m_movementMode != PlayerMovementMode::LADDER_TRANSITION) {
+            m_movementMode = PlayerMovementMode::NONE;
+        }
+        return;
+    }
+
+    if (World::HasOcean() && GetCameraPosition().y < Ocean::GetWaterHeightAtPlayer(m_viewportIndex) + 0.1f) {
+        m_movementMode = PlayerMovementMode::SWIMMING;
+        return;
+    }
+    else {
+        m_movementMode = PlayerMovementMode::WALKING;
+    }
+}
+
+void Player::UpdateMovement(float deltaTime) {
+    UpdateMovementMode();
+
+    switch (m_movementMode) {
+        case PlayerMovementMode::NONE:                                                 break;
+        case PlayerMovementMode::WALKING:           UpdateWalkingMovement(deltaTime);  break;
+        case PlayerMovementMode::SWIMMING:          UpdateSwimmingMovement(deltaTime); break;
+        case PlayerMovementMode::LADDER:            UpdateLadderMovement(deltaTime);   break;
+        case PlayerMovementMode::LADDER_TRANSITION: UpdateLadderTransition(deltaTime); break;
+    }
+
     m_characterControllerAABB = Hell::Physics::GetCharacterControllerAABB(m_characterControllerId);
 }
 
@@ -47,7 +67,7 @@ void Player::UpdateWalkingMovement(float deltaTime) {
     m_crouching = PressingCrouch();
     m_groundedLastFrame = m_grounded;
 
-    if (!Editor::IsOpen() && m_controlEnabled) {
+    if (EditorSession::IsInactive() && m_controlEnabled) {
 
         // TO DO!!!!!!!!!!!!!!
         // You need to find a way to cleanly determine character controller grounded states, and whether its head is touching the ceiling
@@ -109,6 +129,9 @@ void Player::UpdateWalkingMovement(float deltaTime) {
 
         // Jump
         if (PressingJump() && HasControl() && m_grounded) {
+            m_animatedHumanoid.PlayJumpAnimation();
+            m_jumpAnimationActive = true;
+            m_stationaryJumpTailEligible = !m_moving && !m_crouching;
             m_yVelocity = 4.5f;  // Magic value for jump strength
             m_grounded = false;
         }
@@ -126,12 +149,6 @@ void Player::UpdateWalkingMovement(float deltaTime) {
         glm::vec3 displacement = m_movementDirection * m_acceleration;
         displacement *= m_currentSpeed * deltaTime;
         displacement.y += m_yVelocity * deltaTime;
-
-        // Ladder
-        // TODO: instead make it so you can jump off ladders, this prevents it.
-        if (IsOverlappingLadder()) {
-            displacement.y = 0;
-        }
 
         // Update character controller
         Hell::Physics::MoveCharacterController(m_characterControllerId, displacement);
@@ -269,7 +286,7 @@ void Player::UpdateSwimmingMovement(float deltaTime) {
     m_swimmingSpeed = 3.0;
 
     // Snap to ocean surface
-    if (!PressingCrouch() && !IsOverlappingLadder()) {
+    if (!PressingCrouch()) {
         const float surfaceThreshold = 0.05f;
         float targetY = Ocean::GetWaterHeightAtPlayer(m_viewportIndex) - m_viewHeightStanding + 0.05f;
         m_smoothedWaterY = SmoothLerp(m_smoothedWaterY, targetY, deltaTime, 0.1f);

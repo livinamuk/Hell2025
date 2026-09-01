@@ -1,0 +1,64 @@
+#version 450
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout (binding = 0, rgba16f) readonly  uniform image2D imgSrc;
+layout (binding = 1, rgba16f) writeonly uniform image2D imgDst;
+
+uniform ivec2 u_direction;
+uniform int u_width;
+uniform int u_height;
+uniform int u_radius; // 1 to 5
+
+// Weights
+const float w1[3] = float[](0.18126583, 0.63746835, 0.18126583);
+const float w2[5] = float[](0.12458925, 0.23053643, 0.29023005, 0.23053643, 0.12458925);
+const float w3[7] = float[](0.06670864, 0.12933615, 0.19323315, 0.22144413, 0.19323315, 0.12933615, 0.06670864);
+const float w4[9] = float[](0.02781813, 0.06670864, 0.12458925, 0.18126583, 0.20000000, 0.18126583, 0.12458925, 0.06670864, 0.02781813);
+const float w5[11] = float[](0.00881223, 0.02714358, 0.06511406, 0.12164907, 0.17699836, 0.20056541, 0.17699836, 0.12164907, 0.06511406, 0.02714358, 0.00881223);
+
+
+void main() {
+    ivec2 uv = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 size = ivec2(u_width, u_height);
+
+    vec4 sum = vec4(0.0);
+
+    // Branch based on the uniform value
+    if (u_radius == 1) {
+        for (int i = -1; i <= 1; ++i) {
+            ivec2 offset = ivec2(i, i) * u_direction;
+            ivec2 coord = clamp(uv + offset, ivec2(0), size - 1);
+            sum += imageLoad(imgSrc, coord) * w1[i + 1];
+        }
+    } 
+    else if (u_radius == 2) {
+        for (int i = -2; i <= 2; ++i) {
+            ivec2 offset = ivec2(i, i) * u_direction;
+            ivec2 coord = clamp(uv + offset, ivec2(0), size - 1);
+            sum += imageLoad(imgSrc, coord) * w2[i + 2];
+        }
+    } 
+    else if (u_radius == 3) {
+        for (int i = -3; i <= 3; ++i) {
+            ivec2 offset = ivec2(i, i) * u_direction;
+            ivec2 coord = clamp(uv + offset, ivec2(0), size - 1);
+            sum += imageLoad(imgSrc, coord) * w3[i + 3];
+        }
+    } 
+    else if (u_radius == 4) {
+        for (int i = -4; i <= 4; ++i) {
+            ivec2 offset = ivec2(i, i) * u_direction;
+            ivec2 coord = clamp(uv + offset, ivec2(0), size - 1);
+            sum += imageLoad(imgSrc, coord) * w4[i + 4];
+        }
+    } 
+    else { // Default to radius 5
+        for (int i = -5; i <= 5; ++i) {
+            ivec2 offset = ivec2(i, i) * u_direction;
+            ivec2 coord = clamp(uv + offset, ivec2(0), size - 1);
+            sum += imageLoad(imgSrc, coord) * w5[i + 5];
+        }
+    }
+
+    imageStore(imgDst, uv, sum);
+}

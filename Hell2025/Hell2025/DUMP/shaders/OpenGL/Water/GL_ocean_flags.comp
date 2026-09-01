@@ -1,0 +1,52 @@
+#version 460 core
+#include "../../common/OpenGL/GL_binding_indices.glsl"
+
+#include "../../common/constants.glsl"
+#include "../../common/ocean.glsl"
+#include "../../common/types.glsl"
+#include "../../common/util.glsl"
+#include "../../common/viewport.glsl"
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(r8ui, binding = 0) writeonly uniform uimage2D u_oceanFlagsImage; // Output
+layout(r8ui, binding = 1) readonly  uniform uimage2D u_oceanMaskImage;
+layout(binding = 2) uniform sampler2D DisplacementTexture_band0;
+layout(binding = 3) uniform sampler2D DisplacementTexture_band1;
+
+layout(std430, binding = SSBO_IDX_RENDERER_DATA) readonly restrict buffer rendererDataBuffer { RendererData rendererData; };
+layout(std430, binding = SSBO_IDX_VIEWPORT_DATA) readonly restrict buffer viewportDataBuffer { ViewportData viewportDataArr[]; };
+
+void main() {
+    ivec2 px = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 outputImageSize = imageSize(u_oceanFlagsImage);
+
+    if (px.x >= outputImageSize.x || px.y >= outputImageSize.y) return;
+
+    uint viewportIndex = ViewportIndexFromPixel(px, outputImageSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+    ivec4 viewportRect = ivec4(viewportDataArr[viewportIndex].xOffset, viewportDataArr[viewportIndex].yOffset, viewportDataArr[viewportIndex].width, viewportDataArr[viewportIndex].height);
+    mat4 inverseProjectionView = viewportDataArr[viewportIndex].inverseJitteredProjectionViewReverseZ;
+
+    // Unproject near clipping plane
+    vec2 clipXY = ViewportNDCFromPixel(px, outputImageSize, viewportRect);
+    vec4 clipSpaceNear = vec4(clipXY, 1.0, 1.0);
+    vec4 worldNear = inverseProjectionView * clipSpaceNear;
+    vec3 worldPosition = worldNear.xyz / worldNear.w;
+    
+    float height = SampleCombinedEstimatedOceanDisplacement(DisplacementTexture_band0, DisplacementTexture_band1, worldPosition.xz, rendererData.oceanDisplayMode).y;
+
+    float waterHeight = height + rendererData.oceanOriginY;
+    bool pixelUnderwater = worldPosition.y < waterHeight;
+    
+    uint oceanMask = imageLoad(u_oceanMaskImage, px).r;
+    bool oceanGeometry = (oceanMask != 0); 
+    
+    uint flag = 0u;
+
+    if (oceanGeometry)  flag = 1u;
+    if (!oceanGeometry) flag = 0u;
+    if (pixelUnderwater && oceanGeometry) flag = 2u;
+    if (pixelUnderwater && !oceanGeometry) flag = 3u;
+
+    imageStore(u_oceanFlagsImage, px, uvec4(flag, 0u, 0u, 0u));
+}

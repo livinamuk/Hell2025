@@ -1,0 +1,66 @@
+#version 450
+#include "../../common/constants.glsl"
+#include "../../common/ddgi.glsl"
+#include "../../common/normal_encoding.glsl"
+#include "../../common/reconstruction.glsl"
+#include "../../common/types.glsl"
+#include "../../common/util.glsl"
+#include "../../common/viewport.glsl"
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(std430, binding = 4) buffer ProbeStateBuffer          { ProbeState probeStates[]; };
+layout(std430, binding = 5) readonly buffer DDGIVolumeBuffer { DDGIVolume volume; };
+layout(std430, binding = 6) readonly buffer rendererDataBuffer { RendererData rendererData; };
+layout(std430, binding = 7) readonly buffer viewportDataBuffer { ViewportData viewportData[]; };
+
+layout (binding = 2) uniform sampler2D u_normalTexture;
+layout (binding = 3) uniform sampler2D u_depthTexture;
+
+void main() {
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy) * 4; // scale by 4 for quarter-res sampling
+    ivec2 gBufferSize = textureSize(u_normalTexture, 0);
+
+    if (pixelCoords.x >= gBufferSize.x || pixelCoords.y >= gBufferSize.y) return;
+
+    uint viewportIndex = ViewportIndexFromPixel(pixelCoords, gBufferSize, rendererData.viewportLayout, vec2(rendererData.viewportSplitX, rendererData.viewportSplitY));
+
+    // Read DDGIVolume
+    vec3 probeOffset = volume.origin;
+    ivec3 probeCounts = volume.probeCounts;
+    float probeSpacing = volume.probeSpacing;
+    int totalProbes = volume.totalProbes;
+
+    vec3 fragNormal = DecodeOct(texelFetch(u_normalTexture, pixelCoords, 0).rg);
+
+    if (dot(fragNormal, fragNormal) < 0.0001) return;
+
+    // Viewport UV
+    ivec4 viewportRect = ivec4(viewportData[viewportIndex].xOffset, viewportData[viewportIndex].yOffset, viewportData[viewportIndex].width, viewportData[viewportIndex].height);
+    mat4 inverseProjectionView = viewportData[viewportIndex].inverseJitteredProjectionViewReverseZ;
+    vec3 viewPosition = viewportData[viewportIndex].viewPos.xyz;
+    vec2 viewportUV = ViewportUVFromPixel(pixelCoords, gBufferSize, viewportRect);
+
+    // Position from depth
+    float depth = texelFetch(u_depthTexture, pixelCoords, 0).r;
+    vec3 fragPosition = WorldPosFromDepth(viewportUV, depth, inverseProjectionView);
+
+    vec3 surfaceBias = DDGIGetSurfaceBias(fragPosition, fragNormal, viewPosition);
+    vec3 biasedWorldPosition = fragPosition + surfaceBias;
+
+    ivec3 base = DDGIGetBaseProbeGridCoords(biasedWorldPosition, volume);
+
+    ivec3 maxCoords = probeCounts - ivec3(2);
+    if (any(lessThan(base, ivec3(0))) || any(greaterThan(base, maxCoords))) return;
+
+    // Mark all 8 probes in the trilinear volume as visible
+    for (int dy = 0; dy <= 1; dy++) {
+        for (int dz = 0; dz <= 1; dz++) {
+            for (int dx = 0; dx <= 1; dx++) {
+                ivec3 pCoords = base + ivec3(dx, dy, dz);
+                int pIdx = DDGIGetProbeIndex(pCoords, probeCounts);
+                probeStates[volume.probeOffset + uint(pIdx)].isRelevant = true;
+            }
+        }
+    }
+}

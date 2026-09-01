@@ -45,6 +45,7 @@ struct InventoryLocations {
 struct Inventory {
     Inventory() = default;
     void Init();
+    void CleanUp();
     void Update(float deltaTime);
     void AddInventoryItem(const std::string& name);
     void ClearInventory();
@@ -59,14 +60,13 @@ struct Inventory {
     void SetGridCountY(int count);
     void RemoveItemByIndex(int index);
     bool HasItem(const std::string& itemName);
-    void GiveAmmo(const std::string& name, int amount);
+    void GiveAmmo(Bible::Ammo ammo, int amount);
     //void GiveItem(const std::string& name);
     void GiveWeapon(const std::string& name);
 
-    AmmoState* GetAmmoStateByName(const std::string& name);
+    AmmoState* GetAmmoState(Bible::Ammo ammo);
     WeaponState* GetWeaponStateByName(const std::string& name);
 
-    std::vector<AmmoState>& GetAmmoStates()         { return m_ammoStates; }
     std::vector<WeaponState>& GetWeaponStates()     { return m_weaponStates; }
 
     const std::string& GetDebugText()               { return m_debugText; }
@@ -114,7 +114,7 @@ private:
 
     // Getters
     InventoryItem* GetItemAtIndex(int index);
-    ItemInfo* GetSelectedItemInfo();
+    Bible::ItemInfo* GetSelectedItemInfo();
     glm::ivec2 GetSelectedItemHeadingSize();
     glm::ivec2 GetSelectedItemDescriptionSize();
     glm::ivec2 GetItemGridSize();

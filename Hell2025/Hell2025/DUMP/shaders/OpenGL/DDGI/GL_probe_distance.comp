@@ -1,0 +1,133 @@
+#version 450
+#include "../../common/raytracing.glsl"
+#include "../../common/ddgi.glsl"
+#include "../../common/types.glsl"
+
+layout(local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
+
+layout(rg16f, binding = 0) uniform image2DArray u_distanceAtlas;
+
+layout(std430, binding = 4) readonly buffer DDGIVolumeBuffer      { DDGIVolume volume; };
+layout(std430, binding = 5) buffer ProbeStateBuffer               { ProbeState probeStates[]; };
+layout(std430, binding = 6) readonly buffer ProbeDistanceCounter  { uint probeDistanceCounter; };
+layout(std430, binding = 7) readonly buffer ProbeDistanceInidices { uint probeDistanceIndices[]; };
+
+uniform int u_frameIndex;
+
+const int RAYS_PER_PROBE = 128; 
+const int SPECIAL_VERTICAL_RAYS = 2;
+const int BACKFACE_CLASSIFICATION_RAYS = RAYS_PER_PROBE - SPECIAL_VERTICAL_RAYS;
+
+const float HYSTERESIS = 0.97;
+const float PROBE_DISTANCE_EXPONENT = 50.0;
+const float BACKFACE_HIT_DISTANCE_SCALE = 0.2;
+const float EPSILON = 0.000001;
+
+shared vec3 shared_rayDirs[RAYS_PER_PROBE];
+shared float shared_hitDistances[RAYS_PER_PROBE];
+shared bool shared_isActive;
+
+vec3 getSphericalFibonacci(float sampleIndex, float numSamples) {
+    const float b = (sqrt(5.0) * 0.5 + 0.5) - 1.0;
+    float phi = 2.0 * PI * fract(sampleIndex * b);
+    float cosTheta = 1.0 - (2.0 * sampleIndex + 1.0) * (1.0 / numSamples);
+    float sinTheta = sqrt(max(0.0, 1.0 - (cosTheta * cosTheta)));
+    return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
+}
+
+vec3 GetFixedProbeRayDirection(int rayIndex) {
+    if (rayIndex == 0) return vec3(0.0, 1.0, 0.0);
+    if (rayIndex == 1) return vec3(0.0, -1.0, 0.0);
+    float sampleIndex = float(rayIndex - SPECIAL_VERTICAL_RAYS);
+    return normalize(getSphericalFibonacci(sampleIndex, float(BACKFACE_CLASSIFICATION_RAYS)));
+}
+
+void main() {
+    uint listIdx = gl_WorkGroupID.x;
+    if (listIdx >= probeDistanceCounter) return;
+
+    uint pIdx = probeDistanceIndices[listIdx];
+    if (pIdx >= uint(volume.totalProbes)) return;
+
+    uint globalProbeIdx = volume.probeOffset + pIdx;
+    uint threadIdx = gl_LocalInvocationID.x;
+    float probeSpacing = volume.probeSpacing;
+    ivec3 probeCoords = DDGIGetProbeCoords(int(pIdx), volume);
+    vec3 probePos = DDGIGetProbeWorldPosition(probeCoords, volume, probeStates[globalProbeIdx]);
+    
+    float maxDist = length(vec3(probeSpacing)) * 1.5;
+
+    // Trace Rays
+    for (int i = int(threadIdx); i < RAYS_PER_PROBE; i += 32) {
+        vec3 rayDir = GetFixedProbeRayDirection(i);
+        shared_rayDirs[i] = rayDir;
+
+        RayResult hit;
+        float d = maxDist;
+
+        if (ClosestHit(probePos, rayDir, 0.01, maxDist, hit)) {
+            d = (hit.t < 0.0) ? -min(abs(hit.t), maxDist) * BACKFACE_HIT_DISTANCE_SCALE : min(hit.t, maxDist);
+        }
+        shared_hitDistances[i] = d;
+    }
+
+    barrier();
+
+    // Classification
+    if (threadIdx == 0) {
+        uint backfaceCount = 0;
+        for (int i = SPECIAL_VERTICAL_RAYS; i < RAYS_PER_PROBE; i++) {
+            if (shared_hitDistances[i] < 0.0) backfaceCount++;
+        }
+        shared_isActive = (float(backfaceCount) / float(BACKFACE_CLASSIFICATION_RAYS) <= 0.25);
+        probeStates[globalProbeIdx].isActive = shared_isActive;
+
+        if (probeStates[globalProbeIdx].distanceCooldown > 0u) {
+            probeStates[globalProbeIdx].distanceCooldown--;
+        }
+    }
+
+    barrier();
+    if (!shared_isActive) return;
+
+    // Distance Atlas Write
+    uvec3 probeTexelCoords = DDGIGetProbeTexelCoords(int(pIdx), volume);
+    const int interiorSize = PROBE_NUM_DISTANCE_INTERIOR_TEXELS;
+    const int numTexels = interiorSize * interiorSize;
+
+    for (int idx = int(threadIdx); idx < numTexels; idx += 32) {
+        int tx = idx % interiorSize;
+        int ty = idx / interiorSize;
+
+        vec2 octUV = DDGIGetNormalizedOctahedralCoordinates(ivec2(tx, ty), interiorSize);
+        vec3 texelDir = DDGIGetOctahedralDirection(octUV);
+        vec3 res = vec3(0.0);
+
+        for (int i = 0; i < RAYS_PER_PROBE; i++) {
+            float weight = pow(max(0.0, dot(texelDir, shared_rayDirs[i])), PROBE_DISTANCE_EXPONENT);
+            float probeRayDistance = min(abs(shared_hitDistances[i]), maxDist);
+
+            res += vec3(probeRayDistance * weight, probeRayDistance * probeRayDistance * weight, weight);
+        }
+
+        vec2 newValues = res.xy * (1.0 / (2.0 * max(res.z, EPSILON)));
+        
+        // Atlas is (Interior + 2 for borders)
+        ivec3 writeCoord = ivec3(
+            int(probeTexelCoords.x) * (interiorSize + 2) + tx + 1, 
+            int(probeTexelCoords.y) * (interiorSize + 2) + ty + 1, 
+            int(probeTexelCoords.z)
+        );
+
+        vec2 oldValues = imageLoad(u_distanceAtlas, writeCoord).rg;
+        
+        float newMean = newValues.x * 2.0;
+        float oldMean = oldValues.x * 2.0;
+        float distChange = abs(newMean - oldMean);
+
+        // Movement threshold: snap if change > 20%
+        float h = (distChange > (oldMean * 0.2) || dot(oldValues, oldValues) < 1e-6) ? 0.0 : HYSTERESIS;
+
+        imageStore(u_distanceAtlas, writeCoord, vec4(mix(newValues, oldValues, h), 0.0, 1.0));
+    }
+}

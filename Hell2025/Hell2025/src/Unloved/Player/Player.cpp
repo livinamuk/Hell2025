@@ -11,18 +11,18 @@
 #include "Legacy/World/LegacyWorld.h"
 
 #include "Unloved/Bible/Bible.h"
+#include "Unloved/Characters/Mermaids/Mermaid/Mermaid.h"
 #include "Unloved/Session/Session.h"
-#include "Unloved/Editor/Editor.h"
 #include "Unloved/Systems/Ocean/Ocean.h"
+#include "Unloved/Systems/Animator/Animator.h"
 #include "Unloved/Viewport/ViewportManager.h"
 #include "Unloved/World/World.h"
 
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
+#include <limits>
 #include <vector>
-
-namespace Audio = Hell::Audio;
 
 namespace Unloved {
 
@@ -37,15 +37,24 @@ void Player::Init(uint64_t playerId, const glm::vec3& position, const glm::vec3&
     m_inventory.SetLocalPlayerIndex(m_viewportIndex);
     m_shopInventory.SetLocalPlayerIndex(m_viewportIndex);
 
-    m_characterModelAnimatedGameObjectId= LegacyWorld::CreateAnimatedGameObject();
-    m_viewWeaponAnimatedGameObjectId = LegacyWorld::CreateAnimatedGameObject();
+    m_viewWeaponSkinnedGameObjectId = World::CreateSkinnedGameObject();
+    m_viewWeaponAnimatorInstanceId = Animator::CreateAnimatorInstance();
 
-    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
+    AnimatorInstance* viewWeaponAnimatorInstance = GetViewWeaponAnimatorInstance();
+    SkinnedGameObject* viewWeapon = GetViewWeaponSkinnedGameObject();
+
+    if (!viewWeapon || !viewWeaponAnimatorInstance) {
+        Logging::Editor() << "Player::Init(..) some core shit fucked up\n";
+        __debugbreak();
+    }
+
+    // The view weapon skeleton is registered when the first weapon is equipped
+    m_viewWeaponAnimationLayerIndex = viewWeaponAnimatorInstance->CreateAnimationLayer();
+    viewWeapon->SetAnimatorInstanceId(m_viewWeaponAnimatorInstanceId);
+    viewWeapon->SetViewWeapon(true);
     viewWeapon->SetExclusiveViewportIndex(viewportIndex);
     viewWeapon->DisableShadows();
     viewWeapon->SetExcludeFromVulkanTLAS(true);
-
-    AnimatedGameObject* characterModel = GetCharacterModelAnimatedGameObject();
 
     SpriteSheetObjectCreateInfo createInfo;
     createInfo.textureName = "MuzzleFlash_4x5";
@@ -55,8 +64,41 @@ void Player::Init(uint64_t playerId, const glm::vec3& position, const glm::vec3&
     m_muzzleFlash.Init(createInfo);
 
     CreateCharacterController(position);
-    InitCharacterModel();
-    InitRagdoll();
+
+    if (!m_animatedHumanoid.Init(m_playerId, Bible::SkinnedModelPreset::RAT_KING, position, glm::vec3(0.0f, rotation.y + HELL_PI, 0.0f))) {
+        Logging::Editor() << "Player::Init(..) failed to initialize the animated humanoid\n";
+        __debugbreak();
+    }
+    m_animatedHumanoid.CreateRagdoll("RatKing");
+    m_animatedHumanoid.SetWeapon(Bible::Weapon::GLOCK);
+    m_animatedHumanoid.SetIgnoredViewportIndex(m_viewportIndex);
+}
+
+void Player::CleanUp() {
+    m_animatedHumanoid.CleanUp();
+
+    Animator::RemoveAnimatorInstance(m_viewWeaponAnimatorInstanceId);
+
+    World::RemoveObjectById(m_viewWeaponSkinnedGameObjectId);
+    World::RemoveObjectById(m_flashlightSpotLightId);
+
+    Hell::Physics::MarkCharacterControllerForRemoval(m_characterControllerId);
+
+    m_supressor.CleanUp();
+    m_redDot.CleanUp();
+    m_p90MagMeshNodes.CleanUp();
+    m_inventory.CleanUp();
+    m_shopInventory.CleanUp();
+
+    m_playerId = 0;
+    m_characterControllerId = 0;
+    m_viewWeaponAnimatorInstanceId = 0;
+    m_viewWeaponAnimationLayerIndex = 0;
+    m_viewWeaponSkinnedGameObjectId = 0;
+    m_flashlightSpotLightId = 0;
+    m_pianoId = 0;
+    m_shopMermaidObjectId = 0;
+    m_isPlayingPiano = false;
 }
 
 void Player::BeginFrame() {
@@ -65,7 +107,10 @@ void Player::BeginFrame() {
     m_interactOpenableId = 0;
 }
 
-void Player::EnterShop() {
+void Player::EnterShop(uint64_t mermaidObjectId) {
+    if (!World::GetMermaidByObjectId(mermaidObjectId)) return;
+
+    m_shopMermaidObjectId = mermaidObjectId;
     m_isInShop = true;
     m_shopInventory.OpenAsShop();
     m_inventory.CloseInventory();
@@ -74,7 +119,7 @@ void Player::EnterShop() {
     m_typeWriter.DisplayText(text);
 
     m_flashlightOn = true;
-    Audio::PlayAudio(AUDIO_SELECT, 1.00f);
+    Hell::Audio::PlayAudio(AUDIO_SELECT, 1.00f);
 
     ConsumeInteract();
 
@@ -82,6 +127,7 @@ void Player::EnterShop() {
 }
 
 void Player::LeaveShop() {
+    m_shopMermaidObjectId = 0;
     m_isInShop = false;
     m_inventory.CloseInventory();
     m_shopInventory.CloseInventory();
@@ -100,15 +146,15 @@ static float LerpAngle(float a, float b, float t) {
 }
 
 void Player::UpdateShop(float deltaTime) {
-    glm::vec3 targetPosition = glm::vec3(13.06f, 28.68f, 36.78);
-    glm::vec3 targetCamEuler = glm::vec3(-0.08f, -1.65f, 0.0f);
-
-    if (Unloved::Session::GetSplitscreenMode() == SplitscreenMode::TWO_PLAYER) {
-        targetPosition = glm::vec3(12.93f, 28.61f, 36.80);
-        targetCamEuler = glm::vec3(-0.00f, -2.05f, 0.0f);
+    Mermaid* mermaid = World::GetMermaidByObjectId(m_shopMermaidObjectId);
+    if (!mermaid) {
+        LeaveShop();
+        return;
     }
 
-
+    const glm::vec3 cameraOffsetFromFeet = GetCameraPosition() - GetFootPosition();
+    const glm::vec3 targetPosition = mermaid->GetShopTeleportPosition() - cameraOffsetFromFeet;
+    const glm::vec3& targetCamEuler = mermaid->GetShopTeleportEuler();
     glm::vec3 currentPosition = GetFootPosition();
     glm::vec3 currentCamEuler = m_camera.GetEulerRotation();
 
@@ -130,7 +176,7 @@ void Player::UpdateShop(float deltaTime) {
 }
 
 void Player::DiscardItem(const std::string& itemName) {
-    ItemInfo* itemInfo = Bible::GetItemInfoByName(itemName);
+    Bible::ItemInfo* itemInfo = Bible::GetItemInfoByName(itemName);
     if (!itemInfo) {
         Logging::Error() << "Player::DiscardItem(..) failed to drop item '" << itemName << "'\n";
         return;
@@ -143,17 +189,16 @@ void Player::DiscardItem(const std::string& itemName) {
 	createInfo.rotation.x = Hell::Random::Float(-HELL_PI, HELL_PI);
 	createInfo.rotation.y = Hell::Random::Float(-HELL_PI, HELL_PI);
 	createInfo.rotation.z = Hell::Random::Float(-HELL_PI, HELL_PI);
-	createInfo.name = itemName;
+	createInfo.item = itemInfo->GetItem();
 	createInfo.saveToFile = false;
 	createInfo.disablePhysicsAtSpawn = false;
 	createInfo.respawn = false;
-	createInfo.type = Bible::GetItemType(itemName);
 
 	Unloved::World::AddPickUp(createInfo);
 }
 
 bool Player::PurchaseItem(const std::string& itemName) {
-    ItemInfo* itemInfo = Bible::GetItemInfoByName(itemName);
+    Bible::ItemInfo* itemInfo = Bible::GetItemInfoByName(itemName);
     if (!itemInfo) return false;
 
     const ItemType& itemType = itemInfo->GetType();
@@ -162,7 +207,7 @@ bool Player::PurchaseItem(const std::string& itemName) {
     // Is it a weapon that you already have
     if (itemInfo->GetType() == ItemType::WEAPON && HasWeapon(itemName)) {
 		m_typeWriter.DisplayText("You already got one Darlin'.");
-		Audio::PlayAudio("ShopDenied.wav", 1.0f);
+        Hell::Audio::PlayAudio("ShopDenied.wav", 1.0f);
         return false;
     }
 
@@ -170,7 +215,7 @@ bool Player::PurchaseItem(const std::string& itemName) {
 	if (m_cash >= itemCost) {
 		if (itemType == ItemType::WEAPON) {
 			m_inventory.GiveWeapon(itemName);
-			m_inventory.GiveAmmo(itemName, itemCost);
+			if (WeaponInfo* weaponInfo = Bible::GetWeaponInfoByName(itemName); weaponInfo && weaponInfo->ammo != Bible::Ammo::UNDEFINED) m_inventory.GiveAmmo(weaponInfo->ammo, itemCost);
 			SwitchWeapon(itemName, DRAW_BEGIN);
 			SubtractCash(itemCost);
 		}
@@ -183,7 +228,7 @@ bool Player::PurchaseItem(const std::string& itemName) {
         }
 
         m_typeWriter.DisplayText(Bible::MermaidShopWeaponPurchaseConfirmationText());
-        Audio::PlayAudio("ShopPurchase2.wav", 1.0f);
+        Hell::Audio::PlayAudio("ShopPurchase2.wav", 1.0f);
         LeaveShop();
 
         return true;
@@ -191,7 +236,7 @@ bool Player::PurchaseItem(const std::string& itemName) {
 
     // Denied coz you couldn't afford it
 	m_typeWriter.DisplayText(Bible::MermaidShopFailedPurchaseText());
-	Audio::PlayAudio("ShopDenied.wav", 1.0f);
+    Hell::Audio::PlayAudio("ShopDenied.wav", 1.0f);
 	return false;
 }
 
@@ -200,9 +245,13 @@ void Player::Respawn() {
     m_shopInventory.Init();
     m_health = 100;
     m_isInShop = false;
+    m_shopMermaidObjectId = 0;
     m_alive = true;
     m_flashlightOn = false;
     m_awaitingSpawn = false;
+
+    m_animatedHumanoid.EnableWeaponRendering();
+    m_animatedHumanoid.SetBodyAnimationModeToAnimated();
 
     // Get random spawn point
     const SpawnPoint& spawnPoint = Session::GetGameMode() == GameMode::DEATH_MATCH ? Session::GetRandomDeathmatchSpawnPoint() : Session::GetRandomCampaignSpawnPoint();
@@ -250,16 +299,6 @@ void Player::Respawn() {
     PhysXRayResult physxRayResult = Hell::Physics::CastPhysXRay(rayOrigin, rayDir, maxRayDistance, true, std::vector<physx::PxRigidActor*>());
     if (!physxRayResult.hitFound) {
         m_flashlightOn = true;
-    }
-
-    // Make character model animated again (aka not ragdoll)
-    AnimatedGameObject* characterModel = GetCharacterModelAnimatedGameObject();
-    if (characterModel) {
-        characterModel->SetAnimationModeToAnimated();
-    }
-
-    if (Ragdoll* Ragdoll = GetRagdoll()) {
-        Ragdoll->DisableSimulation();
     }
 
     m_respawnCount++;
@@ -345,31 +384,24 @@ Unloved::Camera& Player::GetCamera() {
     return m_camera;
 }
 
-AnimatedGameObject* Player::GetCharacterModelAnimatedGameObject() {
-    return Unloved::World::GetAnimatedGameObjectByObjectId(m_characterModelAnimatedGameObjectId);
+
+AnimatorInstance* Player::GetViewWeaponAnimatorInstance() {
+    return Animator::GetAnimatorInstanceByObjectId(m_viewWeaponAnimatorInstanceId);
 }
 
-AnimatedGameObject* Player::GetViewWeaponAnimatedGameObject() {
-    return Unloved::World::GetAnimatedGameObjectByObjectId(m_viewWeaponAnimatedGameObjectId);
+SkinnedGameObject* Player::GetViewWeaponSkinnedGameObject() {
+    return World::GetSkinnedGameObjectByObjectId(m_viewWeaponSkinnedGameObjectId);
+}
+
+AnimatedHumanoid& Player::GetAnimatedHumanoid() {
+    return m_animatedHumanoid;
 }
 
 bool Player::ViewportIsVisible() {
-    Unloved::Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(m_viewportIndex);
-    if (!viewport) {
-        return false;
-    }
-    else {
-        return viewport->IsVisible();
-    }
-}
+    Viewport* viewport = Unloved::ViewportManager::GetViewportByIndex(m_viewportIndex);
+    if (!viewport) return false;
 
-bool Player::ViewModelAnimationsCompleted() {
-    AnimatedGameObject* viewWeapon = GetViewWeaponAnimatedGameObject();
-    if (!viewWeapon) {
-        std::cout << "WARNING!!! Player::ViewModelAnimationsCompleted() failed coz viewWeapon was nullptr\n";
-        return true;
-    }
-    return viewWeapon->IsAllAnimationsComplete();
+    return viewport->IsVisible();
 }
 
 float Player::GetWeaponAudioFrequency() {
@@ -405,10 +437,8 @@ void Player::GiveDamage(int damage, uint64_t enemyId) {
 }
 
 float Player::DotToClosestToMermaid() {
-    if (Unloved::World::GetMermaids().empty()) return 0;
-
-    Mermaid& mermaid = Unloved::World::GetMermaids()[0];
-    return glm::dot(mermaid.GetWorldForward(), GetCameraForward());
+    Mermaid* mermaid = World::GetMermaidByObjectId(GetFacingMermaidObjectId());
+    return mermaid ? glm::dot(mermaid->GetWorldForward(), GetCameraForward()) : 0.0f;
 }
 
 void Player::GiveCash(int amount) {
@@ -419,27 +449,36 @@ void Player::SubtractCash(int amount) {
     m_cash -= amount;
 }
 
-bool Player::IsFacingClosestMermaid() {
-    if (Unloved::World::GetMermaids().empty()) return false;
-
-    Mermaid& mermaid = Unloved::World::GetMermaids()[0];
-
-    const glm::vec3& cameraPositon = GetCameraPosition();
+uint64_t Player::GetFacingMermaidObjectId() const {
+    const glm::vec3& cameraPosition = GetCameraPosition();
     const glm::vec3& cameraForward = GetCameraForward();
+    constexpr float maximumInteractDistance = 2.0f;
+    constexpr float minimumDistance = 0.0001f;
 
-    glm::vec3 toCamera = cameraPositon - mermaid.GetPosition();
-    glm::vec3 toMermaid = mermaid.GetPosition() - cameraPositon;
+    uint64_t closestMermaidObjectId = 0;
+    float closestDistance = std::numeric_limits<float>::max();
 
-    bool cameraOnFrontSide = glm::dot(mermaid.GetWorldForward(), toMermaid) > 0.0f;
-    bool mermaidInFrontOfCamera = glm::dot(cameraForward, toMermaid) > 0.0f;
+    for (Mermaid& mermaid : World::GetMermaids()) {
+        const glm::vec3 toMermaid = mermaid.GetPosition() - cameraPosition;
+        const float distanceToMermaid = glm::length(toMermaid);
+        if (distanceToMermaid <= minimumDistance || distanceToMermaid > maximumInteractDistance) continue;
 
-    // HACCCCCCCCCK because cameraOnFrontSide doesn't evaluate to what you think it does
-    float distanceToMermaid = glm::distance(cameraPositon, mermaid.GetPosition());
-    if (distanceToMermaid > 2.0f) {
-        return false;
+        const glm::vec3 directionToMermaid = toMermaid / distanceToMermaid;
+        const bool mermaidInFrontOfCamera = glm::dot(cameraForward, directionToMermaid) > 0.0f;
+        const bool cameraInFrontOfMermaid = glm::dot(mermaid.GetWorldForward(), -directionToMermaid) > 0.0f;
+        if (!mermaidInFrontOfCamera || !cameraInFrontOfMermaid) continue;
+
+        if (distanceToMermaid < closestDistance) {
+            closestDistance = distanceToMermaid;
+            closestMermaidObjectId = mermaid.GetObjectId();
+        }
     }
 
-    return !(cameraOnFrontSide && mermaidInFrontOfCamera);
+    return closestMermaidObjectId;
+}
+
+bool Player::IsFacingClosestMermaid() {
+    return GetFacingMermaidObjectId() != 0;
 }
 
 void Player::Kill(bool wasHeadShot) {
@@ -450,13 +489,10 @@ void Player::Kill(bool wasHeadShot) {
         m_inventory.CloseInventory();
         m_shopInventory.CloseInventory();
 
-        if (AnimatedGameObject* characterModel = GetCharacterModelAnimatedGameObject()) {
-            if (GetRagdoll()) {
-                characterModel->SetAnimationModeToRagdoll();
-            }
-        }
+        m_animatedHumanoid.DisableWeaponRendering();
+        m_animatedHumanoid.SetBodyAnimationModeToRagdoll();
 
-        Audio::PlayAudio("Death0.wav", 1.0f);
+        Hell::Audio::PlayAudio("Death0.wav", 1.0f);
         DropWeapons();
         DropItems();
         m_cash /= 2;
@@ -527,17 +563,11 @@ float Player::GetViewportContrast() {
 }
 
 uint64_t Player::GetRagdollId() {
-    AnimatedGameObject* characterModel = GetCharacterModelAnimatedGameObject();
-    if (!characterModel) return 0;
-
-    return characterModel->GetRagdollId();
+    return m_animatedHumanoid.GetRagdollId();
 }
 
 Ragdoll* Player::GetRagdoll() {
-    const uint64_t RagdollId = GetRagdollId();
-    if (RagdollId == 0) return nullptr;
-
-    return Hell::Physics::GetRagdollById(RagdollId);
+    return m_animatedHumanoid.GetRagdoll();
 }
 
 bool Player::InventoryIsOpen() {

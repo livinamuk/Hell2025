@@ -1,0 +1,19 @@
+#version 460
+#extension GL_EXT_nonuniform_qualifier : require
+
+#include "../common/Vulkan/VK_binding_indices.glsl"
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(set = 0, binding = DESC_IDX_STORAGE_IMAGES_RGBA16F, rgba16f) uniform image2D storageImagesRGBA16F[];
+
+void main() {
+    ivec2 texel = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 targetSize = imageSize(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING]);
+
+    if (texel.x >= targetSize.x || texel.y >= targetSize.y) return;
+
+    vec4 color = imageLoad(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], texel);
+    color.rgb *= vec3(1.0, 0.0, 0.0);
+    imageStore(storageImagesRGBA16F[VULKAN_STORAGE_IMAGE_IDX_GBUFFER_LIGHTING], texel, color);
+}

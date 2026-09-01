@@ -85,4 +85,16 @@ namespace Hell::String {
     inline std::string FormatBytesMB(std::size_t bytes) {
         return std::format("{:.2f} MB", bytes / (1024.0 * 1024.0));
     }
+
+    inline void RemoveFromVector(std::vector<std::string>& vec, const std::string& str) {
+        for (size_t i = 0; i < vec.size();) {
+            if (vec[i] == str) {
+                vec[i] = std::move(vec.back());
+                vec.pop_back();
+            }
+            else {
+                ++i;
+            }
+        }
+    }
 }
